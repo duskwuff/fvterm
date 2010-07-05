@@ -8,7 +8,7 @@ FILES = \
 
 NIBS = MainMenu TerminalWindow
 FONTS = fixed13
-APPEXTRAS = Info.plist Credits.rtf
+APPEXTRAS = Info.plist Credits.rtf fvterm.icns
 
 APPDIR = build/fvterm.app/Contents
 
@@ -27,7 +27,8 @@ LDFLAGS = -framework Cocoa
 default: build/fvterm.bin $(NIBS:%=build/%.nib) $(FONTS:%=build/%.vtf)
 	@mkdir -p $(APPDIR)/{MacOS,Resources}/
 	cp build/fvterm.bin $(APPDIR)/MacOS/fvterm
-	cp -a $(NIBS:%=build/%.nib) $(FONTS:%=build/%.vtf) $(APPEXTRAS) $(APPDIR)/Resources/
+	cp -a $(NIBS:%=build/%.nib) $(FONTS:%=build/%.vtf) $(APPEXTRAS) \
+	    $(APPDIR)/Resources/
 	cp Info.plist $(APPDIR)/
 
 build/fontpacker: build/TerminalFont.o build/fontpacker.o
@@ -55,7 +56,10 @@ build/%.vtf: build/fontpacker
 .PRECIOUS: build/Prefix.gch
 
 run: default
-	@gdb $(APPDIR)/Contents/MacOS/fvterm
+	$(APPDIR)/MacOS/fvterm
+
+debug: default
+	@gdb $(APPDIR)/MacOS/fvterm
 
 clean:
 	rm -rf build/*.{o,d,vtf,nib} build/fvterm.app
