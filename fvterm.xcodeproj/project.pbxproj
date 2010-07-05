@@ -1,0 +1,453 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 45;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0E0443D60F11F7B000AE8DFC /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E0443C10F11F7B000AE8DFC /* main.m */; };
+		8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */; };
+		CC1DC53411C7157400C1F5A7 /* TerminalFont.m in Sources */ = {isa = PBXBuildFile; fileRef = CC1DC50711C7077B00C1F5A7 /* TerminalFont.m */; };
+		CC1DC53511C7157700C1F5A7 /* TerminalPTY.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E0443C30F11F7B000AE8DFC /* TerminalPTY.m */; };
+		CC1DC53611C7157800C1F5A7 /* TerminalView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E0443C50F11F7B000AE8DFC /* TerminalView.m */; };
+		CC1DC53711C7157800C1F5A7 /* TerminalWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E0443BF0F11F7B000AE8DFC /* TerminalWindow.m */; };
+		CC1DC53811C7157900C1F5A7 /* TerminalWindow_Emulation.m in Sources */ = {isa = PBXBuildFile; fileRef = 0E0443C70F11F7B000AE8DFC /* TerminalWindow_Emulation.m */; };
+		CC1DC53911C7157A00C1F5A7 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0E0443CE0F11F7B000AE8DFC /* InfoPlist.strings */; };
+		CC1DC53A11C7157B00C1F5A7 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 0E0443CC0F11F7B000AE8DFC /* Credits.rtf */; };
+		CC1DC53B11C7157C00C1F5A7 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0E0443D00F11F7B000AE8DFC /* MainMenu.xib */; };
+		CC1DC53C11C7157C00C1F5A7 /* TerminalWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0E0443D20F11F7B000AE8DFC /* TerminalWindow.xib */; };
+		CC1DC53E11C7158400C1F5A7 /* TerminalFont.m in Sources */ = {isa = PBXBuildFile; fileRef = CC1DC50711C7077B00C1F5A7 /* TerminalFont.m */; };
+		CC1DC55011C92D5200C1F5A7 /* fontpacker.m in Sources */ = {isa = PBXBuildFile; fileRef = CC1DC54011C7159800C1F5A7 /* fontpacker.m */; };
+		CC484DAA11D9894C00B32886 /* fixed13.vtf in Resources */ = {isa = PBXBuildFile; fileRef = CC484DA911D9894C00B32886 /* fixed13.vtf */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		CC2DADB711C31601006F2BD3 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0E0443BF0F11F7B000AE8DFC /* TerminalWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TerminalWindow.m; sourceTree = "<group>"; };
+		0E0443C00F11F7B000AE8DFC /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; lineEnding = 0; path = Info.plist; sourceTree = "<group>"; };
+		0E0443C10F11F7B000AE8DFC /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = main.m; sourceTree = "<group>"; };
+		0E0443C20F11F7B000AE8DFC /* TerminalPTY.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TerminalPTY.h; sourceTree = "<group>"; };
+		0E0443C30F11F7B000AE8DFC /* TerminalPTY.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TerminalPTY.m; sourceTree = "<group>"; };
+		0E0443C40F11F7B000AE8DFC /* TerminalView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TerminalView.h; sourceTree = "<group>"; };
+		0E0443C50F11F7B000AE8DFC /* TerminalView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TerminalView.m; sourceTree = "<group>"; };
+		0E0443C60F11F7B000AE8DFC /* TerminalWindow_Emulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TerminalWindow_Emulation.h; sourceTree = "<group>"; };
+		0E0443C70F11F7B000AE8DFC /* TerminalWindow_Emulation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TerminalWindow_Emulation.m; sourceTree = "<group>"; };
+		0E0443C80F11F7B000AE8DFC /* TerminalWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TerminalWindow.h; sourceTree = "<group>"; };
+		0E0443C90F11F7B000AE8DFC /* DefaultColors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = DefaultColors.h; sourceTree = "<group>"; };
+		0E0443CA0F11F7B000AE8DFC /* ConsoleKeyMappings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = ConsoleKeyMappings.h; sourceTree = "<group>"; };
+		0E0443CD0F11F7B000AE8DFC /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; lineEnding = 0; name = English; path = Credits.rtf; sourceTree = "<group>"; };
+		0E0443CF0F11F7B000AE8DFC /* English */ = {isa = PBXFileReference; fileEncoding = 2415919360; lastKnownFileType = text.plist.strings; lineEnding = 0; name = English; path = InfoPlist.strings; sourceTree = "<group>"; };
+		0E0443D10F11F7B000AE8DFC /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = MainMenu.xib; sourceTree = "<group>"; };
+		0E0443D30F11F7B000AE8DFC /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = TerminalWindow.xib; sourceTree = "<group>"; };
+		0E0443FD0F11F8B800AE8DFC /* fvterm_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = fvterm_Prefix.pch; sourceTree = "<group>"; };
+		1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
+		2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		8D15AC370486D014006FF6A4 /* fvterm.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = fvterm.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC1DC50611C7077B00C1F5A7 /* TerminalFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TerminalFont.h; sourceTree = "<group>"; };
+		CC1DC50711C7077B00C1F5A7 /* TerminalFont.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TerminalFont.m; sourceTree = "<group>"; };
+		CC1DC52C11C7155A00C1F5A7 /* fontpacker */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fontpacker; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC1DC54011C7159800C1F5A7 /* fontpacker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = fontpacker.m; sourceTree = "<group>"; };
+		CC484DA911D9894C00B32886 /* fixed13.vtf */ = {isa = PBXFileReference; lastKnownFileType = file; name = fixed13.vtf; path = fonts/fixed13.vtf; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8D15AC330486D014006FF6A4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D15AC340486D014006FF6A4 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC1DC52A11C7155A00C1F5A7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1058C7A6FEA54F5311CA2CBB /* Linked Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1058C7A7FEA54F5311CA2CBB /* Cocoa.framework */,
+			);
+			name = "Linked Frameworks";
+			sourceTree = "<group>";
+		};
+		1058C7A8FEA54F5311CA2CBB /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2A37F4C4FDCFA73011CA2CEA /* AppKit.framework */,
+				2A37F4C5FDCFA73011CA2CEA /* Foundation.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		19C28FB0FE9D524F11CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8D15AC370486D014006FF6A4 /* fvterm.app */,
+				CC1DC52C11C7155A00C1F5A7 /* fontpacker */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2A37F4AAFDCFA73011CA2CEA /* fvterm */ = {
+			isa = PBXGroup;
+			children = (
+				2A37F4ABFDCFA73011CA2CEA /* Classes */,
+				2A37F4AFFDCFA73011CA2CEA /* Other Sources */,
+				2A37F4B8FDCFA73011CA2CEA /* Resources */,
+				2A37F4C3FDCFA73011CA2CEA /* Frameworks */,
+				19C28FB0FE9D524F11CA2CBB /* Products */,
+			);
+			name = fvterm;
+			sourceTree = "<group>";
+		};
+		2A37F4ABFDCFA73011CA2CEA /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				CC1DC50611C7077B00C1F5A7 /* TerminalFont.h */,
+				CC1DC50711C7077B00C1F5A7 /* TerminalFont.m */,
+				0E0443C20F11F7B000AE8DFC /* TerminalPTY.h */,
+				0E0443C30F11F7B000AE8DFC /* TerminalPTY.m */,
+				0E0443C40F11F7B000AE8DFC /* TerminalView.h */,
+				0E0443C50F11F7B000AE8DFC /* TerminalView.m */,
+				0E0443C80F11F7B000AE8DFC /* TerminalWindow.h */,
+				0E0443BF0F11F7B000AE8DFC /* TerminalWindow.m */,
+				0E0443C60F11F7B000AE8DFC /* TerminalWindow_Emulation.h */,
+				0E0443C70F11F7B000AE8DFC /* TerminalWindow_Emulation.m */,
+			);
+			fileEncoding = 4;
+			lineEnding = 0;
+			name = Classes;
+			sourceTree = "<group>";
+		};
+		2A37F4AFFDCFA73011CA2CEA /* Other Sources */ = {
+			isa = PBXGroup;
+			children = (
+				0E0443C10F11F7B000AE8DFC /* main.m */,
+				0E0443FD0F11F8B800AE8DFC /* fvterm_Prefix.pch */,
+				0E0443C90F11F7B000AE8DFC /* DefaultColors.h */,
+				0E0443CA0F11F7B000AE8DFC /* ConsoleKeyMappings.h */,
+				CC1DC54011C7159800C1F5A7 /* fontpacker.m */,
+			);
+			fileEncoding = 4;
+			lineEnding = 0;
+			name = "Other Sources";
+			sourceTree = "<group>";
+		};
+		2A37F4B8FDCFA73011CA2CEA /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				CC484DA911D9894C00B32886 /* fixed13.vtf */,
+				0E0443CE0F11F7B000AE8DFC /* InfoPlist.strings */,
+				0E0443CC0F11F7B000AE8DFC /* Credits.rtf */,
+				0E0443D00F11F7B000AE8DFC /* MainMenu.xib */,
+				0E0443D20F11F7B000AE8DFC /* TerminalWindow.xib */,
+				0E0443C00F11F7B000AE8DFC /* Info.plist */,
+			);
+			fileEncoding = 4;
+			lineEnding = 0;
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		2A37F4C3FDCFA73011CA2CEA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1058C7A6FEA54F5311CA2CBB /* Linked Frameworks */,
+				1058C7A8FEA54F5311CA2CBB /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8D15AC270486D014006FF6A4 /* fvterm */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C05733C708A9546B00998B17 /* Build configuration list for PBXNativeTarget "fvterm" */;
+			buildPhases = (
+				8D15AC2B0486D014006FF6A4 /* Resources */,
+				CC2DADB711C31601006F2BD3 /* CopyFiles */,
+				8D15AC300486D014006FF6A4 /* Sources */,
+				8D15AC330486D014006FF6A4 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = fvterm;
+			productInstallPath = "$(HOME)/Applications";
+			productName = fvterm;
+			productReference = 8D15AC370486D014006FF6A4 /* fvterm.app */;
+			productType = "com.apple.product-type.application";
+		};
+		CC1DC52B11C7155A00C1F5A7 /* fontpacker */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC1DC54211C7159800C1F5A7 /* Build configuration list for PBXNativeTarget "fontpacker" */;
+			buildPhases = (
+				CC1DC52911C7155A00C1F5A7 /* Sources */,
+				CC1DC52A11C7155A00C1F5A7 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = fontpacker;
+			productName = fontpacker;
+			productReference = CC1DC52C11C7155A00C1F5A7 /* fontpacker */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2A37F4A9FDCFA73011CA2CEA /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = C05733CB08A9546B00998B17 /* Build configuration list for PBXProject "fvterm" */;
+			compatibilityVersion = "Xcode 3.1";
+			hasScannedForEncodings = 1;
+			mainGroup = 2A37F4AAFDCFA73011CA2CEA /* fvterm */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8D15AC270486D014006FF6A4 /* fvterm */,
+				CC1DC52B11C7155A00C1F5A7 /* fontpacker */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8D15AC2B0486D014006FF6A4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC1DC53911C7157A00C1F5A7 /* InfoPlist.strings in Resources */,
+				CC1DC53A11C7157B00C1F5A7 /* Credits.rtf in Resources */,
+				CC1DC53B11C7157C00C1F5A7 /* MainMenu.xib in Resources */,
+				CC1DC53C11C7157C00C1F5A7 /* TerminalWindow.xib in Resources */,
+				CC484DAA11D9894C00B32886 /* fixed13.vtf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8D15AC300486D014006FF6A4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0E0443D60F11F7B000AE8DFC /* main.m in Sources */,
+				CC1DC53411C7157400C1F5A7 /* TerminalFont.m in Sources */,
+				CC1DC53511C7157700C1F5A7 /* TerminalPTY.m in Sources */,
+				CC1DC53611C7157800C1F5A7 /* TerminalView.m in Sources */,
+				CC1DC53711C7157800C1F5A7 /* TerminalWindow.m in Sources */,
+				CC1DC53811C7157900C1F5A7 /* TerminalWindow_Emulation.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC1DC52911C7155A00C1F5A7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC1DC53E11C7158400C1F5A7 /* TerminalFont.m in Sources */,
+				CC1DC55011C92D5200C1F5A7 /* fontpacker.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		0E0443CC0F11F7B000AE8DFC /* Credits.rtf */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0E0443CD0F11F7B000AE8DFC /* English */,
+			);
+			name = Credits.rtf;
+			path = English.lproj;
+			sourceTree = "<group>";
+		};
+		0E0443CE0F11F7B000AE8DFC /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0E0443CF0F11F7B000AE8DFC /* English */,
+			);
+			name = InfoPlist.strings;
+			path = English.lproj;
+			sourceTree = "<group>";
+		};
+		0E0443D00F11F7B000AE8DFC /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0E0443D10F11F7B000AE8DFC /* English */,
+			);
+			name = MainMenu.xib;
+			path = English.lproj;
+			sourceTree = "<group>";
+		};
+		0E0443D20F11F7B000AE8DFC /* TerminalWindow.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0E0443D30F11F7B000AE8DFC /* English */,
+			);
+			name = TerminalWindow.xib;
+			path = English.lproj;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		C05733C808A9546B00998B17 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = fvterm_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				PRODUCT_NAME = fvterm;
+			};
+			name = Debug;
+		};
+		C05733C908A9546B00998B17 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = fvterm_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				PRODUCT_NAME = fvterm;
+			};
+			name = Release;
+		};
+		C05733CC08A9546B00998B17 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.5;
+			};
+			name = Debug;
+		};
+		C05733CD08A9546B00998B17 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.5;
+			};
+			name = Release;
+		};
+		CC1DC52E11C7155B00C1F5A7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INSTALL_PATH = /usr/local/bin;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = fontpacker;
+			};
+			name = Debug;
+		};
+		CC1DC52F11C7155B00C1F5A7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INSTALL_PATH = /usr/local/bin;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = fontpacker;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C05733C708A9546B00998B17 /* Build configuration list for PBXNativeTarget "fvterm" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C05733C808A9546B00998B17 /* Debug */,
+				C05733C908A9546B00998B17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C05733CB08A9546B00998B17 /* Build configuration list for PBXProject "fvterm" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C05733CC08A9546B00998B17 /* Debug */,
+				C05733CD08A9546B00998B17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CC1DC54211C7159800C1F5A7 /* Build configuration list for PBXNativeTarget "fontpacker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC1DC52E11C7155B00C1F5A7 /* Debug */,
+				CC1DC52F11C7155B00C1F5A7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 2A37F4A9FDCFA73011CA2CEA /* Project object */;
+}
