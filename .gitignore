@@ -1,1 +1,5 @@
-.DS_Status
+.DS_Store
+build/
+fvterm.xcodeproj/*.mode1v3
+fvterm.xcodeproj/*.pbxuser
+tasks
