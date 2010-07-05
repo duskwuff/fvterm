@@ -1,5 +1,3 @@
-TARGETS = fontpacker fvterm
-
 FILES = \
 	TerminalFont \
 	TerminalPTY \
