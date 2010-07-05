@@ -1,3 +1,5 @@
+#import "Prefix.h"
+
 #import "TerminalFont.h"
 
 @implementation TerminalFont

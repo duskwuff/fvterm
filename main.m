@@ -1,4 +1,4 @@
-#import <Cocoa/Cocoa.h>
+#import "Prefix.h"
 
 int main(int argc, const char *argv[]) {
     return NSApplicationMain(argc, argv);

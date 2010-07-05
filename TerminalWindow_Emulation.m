@@ -1,3 +1,5 @@
+#import "Prefix.h"
+
 #import "TerminalWindow.h"
 #import "TerminalPTY.h"
 #import "TerminalWindow_Emulation.h"

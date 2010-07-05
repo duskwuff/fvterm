@@ -1,5 +1,6 @@
-#import <stdio.h>
+#import "Prefix.h"
 
+#import <stdio.h>
 #import "TerminalFont.h"
 
 int main(int argc, char **argv)
