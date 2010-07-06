@@ -31,13 +31,6 @@ struct EmulationState {
         ST_CSI_INT,
         ST_CSI_PARM,
         ST_CSI_IGNORE,
-        ST_OSC,
-        ST_SOS,
-        ST_DCS,
-        ST_DCS_INT,
-        ST_DCS_PARM,
-        ST_DCS_IGNORE,
-        ST_DCS_PASS,
     } state;
     uint32_t cursorAttr;
 
@@ -372,9 +365,11 @@ static enum emuState do_esc(STDARGS, uint8_t ch, enum emuState subState) {
                     act_clear(STDCALL);
                     return ST_CSI;
 
+                /*
                 case ']': // OSC
                     act_clear(STDCALL);
                     return ST_OSC;
+                */
 
                 default:
                     NSLog(@"Unhandled ESC %c", ch);
@@ -385,7 +380,8 @@ static enum emuState do_esc(STDARGS, uint8_t ch, enum emuState subState) {
             switch(ch) {
                 case '8': // DECALN
                     for(int i = 0; i < self->size.ws_row; i++)
-                        row_fill(self->rows[i], 0, self->size.ws_col, ATTR_PACK('E', S->cursorAttr));
+                        row_fill(self->rows[i], 0, self->size.ws_col,
+                                 ATTR_PACK('E', S->cursorAttr));
                     break;
                 default:
                     NSLog(@"Unhandled ESC # %c", ch);
@@ -465,7 +461,8 @@ static void csi_dispatch(STDARGS, uint8_t final) {
                     break;
             }
             for(int i = from; i <= to; i++)
-                row_fill(self->rows[i], 0, self->size.ws_col, ATTR_PACK(' ', S->cursorAttr));
+                row_fill(self->rows[i], 0, self->size.ws_col,
+                         ATTR_PACK(' ', S->cursorAttr));
             // FALL THROUGH (intentionally... ED erases partial lines too)
 
         case 'K': // EL
@@ -482,7 +479,8 @@ static void csi_dispatch(STDARGS, uint8_t final) {
                 case 2:
                     break;
             }
-            row_fill(self->rows[self->cRow], from, to - from, ATTR_PACK(' ', S->cursorAttr));
+            row_fill(self->rows[self->cRow], from, to - from,
+                     ATTR_PACK(' ', S->cursorAttr));
             break;
 
         //case 'L': // IL  
@@ -544,12 +542,14 @@ static void csi_dispatch(STDARGS, uint8_t final) {
 
                             case 8: // DECARM (Auto-Repeat)
                             case 9: // DECINLM (Interlace)
-                                break; // These features aren't applicable
+                                // These features aren't applicable to fvterm
+                                break;
 
                             //case 40: // XTerm 132-column mode
 
                             case 41: // XTerm curses hack
-                                break; // hopefully this has been lost and forgotten by now
+                                // hopefully this has been lost and forgotten
+                                break; 
 
                             default:
                                 NSLog(@"Unknown DEC mode %d", S->params[i]);
@@ -723,22 +723,6 @@ static enum emuState do_csi(STDARGS, uint8_t ch, enum emuState subState) {
                 state = ST_ESC;
                 act_clear(STDCALL);
                 continue;
-
-/* THESE ARE INCOMPATIBLE WITH UTF-8 OUTPUT
-            case 0x9B:
-                state = ST_CSI;
-                act_clear(STDCALL);
-                break;
-
-            case 0x9C:
-                state = ST_GROUND;
-                continue;
-
-            case 0x9D:
-                state = ST_OSC;
-                act_clear(STDCALL);
-                break;
-*/
         }
 
         // State-based actions
@@ -765,11 +749,6 @@ static enum emuState do_csi(STDARGS, uint8_t ch, enum emuState subState) {
                     do_controlChar(STDCALL, ch);
                 else
                     state = do_csi(STDCALL, ch, state);
-                break;
-
-            case ST_OSC:
-#warning FIXME
-                // ...
                 break;
 
             default:

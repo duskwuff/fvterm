@@ -40,7 +40,7 @@ build/fvterm.bin: $(FILES:%=build/%.o)
 build/%.gch: %.h
 	$(CC) -c $(CFLAGS) -x objective-c-header $< -o $@
 
-build/%.o: %.m build/Prefix.gch
+build/%.o: %.[cm] build/Prefix.gch
 	$(CC) -MMD -MP -c $(CFLAGS) $< -o $@
 
 build/%.nib: %.xib
