@@ -17,13 +17,13 @@
 
     parent = tw;
     alive = YES;
-    
+
     // Need to get this BEFORE we fork, as CF isn't guaranteed to work afterwards
     const char *homedir = [NSHomeDirectory() fileSystemRepresentation];
 
     int term_fd;
     pid = forkpty(&term_fd, NULL, NULL, &ws);
-    
+
     if(pid < 0) {
         NSLog(@"forkpty failed");
         [self release];
@@ -31,13 +31,13 @@
     } else if(pid == 0) {
         setsid();
         chdir(homedir);
-        
+
         setenv("TERM", "vt100+", 1); // XXX: need to make this flexible
-        
+
         struct passwd *pwd = getpwuid(getuid());
         char *shell = (pwd && pwd->pw_shell) ? pwd->pw_shell : "/bin/sh";
         endpwent();
-        
+
         execl(shell, "-", NULL);
         printf("failed to exec shell %s: %s\n", shell, strerror(errno));
         exit(255);

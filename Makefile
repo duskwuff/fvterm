@@ -3,7 +3,7 @@ FILES = \
 	TerminalPTY \
 	TerminalView \
 	TerminalWindow \
-	TerminalWindow_Emulation \
+	TerminalEmulator \
 	main
 
 NIBS = MainMenu TerminalWindow
@@ -16,7 +16,7 @@ APPDIR = build/fvterm.app/Contents
 
 CC = /usr/bin/gcc-4.2
 
-CFLAGS = -std=gnu99 -Wall \
+CFLAGS = -std=gnu99 -Wall -Werror \
 	 -Ibuild -Winvalid-pch \
 	 -O2 -ggdb
 
