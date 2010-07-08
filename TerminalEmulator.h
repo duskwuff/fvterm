@@ -5,6 +5,8 @@
 #define TERMROW_DIRTY   0x0001
 #define TERMROW_WRAPPED 0x0002
 
+#define MAX_PARAMS 16
+
 struct termRow {
     void *bitmaps[BITMAP_PTRS];
     int flags;
@@ -34,7 +36,7 @@ struct emulatorState {
     int wrapnext, tScroll, bScroll;
     uint64_t flags;
 
-    int params[16], paramPtr, paramVal, priv, intermed;
+    int params[MAX_PARAMS], paramPtr, paramVal, priv, intermed;
 };
 
 #define MODE_WRAPAROUND     0x0001

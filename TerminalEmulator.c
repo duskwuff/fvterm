@@ -131,7 +131,7 @@ void term_index(struct emulatorState *S, int count)
 
 
 void output_char(struct emulatorState *S, uint32_t uch) {
-    if(S->wrapnext) {
+    if(unlikely(S->wrapnext)) {
         if(S->flags & MODE_WRAPAROUND) {
             S->rows[S->cRow]->flags |= TERMROW_WRAPPED;
             term_index(S, 1);
@@ -143,7 +143,7 @@ void output_char(struct emulatorState *S, uint32_t uch) {
     S->rows[S->cRow]->chars[S->cCol++] = ATTR_PACK(uch, S->cursorAttr);
     S->rows[S->cRow]->flags |= TERMROW_DIRTY;
 
-    if(S->cCol == S->wCols) {
+    if(unlikely(S->cCol == S->wCols)) {
         S->cCol = S->wCols - 1;
         S->wrapnext = 1;
     }
@@ -160,36 +160,135 @@ void act_clear(struct emulatorState *S)
 }
 
 
+void dispatch_esc(struct emulatorState *S, uint8_t ch)
+{
+    switch(ch) {
+        case '[':
+            S->state = ST_CSI;
+            break;
+
+        default:
+            printf("unknown ESC %02x\n", ch);
+            break;
+    }
+}
+
+
+void dispatch_csi(struct emulatorState *S, uint8_t ch)
+{
+    printf("ESC CSI ... %02x\n", ch);
+}
+
+
 int TerminalEmulator_run(struct emulatorState *S, const uint8_t *bytes, size_t len)
 {
     for(int i = 0; i < len; i++) {
         uint8_t ch = bytes[i];
 
-        switch(ch) {
-            case 0x00:
-                continue;
+        if(ch < 0x20) {
+            switch(ch) {
+                case 0x07: // BEL
+                    // FIXME
+                    break;
 
-            case 0x0A: // NL
-            case 0x0B: // VT
-            case 0x0C: // NP
-                term_index(S, 1);
-                if(S->flags & MODE_NEWLINE)
+                case 0x08: // BS
+                    // FIXME
+                    break;
+
+                case 0x09: // HT
+                    // FIXME
+                    break;
+
+                case 0x0A: // NL
+                case 0x0B: // VT
+                case 0x0C: // NP
+                    term_index(S, 1);
+                    if(S->flags & MODE_NEWLINE)
+                        S->cCol = 0;
+                    S->wrapnext = 0;
+                    break;
+
+                case 0x0D: // CR
                     S->cCol = 0;
-                S->wrapnext = 0;
-                continue;
+                    S->wrapnext = 0;
+                    break;
 
-            case 0x0D: // CR
-                S->cCol = 0;
-                S->wrapnext = 0;
-                continue;
-
-            case 0x1B: // ESC
-                S->state = ST_ESC;
-                act_clear(S);
-                continue;
+                case 0x1B: // ESC
+                    S->state = ST_ESC;
+                    act_clear(S);
+                    break;
+            }
+            continue;
         }
 
-        output_char(S, ch);
+        switch(S->state) {
+            case ST_GROUND:
+                output_char(S, ch);
+                break;
+
+            case ST_ESC:
+                if(ch < 0x30) {
+                    if(S->intermed >= 0xffff)
+                        S->intermed = 0xffff;
+                    else
+                        S->intermed = (S->intermed << 8) | ch;
+                    break;
+                } else {
+                    S->state = ST_GROUND;
+                    dispatch_esc(S, ch);
+                }
+                break;
+
+            case ST_CSI:
+            case ST_CSI_INT:
+            case ST_CSI_PARM:
+                if(ch < 0x30) { // intermediate char
+                    if(S->intermed >= 0xffff)
+                        S->intermed = 0xffff;
+                    else
+                        S->intermed = (S->intermed << 8) | ch;
+                } else if(ch < 0x3A) { // digit
+                    if(S->state == ST_CSI_INT) { // invalid!
+                        S->state = ST_CSI_IGNORE;
+                        break;
+                    }
+                    CAP_MIN(S->paramVal, 0);
+                    S->paramVal = 10 * S->paramVal + (ch - 0x30);
+                    CAP_MAX(S->paramVal, 16383);
+                    S->state = ST_CSI_PARM;
+                } else if(ch == 0x3A) { // colon (invalid)
+                    S->state = ST_CSI_IGNORE;
+                    break;
+                } else if(ch == 0x3B) { // semicolon
+                    if(S->state == ST_CSI_INT) {
+                        S->state = ST_CSI_IGNORE;
+                        break;
+                    }
+                    if(S->paramPtr < MAX_PARAMS)
+                        S->params[S->paramPtr++] = S->paramVal;
+                    S->paramVal = 0;
+                    S->state = ST_CSI_PARM;
+                } else if(ch < 0x40) { // private
+                    if(S->state != ST_CSI) {
+                        S->state = ST_CSI_IGNORE;
+                        break;
+                    }
+                    S->priv = ch;
+                    S->state = ST_CSI_PARM;
+                } else {
+                    dispatch_csi(S, ch);
+                    S->state = ST_GROUND;
+                }
+                break;
+
+            case ST_CSI_IGNORE:
+                if(ch >= 0x40)
+                    S->state = ST_GROUND;
+                break;
+
+            default:
+                abort(); // WTF
+        }
     }
 
     return len;
