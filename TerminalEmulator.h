@@ -17,7 +17,8 @@ struct emulatorState {
     int cRow, cCol, saveRow, saveCol;
     uint32_t palette[256 + 2];
     int wRows, wCols;
-    struct termRow **rows, *rowBase;
+    struct termRow **rows;
+    void *rowBase;
 
     enum emuState {
         ST_GROUND,
@@ -52,7 +53,7 @@ struct emulatorState {
 
 void TerminalEmulator_init(struct emulatorState *S, int rows, int cols);
 void TerminalEmulator_free(struct emulatorState *S);
-void TerminalEmulator_run(struct emulatorState *S, const uint8_t *bytes, size_t len);
+int TerminalEmulator_run(struct emulatorState *S, const uint8_t *bytes, size_t len);
 void TerminalEmulator_handleResize(struct emulatorState *S, int rows, int cols);
 
 void TerminalEmulator_setTitle(struct emulatorState *S, const char *title);

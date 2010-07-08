@@ -11,7 +11,7 @@
 
 @implementation TerminalPTY
 
-- (id)initWithParent:(TerminalWindow *)tw winsize:(struct winsize)ws
+- (id)initWithParent:(TerminalWindow *)tw rows:(int)rows cols:(int)cols
 {
     if(!(self = [super init])) return nil;
 
@@ -22,6 +22,12 @@
     const char *homedir = [NSHomeDirectory() fileSystemRepresentation];
 
     int term_fd;
+    struct winsize ws = {
+        .ws_row = rows,
+        .ws_col = cols,
+        .ws_xpixel = 0,
+        .ws_ypixel = 0,
+    };
     pid = forkpty(&term_fd, NULL, NULL, &ws);
 
     if(pid < 0) {
@@ -65,10 +71,17 @@
     [super dealloc];
 }
 
-- (void)setSize:(struct winsize)ws
+- (void)setRows:(int)rows cols:(int)cols
 {
-    if(alive)
+    if(alive) {
+        struct winsize ws = {
+            .ws_row = rows,
+            .ws_col = cols,
+            .ws_xpixel = 0,
+            .ws_ypixel = 0,
+        };
         ioctl([term fileDescriptor], TIOCSWINSZ, &ws);
+    }
 }
 
 - (void)writeData:(NSData *)dat

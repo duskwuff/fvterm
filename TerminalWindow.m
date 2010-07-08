@@ -28,17 +28,11 @@
 {
     [super windowControllerDidLoadNib:controller];
 
-    struct winsize ws = {
-        .ws_row = 24,
-        .ws_col = 80,
-        .ws_xpixel = 0,
-        .ws_ypixel = 0,
-    };
-
     title = @"Terminal";
 
-    TerminalEmulator_init(&emuState, ws.ws_row, ws.ws_col);
-    pty = [[TerminalPTY alloc] initWithParent:self winsize:ws];
+    int rows = 24, cols = 80; // XXX
+    TerminalEmulator_init(&emuState, rows, cols);
+    pty = [[TerminalPTY alloc] initWithParent:self rows:rows cols:cols];
 
     [view resizeForTerminal];
 }
@@ -131,9 +125,16 @@
 }
 
 
+- (void)viewDidResize:(NSView *)src rows:(int)rows cols:(int)cols;
+{
+    TerminalEmulator_handleResize(&emuState, rows, cols);
+}
+
+
 - (void)ptyInput:(TerminalPTY *)pty data:(NSData *)data
 {
-    TerminalEmulator_run(&emuState, [data bytes], [data length]);
+    int n = TerminalEmulator_run(&emuState, [data bytes], [data length]);
+    [view triggerRedrawWithDataLength:n];
 }
 
 
@@ -142,6 +143,5 @@
     // Poke the controller to make the new title show up
     [[self windowControllers] makeObjectsPerformSelector:@selector(synchronizeWindowTitleWithDocumentName)];
 }
-
 
 @end

@@ -245,11 +245,11 @@ void render(TerminalView *view, struct termRow *row)
     (void) note;
 
     NSRect frame = [self frame];
-    struct winsize newsize;
-    newsize.ws_col = (frame.size.width  - 2 * HSPACE) / font->width;
-    newsize.ws_row = (frame.size.height - 2 * VSPACE) / font->height;
-    newsize.ws_xpixel = newsize.ws_ypixel = 0;
-
+    int newRows = (frame.size.height - 2 * VSPACE) / font->height;
+    int newCols = (frame.size.width  - 2 * HSPACE) / font->width;
+    if(newRows != parent->emuState.wRows || newCols != parent->emuState.wCols) {
+        [parent viewDidResize:self rows:newRows cols:newCols];
+    }
     //if(newsize.ws_col != parent->emuState.wCols || newsize.ws_row != parent->emuState.wRows)
     //    [parent setWinSize:newsize];
 }

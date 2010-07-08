@@ -15,6 +15,7 @@
 
 - (void)eventKeyInput:(TerminalView *)view event:(NSEvent *)evt;
 - (void)eventMouseInput:(TerminalView *)view event:(NSEvent *)evt;
+- (void)viewDidResize:(NSView *)src rows:(int)rows cols:(int)cols;
 
 - (void)ptyInput:(TerminalPTY *)pty data:(NSData *)data;
 - (void)ptyClosed:(TerminalPTY *)pty;

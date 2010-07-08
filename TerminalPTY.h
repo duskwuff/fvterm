@@ -7,8 +7,8 @@
     pid_t pid;
 }
 
-- (id)initWithParent:(TerminalWindow *)tw winsize:(struct winsize)ws;
-- (void)setSize:(struct winsize)ws;
+- (id)initWithParent:(TerminalWindow *)tw rows:(int)rows cols:(int)cols;
+- (void)setRows:(int)rows cols:(int)cols;
 - (void)writeData:(NSData *)dat;
 - (BOOL)alive;
 
