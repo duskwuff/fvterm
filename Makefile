@@ -16,7 +16,7 @@ APPDIR = build/fvterm.app/Contents
 
 CC = /usr/bin/gcc-4.2
 
-CFLAGS = -std=gnu99 -Wall -Werror \
+CFLAGS = -std=gnu99 -Wall -Werror -Wno-multichar \
 	 -Ibuild -Winvalid-pch \
 	 -O0 -ggdb
 

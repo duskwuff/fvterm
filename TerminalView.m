@@ -3,7 +3,6 @@
 #import "TerminalView.h"
 #import "TerminalPTY.h"
 #import "TerminalWindow.h"
-#import "TerminalWindow_Emulation.h"
 #import "TerminalFont.h"
 
 #define HSPACE 2

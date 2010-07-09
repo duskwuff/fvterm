@@ -39,6 +39,25 @@ struct emulatorState {
     int params[MAX_PARAMS], paramPtr, paramVal, priv, intermed;
 };
 
+#define ATTR_FG_MASK    0x000000FFUL
+#define ATTR_BG_MASK    0x0000FF00UL
+#define ATTR_FG_SHIFT   0
+#define ATTR_BG_SHIFT   8
+#define ATTR_MD_MASK    0xFFFF0000UL
+
+#define ATTR_DEFAULT    0x00000007UL
+
+//#define ATTR_BOLD       0x00010008UL
+#define ATTR_BOLD       0x00010000UL
+#define ATTR_UNDERLINE  0x00020000UL
+#define ATTR_BLINK      0x00040000UL
+#define ATTR_REVERSE    0x00080000UL
+#define ATTR_CUSTFG     0x00100000UL
+#define ATTR_CUSTBG     0x00200000UL
+
+#define PAL_DEFAULT_FG 256
+#define PAL_DEFAULT_BG 257
+
 #define MODE_WRAPAROUND     0x0001
 #define MODE_REVWRAP        0x0002
 #define MODE_ORIGIN         0x0004

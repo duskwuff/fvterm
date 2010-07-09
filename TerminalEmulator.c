@@ -5,6 +5,8 @@
 #include "TerminalEmulator.h"
 #include "DefaultColors.h"
 
+//////////////////////////////////////////////////////////////////////////////
+
 #ifndef unlikely
 # define unlikely(x) __builtin_expect((x),0)
 #endif
@@ -20,6 +22,10 @@
 
 #define ATTR_PACK(ch, attr) (((uint64_t) (attr) << 32) | ((uint32_t) ch))
 #define APPLY_FLAG(mask) if(val) S->flags |= (mask); else S->flags &= ~(mask);
+
+
+//////////////////////////////////////////////////////////////////////////////
+
 
 void TerminalEmulator_init(struct emulatorState *S, int rows, int cols)
 {
@@ -40,6 +46,7 @@ void TerminalEmulator_init(struct emulatorState *S, int rows, int cols)
     S->bScroll = rows - 1;
 
     S->flags = MODE_WRAPAROUND;
+    S->cursorAttr = ATTR_DEFAULT;
 }
 
 
@@ -58,14 +65,15 @@ void TerminalEmulator_free(struct emulatorState *S)
 //////////////////////////////////////////////////////////////////////////////
 
 
-void row_fill(struct termRow *row, int start, int count, uint64_t value)
+static void row_fill(struct termRow *row, int start, int count, uint64_t value)
 {
     // memset_pattern8 is highly optimized on x86 :)
     memset_pattern8(&row->chars[start], &value, count * 8);
     row->flags = TERMROW_DIRTY;
 }
 
-void scroll_down(struct emulatorState *S, int top, int btm, int count)
+
+static void scroll_down(struct emulatorState *S, int top, int btm, int count)
 {
     assert(count > 0);
     int clearStart;
@@ -90,7 +98,7 @@ void scroll_down(struct emulatorState *S, int top, int btm, int count)
 }
 
 
-void scroll_up(struct emulatorState *S, int top, int btm, int count)
+static void scroll_up(struct emulatorState *S, int top, int btm, int count)
 {
     // FIXME: this is unoptimized.
     assert(count > 0);
@@ -104,7 +112,8 @@ void scroll_up(struct emulatorState *S, int top, int btm, int count)
     }
 }
 
-void term_index(struct emulatorState *S, int count)
+
+static void term_index(struct emulatorState *S, int count)
 {
     if(unlikely(count == 0)) return;
 
@@ -130,7 +139,16 @@ void term_index(struct emulatorState *S, int count)
 }
 
 
-void output_char(struct emulatorState *S, uint32_t uch) {
+static void term_cursorHorz(struct emulatorState *S, int count)
+{
+    // XXX: reverse wraparound?
+    S->cCol += count;
+    CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
+    S->wrapnext = 0;
+}
+
+
+static void output_char(struct emulatorState *S, uint32_t uch) {
     if(unlikely(S->wrapnext)) {
         if(S->flags & MODE_WRAPAROUND) {
             S->rows[S->cRow]->flags |= TERMROW_WRAPPED;
@@ -151,6 +169,7 @@ void output_char(struct emulatorState *S, uint32_t uch) {
 
 
 //////////////////////////////////////////////////////////////////////////////
+
 
 void act_clear(struct emulatorState *S)
 {
@@ -174,9 +193,74 @@ void dispatch_esc(struct emulatorState *S, uint8_t ch)
 }
 
 
-void dispatch_csi(struct emulatorState *S, uint8_t ch)
+void dispatch_csi(struct emulatorState *S, uint8_t lastch)
 {
-    printf("ESC CSI ... %02x\n", ch);
+    uint32_t ch = (S->intermed << 8) | lastch;
+    switch(ch) {
+        case 'm':
+            for(int i = 0; i < S->paramPtr; i++) {
+                switch(S->params[i]) {
+                    case 0:
+                        S->cursorAttr = ATTR_DEFAULT;
+                        break;
+                    case 1:
+                        S->cursorAttr |= ATTR_BOLD;
+                        break;
+                    case 4:
+                        S->cursorAttr |= ATTR_UNDERLINE;
+                        break;
+                    case 5:
+                        S->cursorAttr |= ATTR_BLINK;
+                        break;
+                    case 7:
+                        S->cursorAttr |= ATTR_REVERSE;
+                        break;
+
+                    //case 8: invisible?
+
+                    case 22:
+                        S->cursorAttr &= ~ATTR_BOLD;
+                        break;
+                    case 24:
+                        S->cursorAttr &= ~ATTR_UNDERLINE;
+                        break;
+                    case 25:
+                        S->cursorAttr &= ~ATTR_BLINK;
+                        break;
+                    case 27:
+                        S->cursorAttr &= ~ATTR_REVERSE;
+                        break;
+
+                    //case 28: invisible?
+
+                    case 30 ... 37:
+                        S->cursorAttr &= ~ATTR_FG_MASK;
+                        S->cursorAttr |= ATTR_CUSTFG |
+                            (S->params[i] - 30) << ATTR_FG_SHIFT;
+                        break;
+
+                    //case 38: extended FG
+                    //case 39: default FG
+
+                    case 40 ... 47:
+                        S->cursorAttr &= ~ATTR_BG_MASK;
+                        S->cursorAttr |= ATTR_CUSTBG |
+                            (S->params[i] - 40) << ATTR_BG_SHIFT;
+                        break;
+
+                    // case 48: extended BG
+                    // case 49: default BG
+
+                    default:
+                        printf("unhandled SGR %d\n", S->params[i]);
+                }
+            }
+            break;
+
+        default:
+            printf("unhandled ESC CSI ... %02x\n", ch);
+            break;
+    }
 }
 
 
@@ -192,7 +276,7 @@ int TerminalEmulator_run(struct emulatorState *S, const uint8_t *bytes, size_t l
                     break;
 
                 case 0x08: // BS
-                    // FIXME
+                    term_cursorHorz(S, -1);
                     break;
 
                 case 0x09: // HT
@@ -276,6 +360,9 @@ int TerminalEmulator_run(struct emulatorState *S, const uint8_t *bytes, size_t l
                     S->priv = ch;
                     S->state = ST_CSI_PARM;
                 } else {
+                    // flush last param
+                    if(S->paramPtr < MAX_PARAMS)
+                        S->params[S->paramPtr++] = S->paramVal;
                     dispatch_csi(S, ch);
                     S->state = ST_GROUND;
                 }

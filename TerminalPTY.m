@@ -2,7 +2,6 @@
 
 #import "TerminalPTY.h"
 #import "TerminalWindow.h"
-#import "TerminalWindow_Emulation.h"
 
 #import <util.h>
 #import <unistd.h>
