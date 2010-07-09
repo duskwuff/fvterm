@@ -196,7 +196,66 @@ void dispatch_esc(struct emulatorState *S, uint8_t ch)
 void dispatch_csi(struct emulatorState *S, uint8_t lastch)
 {
     uint32_t ch = (S->intermed << 8) | lastch;
+    int from, to; // common var names
     switch(ch) {
+        case 'C': // CUF
+            term_cursorHorz(S, DEFAULT(S->params[0], 1));
+            break;
+
+        case 'D': // CUB
+            term_cursorHorz(S, -DEFAULT(S->params[0], 1));
+            break;
+
+        case 'H': // CUP
+        case 'f': // HVP
+            S->cRow = DEFAULT(S->params[0], 1) - 1;
+            S->cCol = DEFAULT(S->params[1], 1) - 1;
+            if(S->flags & MODE_ORIGIN) {
+                S->cRow += S->tScroll;
+                CAP_MAX(S->cRow, S->bScroll);
+            } else
+                CAP_MIN_MAX(S->cRow, 0, S->wRows - 1);
+            CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
+            S->wrapnext = 0;
+            break;
+
+        case 'J': // ED
+            from = 0;
+            to = S->wRows - 1;
+            switch(S->params[0]) {
+                default:
+                case 0:
+                    from = S->cRow + 1;
+                    break;
+                case 1:
+                    to = S->cRow - 1;
+                    break;
+                case 2:
+                    break;
+            }
+            for(int i = from; i <= to; i++)
+                row_fill(S->rows[i], 0, S->wCols,
+                         ATTR_PACK(' ', S->cursorAttr));
+            // FALL THROUGH (intentionally... ED erases partial lines too)
+
+        case 'K': // EL
+            from = 0;
+            to = S->wCols - 1;
+            switch(S->params[0]) {
+                default:
+                case 0:
+                    from = S->cCol;
+                    break;
+                case 1:
+                    to = S->cCol;
+                    break;
+                case 2:
+                    break;
+            }
+            row_fill(S->rows[S->cRow], from, to - from,
+                     ATTR_PACK(' ', S->cursorAttr));
+            break;
+
         case 'm':
             for(int i = 0; i < S->paramPtr; i++) {
                 switch(S->params[i]) {
