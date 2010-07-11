@@ -186,6 +186,30 @@ static void output_char(struct emulatorState *S, uint32_t uch)
 }
 
 
+#ifdef DEBUG
+static const char * safeHex(uint32_t ch)
+{
+    // Remember, kids, always practice safe hex.
+    static char buf[64];
+    if(ch < 0x20) {
+        snprintf(buf, sizeof(buf), "^%c", ch + 0x40);
+    } else if(ch > 0x20 && ch < 0x7f) {
+        snprintf(buf, sizeof(buf), "%c", ch);
+    } else if(ch <= 0xff) {
+        snprintf(buf, sizeof(buf), "%02x", ch);
+    } else if(ch <= 0xffff) {
+        int lo = ch & 0xff, hi = (ch >> 8) & 0xff;
+        if(lo > 0x20 && lo < 0x7f && hi > 0x20 && hi < 0x7f) {
+            snprintf(buf, sizeof(buf), "%c%c", hi, lo);
+        } else {
+            snprintf(buf, sizeof(buf), "%04x", ch);
+        }
+    }
+    return buf;
+}
+#endif
+
+
 //////////////////////////////////////////////////////////////////////////////
 
 
@@ -248,8 +272,20 @@ static void do_csi_sgr(struct emulatorState *S)
                 S->cursorAttr &= ~(ATTR_BG_MASK | ATTR_CUSTBG);
                 break;
 
+            case 90 ... 97:
+                S->cursorAttr &= ~ATTR_FG_MASK;
+                S->cursorAttr |= ATTR_CUSTFG | (8 + S->params[i] - 90);
+                break;
+
+            case 100 ... 107:
+                S->cursorAttr &= ~ATTR_BG_MASK;
+                S->cursorAttr |= ATTR_CUSTBG | (8 + S->params[i] - 100) << 8;
+                break;
+
+#ifdef DEBUG
             default:
                 printf("unhandled SGR %d\n", S->params[i]);
+#endif
         }
     }
 }
@@ -311,9 +347,11 @@ void dispatch_esc(struct emulatorState *S, uint8_t lastch)
                          ATTR_PACK('E', S->cursorAttr));
             break;
 
+#ifdef DEBUG
         default:
-            printf("unknown ESC %02x\n", ch);
+            printf("unknown ESC %s\n", safeHex(ch));
             break;
+#endif
     }
 }
 
@@ -430,9 +468,15 @@ void dispatch_csi(struct emulatorState *S, uint8_t lastch)
             }
             break;
 
+#ifdef DEBUG
         default:
-            printf("unhandled ESC CSI ... %02x\n", ch);
-            break;
+            printf("unhandled CSI");
+            if(S->paramPtr > 0)
+                printf(" %d", S->params[0]);
+            for(int i = 1; i < S->paramPtr; i++)
+                printf("; %d", S->params[i]);
+            printf(" %s\n", safeHex(ch));
+#endif
     }
 }
 
@@ -474,6 +518,11 @@ int TerminalEmulator_run(struct emulatorState *S, const uint8_t *bytes, size_t l
                     S->state = ST_ESC;
                     act_clear(S);
                     break;
+
+#ifdef DEBUG
+                default:
+                    printf("Unknown control char %s", safeHex(ch));
+#endif
             }
             continue;
         }

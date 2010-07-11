@@ -18,7 +18,7 @@ CC = /usr/bin/gcc-4.2
 
 CFLAGS = -std=gnu99 -Wall -Werror -Wno-multichar \
 	 -Ibuild -Winvalid-pch \
-	 -O0 -ggdb
+	 -O0 -ggdb -DDEBUG
 
 LDFLAGS = -framework Cocoa
 
@@ -62,4 +62,6 @@ debug: default
 	@gdb -x .gdbscript $(APPDIR)/MacOS/fvterm
 
 clean:
-	rm -rf build/*.{o,d,vtf,nib} build/fvterm.app
+	rm -rf \
+	    build/*.{o,d,vtf,nib} \
+	    build/{fvterm.app,fvterm.bin,fontpacker}
