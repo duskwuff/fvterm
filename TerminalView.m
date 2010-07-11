@@ -16,8 +16,9 @@ static CGColorSpaceRef cspace = nil;
 {
     running = NO;
 
-    font = [[TerminalFont alloc] initWithFile:[[NSBundle mainBundle] pathForResource:@"fixed13"
-                                                                              ofType:@"vtf"]];
+    font = [[TerminalFont alloc] initWithFile:
+       [[NSBundle mainBundle] pathForResource:@"fixed13"
+                                       ofType:@"vtf"]];
 
     if(cspace == nil)
         cspace = CGColorSpaceCreateDeviceRGB();
@@ -40,7 +41,9 @@ static CGColorSpaceRef cspace = nil;
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    [[NSRunLoop mainRunLoop] cancelPerformSelector:@selector(_delayedRedraw:) target:self argument:nil];
+    [[NSRunLoop mainRunLoop] cancelPerformSelector:@selector(_delayedRedraw:)
+                                            target:self
+                                          argument:nil];
     [super dealloc];
 }
 
@@ -85,7 +88,28 @@ static CGColorSpaceRef cspace = nil;
 
 #pragma mark Rendering
 
-void render(TerminalView *view, struct termRow *row)
+static const uint8_t * getPage(TerminalFont *font, int page, unichar *glyph) {
+    if(font->unpackedPages[page] || [font unpackPage:page])
+        return font->unpackedPages[page];
+
+    // page 0 fallback!
+    if(glyph) *glyph = 1;
+    if(font->unpackedPages[0] || [font unpackPage:page])
+        return font->unpackedPages[page];
+
+    NSLog(@"Failed to load page 0 fallback. Argh!");
+    abort();
+}
+
+#define OFFSET_FONT(ptr, lrow, glyph) do { \
+    int fontRow = (charGlyph >> 5) & 7; \
+    int fontCol = charGlyph & 31; \
+    ptr += font->width * ( \
+            fontCol + FVFONT_CHARS_WIDE * ( \
+                (fontRow + 1) * font->height - (lrow + 1))); \
+} while(0)
+
+static void render(TerminalView *view, struct termRow *row)
 {
     TerminalFont *font = view->font;
     uint32_t *plt = view->parent->emuState.palette;
@@ -100,20 +124,18 @@ void render(TerminalView *view, struct termRow *row)
 
     uint32_t *bmap = row->bitmaps[0];
 
-    for(int lrow = 0; lrow < charHeight; lrow++)
+    for(int lrow = 0; lrow < charHeight; lrow++) {
         for(int col = 0; col < cols; col++) {
             uint64_t ch = row->chars[col];
             unichar charGlyph = ch & 65535;
             int fontPage = charGlyph >> 8;
-            int fontRow = (charGlyph >> 5) & 7;
-            int fontCol =  charGlyph & 31;
 
             uint32_t charAttr = ch >> 32;
             int charFG = PAL_DEFAULT_FG, charBG = PAL_DEFAULT_BG;
             if(charAttr & ATTR_CUSTFG)
-                charFG = (charAttr & ATTR_FG_MASK) >> ATTR_FG_SHIFT;
+                charFG = (charAttr & ATTR_FG_MASK);
             if(charAttr & ATTR_CUSTBG)
-                charBG = (charAttr & ATTR_BG_MASK) >> ATTR_BG_SHIFT;
+                charBG = (charAttr & ATTR_BG_MASK) >> 8;
             if(charAttr & ATTR_BOLD) fontPage += 256;
 
             // reverse video = swap fg/bg
@@ -123,29 +145,14 @@ void render(TerminalView *view, struct termRow *row)
                 charBG = tmp;
             }
 
-            uint8_t *src = font->unpackedPages[fontPage];
-
-            if(!src) {
-                NSLog(@"Unpacking page %d", fontPage);
-                if(![font unpackPage:fontPage]) {
-                    NSLog(@"No page for char %x (page %d)!", charGlyph, fontPage);
-                    charGlyph = 0;
-                    fontPage = 0;
-                    [font unpackPage:0];
-                }
-
-                if(!(src = font->unpackedPages[fontPage])) {
-                    NSLog(@"Couldn't load page 0, ugh");
-                    abort();
-                }
-            }
-
-            src += font->width * (fontCol + FVFONT_CHARS_WIDE * ((fontRow + 1) * font->height - (lrow + 1)));
+            const uint8_t *src = getPage(font, fontPage, &charGlyph);
+            OFFSET_FONT(src, lrow, charGlyph);
 
             for(int i = 0; i < charWidth; i++) {
                 *bmap++ = src[i] ? plt[charFG] : plt[charBG];
             }
         }
+    }
 
     CGDataProviderRef provider = CGDataProviderCreateWithData(nil, row->bitmaps[0], rowLen * charHeight, nil);
 
@@ -157,6 +164,7 @@ void render(TerminalView *view, struct termRow *row)
                                    cspace, kCGBitmapByteOrder32Host,
                                    provider, nil, NO,
                                    kCGRenderingIntentDefault);
+
     CGDataProviderRelease(provider);
     row->bitmaps[1] = img;
 

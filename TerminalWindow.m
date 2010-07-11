@@ -4,7 +4,6 @@
 #import "TerminalView.h"
 #import "TerminalPTY.h"
 
-// NB: Data is defined in the following files...
 #import "ConsoleKeyMappings.h"
 
 @implementation TerminalWindow
@@ -121,7 +120,7 @@
 
 - (void)eventMouseInput:(TerminalView *)view event:(NSEvent *)ev
 {
-    // ...
+    // FIXME
 }
 
 
@@ -143,5 +142,33 @@
     // Poke the controller to make the new title show up
     [[self windowControllers] makeObjectsPerformSelector:@selector(synchronizeWindowTitleWithDocumentName)];
 }
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+
+void TerminalEmulator_bell(struct emulatorState *S)
+{
+    NSBeep();
+}
+
+
+void TerminalEmulator_setTitle(struct emulatorState *S, const char *title)
+{
+    abort();
+}
+
+
+void TerminalEmulator_resize(struct emulatorState *S, int rows, int cols)
+{
+    abort();
+}
+
+
+void TerminalEmulator_write(struct emulatorState *S, const char *bytes, size_t len)
+{
+    abort();
+}
+
 
 @end

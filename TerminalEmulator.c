@@ -5,23 +5,40 @@
 #include "TerminalEmulator.h"
 #include "DefaultColors.h"
 
+
 //////////////////////////////////////////////////////////////////////////////
 
+
 #ifndef unlikely
-# define unlikely(x) __builtin_expect((x),0)
+# define unlikely(x) __builtin_expect((x), 0)
 #endif
 
 #ifndef likely
-# define likely(x) __builtin_expect((x),1)
+# define likely(x) __builtin_expect((x), 1)
 #endif
 
-#define DEFAULT(n, default) ((n) == 0 ? (default) : (n))
-#define CAP_MIN(val, vmin) do { if((val) < (vmin)) val = vmin; } while(0)
-#define CAP_MAX(val, vmax) do { if((val) > (vmax)) val = vmax; } while(0)
-#define CAP_MIN_MAX(val, vmin, vmax) do { CAP_MIN(val, vmin); CAP_MAX(val, vmax); } while(0)
+#define DEFAULT(n, def) ((n) == 0 ? (def) : (n))
+
+#define CAP_MIN(val, vmin) do { \
+    if((val) < (vmin)) val = vmin; \
+} while(0)
+
+#define CAP_MAX(val, vmax) do { \
+    if((val) > (vmax)) val = vmax; \
+} while(0)
+
+#define CAP_MIN_MAX(val, vmin, vmax) do { \
+    CAP_MIN(val, vmin); \
+    CAP_MAX(val, vmax); \
+} while(0)
 
 #define ATTR_PACK(ch, attr) (((uint64_t) (attr) << 32) | ((uint32_t) ch))
-#define APPLY_FLAG(mask) if(val) S->flags |= (mask); else S->flags &= ~(mask);
+#define APPLY_FLAG(mask) do { \
+    if(val) S->flags |= (mask); \
+    else S->flags &= ~(mask); \
+} while(0)
+
+#define CHAR2(c1, c2) ((c1 << 8) | (c2))
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -46,7 +63,7 @@ void TerminalEmulator_init(struct emulatorState *S, int rows, int cols)
     S->bScroll = rows - 1;
 
     S->flags = MODE_WRAPAROUND;
-    S->cursorAttr = ATTR_DEFAULT;
+    S->cursorAttr = 0;
 }
 
 
@@ -179,11 +196,52 @@ void act_clear(struct emulatorState *S)
 }
 
 
-void dispatch_esc(struct emulatorState *S, uint8_t ch)
+void dispatch_esc(struct emulatorState *S, uint8_t lastch)
 {
+    uint32_t ch = (S->intermed << 8) | lastch;
+    if(ch < 0x30) { // intermediate
+        S->intermed = ch;
+        CAP_MAX(S->intermed, 0xffff);
+        S->state = ST_ESC; // more!
+        return;
+    }
+
     switch(ch) {
-        case '[':
+        case '7': // DECSC (Save Cursor)
+            S->saveRow  = S->cRow;
+            S->saveCol  = S->cCol;
+            S->saveAttr = S->cursorAttr;
+            break;
+
+        case '8': // DECRC (Restore Cursor)
+            S->cRow = S->saveRow;
+            S->cCol = S->saveCol;
+            S->cursorAttr = S->saveAttr;
+            CAP_MAX(S->cRow, S->wRows - 1);
+            CAP_MAX(S->cCol, S->wCols - 1);
+            break;
+            
+        case 'D': // IND
+            term_index(S, 1);
+            break;
+
+        case 'E': // NEL
+            term_index(S, 1);
+            S->cCol = 0;
+            break;
+
+        case 'M': // RI
+            term_index(S, -1);
+            break;
+
+        case '[': // CSI
             S->state = ST_CSI;
+            break;
+
+        case CHAR2('#', '8'): // DECALN
+            for(int i = 0; i < S->wRows; i++)
+                row_fill(S->rows[i], 0, S->wCols,
+                         ATTR_PACK('E', S->cursorAttr));
             break;
 
         default:
@@ -196,14 +254,43 @@ void dispatch_esc(struct emulatorState *S, uint8_t ch)
 void dispatch_csi(struct emulatorState *S, uint8_t lastch)
 {
     uint32_t ch = (S->intermed << 8) | lastch;
-    int from, to; // common var names
+    int from, to, row; // common var names
     switch(ch) {
+        case 'A': // CUU
+            row = S->cRow;
+            S->cRow -= DEFAULT(S->params[0], 1);
+            CAP_MIN(S->cRow, (row < S->tScroll) ? 0 : S->tScroll);
+            S->wrapnext = 0;
+            break;
+
+        case 'B': // CUD
+            row = S->cRow;
+            S->cRow += DEFAULT(S->params[0], 1);
+            CAP_MAX(S->cRow, (row > S->bScroll) ? S->wRows - 1 : S->bScroll);
+            S->wrapnext = 0;
+            break;
+
         case 'C': // CUF
             term_cursorHorz(S, DEFAULT(S->params[0], 1));
             break;
 
         case 'D': // CUB
             term_cursorHorz(S, -DEFAULT(S->params[0], 1));
+            break;
+
+        case 'E': // CNL
+            term_index(S, DEFAULT(S->params[0], 1));
+            S->cCol = 0;
+            break;
+
+        case 'F': // CPL
+            term_index(S, -DEFAULT(S->params[0], 1));
+            S->cCol = 0;
+            break;
+
+        case 'G': // CHA
+            S->cCol = S->params[0];
+            CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
             break;
 
         case 'H': // CUP
@@ -236,7 +323,7 @@ void dispatch_csi(struct emulatorState *S, uint8_t lastch)
             for(int i = from; i <= to; i++)
                 row_fill(S->rows[i], 0, S->wCols,
                          ATTR_PACK(' ', S->cursorAttr));
-            // FALL THROUGH (intentionally... ED erases partial lines too)
+            // FALL THROUGH (intentionally -- ED erases partial lines too)
 
         case 'K': // EL
             from = 0;
@@ -260,7 +347,7 @@ void dispatch_csi(struct emulatorState *S, uint8_t lastch)
             for(int i = 0; i < S->paramPtr; i++) {
                 switch(S->params[i]) {
                     case 0:
-                        S->cursorAttr = ATTR_DEFAULT;
+                        S->cursorAttr = 0;
                         break;
                     case 1:
                         S->cursorAttr |= ATTR_BOLD;
@@ -294,21 +381,25 @@ void dispatch_csi(struct emulatorState *S, uint8_t lastch)
 
                     case 30 ... 37:
                         S->cursorAttr &= ~ATTR_FG_MASK;
-                        S->cursorAttr |= ATTR_CUSTFG |
-                            (S->params[i] - 30) << ATTR_FG_SHIFT;
+                        S->cursorAttr |= ATTR_CUSTFG | (S->params[i] - 30);
                         break;
 
                     //case 38: extended FG
-                    //case 39: default FG
+                    
+                    case 39: // default FG
+                        S->cursorAttr &= ~(ATTR_FG_MASK | ATTR_CUSTFG);
+                        break;
 
                     case 40 ... 47:
                         S->cursorAttr &= ~ATTR_BG_MASK;
-                        S->cursorAttr |= ATTR_CUSTBG |
-                            (S->params[i] - 40) << ATTR_BG_SHIFT;
+                        S->cursorAttr |= ATTR_CUSTBG | (S->params[i] - 40) << 8;
                         break;
 
                     // case 48: extended BG
-                    // case 49: default BG
+
+                    case 49: // default FG
+                        S->cursorAttr &= ~(ATTR_BG_MASK | ATTR_CUSTBG);
+                        break;
 
                     default:
                         printf("unhandled SGR %d\n", S->params[i]);
@@ -331,7 +422,7 @@ int TerminalEmulator_run(struct emulatorState *S, const uint8_t *bytes, size_t l
         if(ch < 0x20) {
             switch(ch) {
                 case 0x07: // BEL
-                    // FIXME
+                    TerminalEmulator_bell(S);
                     break;
 
                 case 0x08: // BS

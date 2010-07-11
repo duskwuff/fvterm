@@ -41,19 +41,16 @@ struct emulatorState {
 
 #define ATTR_FG_MASK    0x000000FFUL
 #define ATTR_BG_MASK    0x0000FF00UL
-#define ATTR_FG_SHIFT   0
-#define ATTR_BG_SHIFT   8
 #define ATTR_MD_MASK    0xFFFF0000UL
 
-#define ATTR_DEFAULT    0x00000007UL
-
-//#define ATTR_BOLD       0x00010008UL
+//#define ATTR_BOLD     0x00010008UL
 #define ATTR_BOLD       0x00010000UL
 #define ATTR_UNDERLINE  0x00020000UL
 #define ATTR_BLINK      0x00040000UL
 #define ATTR_REVERSE    0x00080000UL
-#define ATTR_CUSTFG     0x00100000UL
-#define ATTR_CUSTBG     0x00200000UL
+#define ATTR_ITALIC     0x00100000UL
+#define ATTR_CUSTFG     0x10000000UL
+#define ATTR_CUSTBG     0x20000000UL
 
 #define PAL_DEFAULT_FG 256
 #define PAL_DEFAULT_BG 257
@@ -68,15 +65,12 @@ struct emulatorState {
 #define MODE_CURSORKEYS     0x0080
 #define MODE_INVERT         0x0100
 
-#define PACK_2(x,y)     ( ((x) <<  8) | (y) )
-#define PACK_3(x,y,z)   ( ((x) << 16) | ((y) <<  8) | (z))
-#define PACK_4(x,y,z,a) ( ((x) << 24) | ((y) << 16) | ((z) << 8) | (a))
-
 void TerminalEmulator_init(struct emulatorState *S, int rows, int cols);
 void TerminalEmulator_free(struct emulatorState *S);
 int TerminalEmulator_run(struct emulatorState *S, const uint8_t *bytes, size_t len);
 void TerminalEmulator_handleResize(struct emulatorState *S, int rows, int cols);
 
+void TerminalEmulator_bell(struct emulatorState *S);
 void TerminalEmulator_setTitle(struct emulatorState *S, const char *title);
 void TerminalEmulator_resize(struct emulatorState *S, int rows, int cols);
-
+void TerminalEmulator_write(struct emulatorState *S, const char *bytes, size_t len);
