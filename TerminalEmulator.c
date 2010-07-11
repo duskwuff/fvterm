@@ -165,7 +165,8 @@ static void term_cursorHorz(struct emulatorState *S, int count)
 }
 
 
-static void output_char(struct emulatorState *S, uint32_t uch) {
+static void output_char(struct emulatorState *S, uint32_t uch)
+{
     if(unlikely(S->wrapnext)) {
         if(S->flags & MODE_WRAPAROUND) {
             S->rows[S->cRow]->flags |= TERMROW_WRAPPED;
@@ -188,7 +189,73 @@ static void output_char(struct emulatorState *S, uint32_t uch) {
 //////////////////////////////////////////////////////////////////////////////
 
 
-void act_clear(struct emulatorState *S)
+static void do_csi_sgr(struct emulatorState *S)
+{
+    for(int i = 0; i < S->paramPtr; i++) {
+        switch(S->params[i]) {
+            case 0:
+                S->cursorAttr = 0;
+                break;
+            case 1:
+                S->cursorAttr |= ATTR_BOLD;
+                break;
+            case 4:
+                S->cursorAttr |= ATTR_UNDERLINE;
+                break;
+            case 5:
+                S->cursorAttr |= ATTR_BLINK;
+                break;
+            case 7:
+                S->cursorAttr |= ATTR_REVERSE;
+                break;
+
+                //case 8: invisible? FIXME
+
+            case 22:
+                S->cursorAttr &= ~ATTR_BOLD;
+                break;
+            case 24:
+                S->cursorAttr &= ~ATTR_UNDERLINE;
+                break;
+            case 25:
+                S->cursorAttr &= ~ATTR_BLINK;
+                break;
+            case 27:
+                S->cursorAttr &= ~ATTR_REVERSE;
+                break;
+
+                //case 28: invisible? FIXME
+
+            case 30 ... 37:
+                S->cursorAttr &= ~ATTR_FG_MASK;
+                S->cursorAttr |= ATTR_CUSTFG | (S->params[i] - 30);
+                break;
+
+                //case 38: extended FG, FIXME
+
+            case 39: // default FG
+                S->cursorAttr &= ~(ATTR_FG_MASK | ATTR_CUSTFG);
+                break;
+
+            case 40 ... 47:
+                S->cursorAttr &= ~ATTR_BG_MASK;
+                S->cursorAttr |= ATTR_CUSTBG | (S->params[i] - 40) << 8;
+                break;
+
+                // case 48: extended BG, FIXME
+
+            case 49: // default FG
+                S->cursorAttr &= ~(ATTR_BG_MASK | ATTR_CUSTBG);
+                break;
+
+            default:
+                printf("unhandled SGR %d\n", S->params[i]);
+        }
+    }
+}
+
+
+static void act_clear(struct emulatorState *S)
 {
     S->paramPtr = S->paramVal = 0;
     S->priv = S->intermed = 0;
@@ -254,7 +321,7 @@ void dispatch_esc(struct emulatorState *S, uint8_t lastch)
 void dispatch_csi(struct emulatorState *S, uint8_t lastch)
 {
     uint32_t ch = (S->intermed << 8) | lastch;
-    int from, to, row; // common var names
+    int from, to, top, btm, row; // common var names
     switch(ch) {
         case 'A': // CUU
             row = S->cRow;
@@ -343,67 +410,23 @@ void dispatch_csi(struct emulatorState *S, uint8_t lastch)
                      ATTR_PACK(' ', S->cursorAttr));
             break;
 
-        case 'm':
-            for(int i = 0; i < S->paramPtr; i++) {
-                switch(S->params[i]) {
-                    case 0:
-                        S->cursorAttr = 0;
-                        break;
-                    case 1:
-                        S->cursorAttr |= ATTR_BOLD;
-                        break;
-                    case 4:
-                        S->cursorAttr |= ATTR_UNDERLINE;
-                        break;
-                    case 5:
-                        S->cursorAttr |= ATTR_BLINK;
-                        break;
-                    case 7:
-                        S->cursorAttr |= ATTR_REVERSE;
-                        break;
+        case 'c': // DA
+            TerminalEmulator_writeStr(S, "\e[?1;2c");
+            break;
 
-                    //case 8: invisible?
+        case 'm': // SGR
+            do_csi_sgr(S);
+            break;
 
-                    case 22:
-                        S->cursorAttr &= ~ATTR_BOLD;
-                        break;
-                    case 24:
-                        S->cursorAttr &= ~ATTR_UNDERLINE;
-                        break;
-                    case 25:
-                        S->cursorAttr &= ~ATTR_BLINK;
-                        break;
-                    case 27:
-                        S->cursorAttr &= ~ATTR_REVERSE;
-                        break;
-
-                    //case 28: invisible?
-
-                    case 30 ... 37:
-                        S->cursorAttr &= ~ATTR_FG_MASK;
-                        S->cursorAttr |= ATTR_CUSTFG | (S->params[i] - 30);
-                        break;
-
-                    //case 38: extended FG
-                    
-                    case 39: // default FG
-                        S->cursorAttr &= ~(ATTR_FG_MASK | ATTR_CUSTFG);
-                        break;
-
-                    case 40 ... 47:
-                        S->cursorAttr &= ~ATTR_BG_MASK;
-                        S->cursorAttr |= ATTR_CUSTBG | (S->params[i] - 40) << 8;
-                        break;
-
-                    // case 48: extended BG
-
-                    case 49: // default FG
-                        S->cursorAttr &= ~(ATTR_BG_MASK | ATTR_CUSTBG);
-                        break;
-
-                    default:
-                        printf("unhandled SGR %d\n", S->params[i]);
-                }
+        case 'r': // DECSTBM
+            top = DEFAULT(S->params[0], 1);
+            btm = DEFAULT(S->params[1], 65535);
+            CAP_MAX(btm, S->wRows);
+            if(btm > top) { // FIXME: is this correct?
+                S->tScroll = top - 1;
+                S->bScroll = btm - 1;
+                S->cRow = (S->flags & MODE_ORIGIN) ? S->tScroll : 0;
+                S->cRow = 0;
             }
             break;
 
@@ -492,23 +515,22 @@ int TerminalEmulator_run(struct emulatorState *S, const uint8_t *bytes, size_t l
                     S->state = ST_CSI_PARM;
                 } else if(ch == 0x3A) { // colon (invalid)
                     S->state = ST_CSI_IGNORE;
-                    break;
                 } else if(ch == 0x3B) { // semicolon
                     if(S->state == ST_CSI_INT) {
                         S->state = ST_CSI_IGNORE;
-                        break;
+                    } else {
+                        if(S->paramPtr < MAX_PARAMS)
+                            S->params[S->paramPtr++] = S->paramVal;
+                        S->paramVal = 0;
+                        S->state = ST_CSI_PARM;
                     }
-                    if(S->paramPtr < MAX_PARAMS)
-                        S->params[S->paramPtr++] = S->paramVal;
-                    S->paramVal = 0;
-                    S->state = ST_CSI_PARM;
                 } else if(ch < 0x40) { // private
                     if(S->state != ST_CSI) {
                         S->state = ST_CSI_IGNORE;
-                        break;
+                    } else {
+                        S->priv = ch;
+                        S->state = ST_CSI_PARM;
                     }
-                    S->priv = ch;
-                    S->state = ST_CSI_PARM;
                 } else {
                     // flush last param
                     if(S->paramPtr < MAX_PARAMS)

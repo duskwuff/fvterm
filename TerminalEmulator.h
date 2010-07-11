@@ -73,4 +73,5 @@ void TerminalEmulator_handleResize(struct emulatorState *S, int rows, int cols);
 void TerminalEmulator_bell(struct emulatorState *S);
 void TerminalEmulator_setTitle(struct emulatorState *S, const char *title);
 void TerminalEmulator_resize(struct emulatorState *S, int rows, int cols);
-void TerminalEmulator_write(struct emulatorState *S, const char *bytes, size_t len);
+void TerminalEmulator_write(struct emulatorState *S, char *bytes, size_t len);
+void TerminalEmulator_writeStr(struct emulatorState *S, char *bytes);
