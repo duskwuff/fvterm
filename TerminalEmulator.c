@@ -291,14 +291,6 @@ static void do_csi_sgr(struct emulatorState *S)
 }
 
 
-static void act_clear(struct emulatorState *S)
-{
-    S->paramPtr = S->paramVal = 0;
-    S->priv = S->intermed = 0;
-    bzero(S->params, sizeof(S->params));
-}
-
-
 void dispatch_esc(struct emulatorState *S, uint8_t lastch)
 {
     uint32_t ch = (S->intermed << 8) | lastch;
@@ -339,6 +331,9 @@ void dispatch_esc(struct emulatorState *S, uint8_t lastch)
 
         case '[': // CSI
             S->state = ST_CSI;
+            S->paramPtr = S->paramVal = 0;
+            S->priv = S->intermed = 0;
+            bzero(S->params, sizeof(S->params));
             break;
 
         case CHAR2('#', '8'): // DECALN
@@ -516,7 +511,6 @@ int TerminalEmulator_run(struct emulatorState *S, const uint8_t *bytes, size_t l
 
                 case 0x1B: // ESC
                     S->state = ST_ESC;
-                    act_clear(S);
                     break;
 
 #ifdef DEBUG
@@ -558,7 +552,6 @@ int TerminalEmulator_run(struct emulatorState *S, const uint8_t *bytes, size_t l
                         S->state = ST_CSI_IGNORE;
                         break;
                     }
-                    CAP_MIN(S->paramVal, 0);
                     S->paramVal = 10 * S->paramVal + (ch - 0x30);
                     CAP_MAX(S->paramVal, 16383);
                     S->state = ST_CSI_PARM;
