@@ -3,3 +3,4 @@ build/
 fvterm.xcodeproj/*.mode1v3
 fvterm.xcodeproj/*.pbxuser
 tasks
+fonts/consolefonts/

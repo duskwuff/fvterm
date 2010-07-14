@@ -8,7 +8,10 @@ FILES = \
 
 NIBS = MainMenu TerminalWindow
 FONTS = \
-	fixed-13
+	fixed-13 \
+	monaco-12 \
+	vga-16 \
+	terminus-32
 
 APPEXTRAS = Info.plist Credits.rtf fvterm.icns
 
@@ -48,7 +51,7 @@ build/%.o: %.[cm] build/Prefix.gch
 build/%.nib: %.xib
 	ibtool $< --compile $@
 
-build/%.vtf: build/fontpacker
+build/%.vtf: build/fontpacker fonts/%/fontconfig.ini
 	touch $@
 	build/fontpacker fonts/$*/fontconfig.ini $@
 
