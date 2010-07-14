@@ -80,7 +80,9 @@
     for(int y = 0; y < height * FVFONT_CHARS_HIGH; y++) {
         for(int x = 0; x < width * FVFONT_CHARS_WIDE; x++) {
             NSColor *c = [rep colorAtX:x y:y];
-            *packptr++ = ([c whiteComponent] > 0.5) ? 0x00 : 0xff;
+            CGFloat components[8];
+            [c getComponents:components];
+            *packptr++ = (components[0] > 0.5) ? 0x00 : 0xff;
         }
     }
 

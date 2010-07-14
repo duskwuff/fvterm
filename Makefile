@@ -7,7 +7,9 @@ FILES = \
 	main
 
 NIBS = MainMenu TerminalWindow
-FONTS = fixed13
+FONTS = \
+	fixed-13
+
 APPEXTRAS = Info.plist Credits.rtf fvterm.icns
 
 APPDIR = build/fvterm.app/Contents

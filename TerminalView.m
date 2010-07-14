@@ -17,7 +17,7 @@ static CGColorSpaceRef cspace = nil;
     running = NO;
 
     font = [[TerminalFont alloc] initWithFile:
-       [[NSBundle mainBundle] pathForResource:@"fixed13"
+       [[NSBundle mainBundle] pathForResource:@"fixed-13"
                                        ofType:@"vtf"]];
 
     if(cspace == nil)
@@ -92,12 +92,19 @@ static const uint8_t * getPage(TerminalFont *font, int page, unichar *glyph) {
     if(font->unpackedPages[page] || [font unpackPage:page])
         return font->unpackedPages[page];
 
-    // page 0 fallback!
-    if(glyph) *glyph = 1;
-    if(font->unpackedPages[0] || [font unpackPage:page])
-        return font->unpackedPages[page];
+    // try unbold?
+    if(page > 255) {
+        page &= 255;
+        if(font->unpackedPages[page] || [font unpackPage:page])
+            return font->unpackedPages[page];
+    }
 
-    NSLog(@"Failed to load page 0 fallback. Argh!");
+    // try fallback glyph?
+    if(glyph) *glyph = 1;
+    if(font->unpackedPages[0] || [font unpackPage:0])
+        return font->unpackedPages[0];
+
+    NSLog(@"Font %@ has no fallback glyph!", font);
     abort();
 }
 
