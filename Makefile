@@ -1,4 +1,4 @@
-FILES = \
+APP_FILES = \
 	TerminalFont \
 	TerminalPTY \
 	TerminalView \
@@ -22,14 +22,19 @@ APPDIR = build/fvterm.app/Contents
 CC = /usr/bin/gcc-4.2
 
 CFLAGS = -std=gnu99 -Wall -Werror -Wno-multichar \
-	 -Ibuild -Winvalid-pch \
-	 -O0 -ggdb -DDEBUG
+	 -Ibuild -Winvalid-pch
+
+# For debuggability:
+CFLAGS += -O0 -ggdb -DDEBUG
+
+# For building the test dylib on !Darwin:
+# CFLAGS += -DNOT_DARWIN
 
 LDFLAGS = -framework Cocoa
 
 
 
-default: build/fvterm.bin $(NIBS:%=build/%.nib) $(FONTS:%=build/%.vtf)
+default: build/fvterm.bin build/libfvterm.dylib $(NIBS:%=build/%.nib) $(FONTS:%=build/%.vtf)
 	@mkdir -p $(APPDIR)/{MacOS,Resources}/
 	cp build/fvterm.bin $(APPDIR)/MacOS/fvterm
 	cp -a $(NIBS:%=build/%.nib) $(FONTS:%=build/%.vtf) $(APPEXTRAS) \
@@ -39,8 +44,11 @@ default: build/fvterm.bin $(NIBS:%=build/%.nib) $(FONTS:%=build/%.vtf)
 build/fontpacker: build/TerminalFont.o build/fontpacker.o
 	$(CC) $(LDFLAGS) $+ -o build/fontpacker
 
-build/fvterm.bin: $(FILES:%=build/%.o)
+build/fvterm.bin: $(APP_FILES:%=build/%.o)
 	$(CC) $(LDFLAGS) $+ -o $@
+
+build/libfvterm.dylib: build/TerminalEmulator.o build/libfvterm.o
+	libtool -dynamic -lc -exported_symbols_list libfvterm.exp $+ -o $@
 
 build/%.gch: %.h
 	$(CC) -c $(CFLAGS) -x objective-c-header $< -o $@
@@ -55,7 +63,7 @@ build/%.vtf: build/fontpacker fonts/%/fontconfig.ini
 	touch $@
 	build/fontpacker fonts/$*/fontconfig.ini $@
 
--include $(FILES:%=build/%.d)
+-include $(APP_FILES:%=build/%.d)
 
 .PHONY: build/fvterm.app
 .PRECIOUS: build/Prefix.gch

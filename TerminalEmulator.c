@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
@@ -84,8 +85,14 @@ void TerminalEmulator_free(struct emulatorState *S)
 
 static void row_fill(struct termRow *row, int start, int count, uint64_t value)
 {
+#ifdef NOT_DARWIN
+    // bah, we have to do this the hard way
+    for(int i = 0; i < count; i++)
+        row->chars[start + i] = value;
+#else
     // memset_pattern8 is highly optimized on x86 :)
     memset_pattern8(&row->chars[start], &value, count * 8);
+#endif
     row->flags = TERMROW_DIRTY;
 }
 
@@ -510,12 +517,13 @@ int TerminalEmulator_run(struct emulatorState *S, const uint8_t *bytes, size_t l
                     break;
 
                 case 0x1B: // ESC
+                    S->priv = S->intermed = 0;
                     S->state = ST_ESC;
                     break;
 
 #ifdef DEBUG
                 default:
-                    printf("Unknown control char %s", safeHex(ch));
+                    printf("Unknown control char %s\n", safeHex(ch));
 #endif
             }
             continue;

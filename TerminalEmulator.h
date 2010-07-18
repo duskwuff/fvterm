@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <util.h>
 
 #define BITMAP_PTRS 2
 #define TERMROW_DIRTY   0x0001
