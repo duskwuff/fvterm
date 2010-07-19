@@ -101,10 +101,12 @@ def runTest(testPath):
     return errors
 
 errors = 0
+tests = 0
 for arg in sys.argv[1:]:
     errors += runTest(arg)
+    tests += 1
 if errors == 0:
-    print "All tests passed"
+    print "%d tests passed" % tests
     sys.exit(0)
 else:
     print "%d error(s)" % errors

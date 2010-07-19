@@ -74,6 +74,9 @@ run: default
 debug: default
 	@gdb -x .gdbscript $(APPDIR)/MacOS/fvterm
 
+test: build/libfvterm.dylib
+	cd t ; make test
+
 clean:
 	rm -rf \
 	    build/*.{o,d,vtf,nib} \
