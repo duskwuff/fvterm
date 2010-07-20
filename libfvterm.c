@@ -35,6 +35,12 @@ void fvterm_write(struct fvterm *self, const uint8_t *data, size_t len)
 }
 
 
+void fvterm_setsize(struct fvterm *self, int rows, int cols)
+{
+    TerminalEmulator_handleResize(self->state, rows, cols);
+}
+
+
 void fvterm_getsize(struct fvterm *self, int *rows, int *cols)
 {
     if(rows) *rows = self->state->wRows;

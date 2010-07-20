@@ -76,6 +76,8 @@ debug: default
 
 test: build/libfvterm.dylib
 	cd t ; make test
+test-%: build/libfvterm.dylib
+	cd t ; make $@
 
 clean:
 	rm -rf \

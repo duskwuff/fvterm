@@ -11,6 +11,7 @@ struct fvterm * fvterm_init(int rows, int cols);
 void fvterm_free(struct fvterm *self);
 
 void fvterm_write(struct fvterm *self, const uint8_t *data, size_t len);
+void fvterm_setsize(struct fvterm *self, int rows, int cols);
 void fvterm_getsize(struct fvterm *self, int *rows, int *cols);
 void fvterm_getcursor(struct fvterm *self, int *row, int *col);
 int fvterm_getrowflags(struct fvterm *self, int row);

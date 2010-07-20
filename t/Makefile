@@ -1,4 +1,6 @@
-SUITES = dumb
+SUITES = \
+	 dumb \
+	 vt100
 
 test: $(foreach suite,$(SUITES),test-$(suite))
 
