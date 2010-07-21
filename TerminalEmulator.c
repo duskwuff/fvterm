@@ -70,7 +70,25 @@ void TerminalEmulator_init(struct emulatorState *S, int rows, int cols)
 
 void TerminalEmulator_handleResize(struct emulatorState *S, int rows, int cols)
 {
-    abort();
+    // FIXME: this is the simplest and worst possible resize impl (erase all)
+
+    free(S->rowBase);
+    free(S->rows);
+
+    size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * cols;
+    S->rowBase = calloc(rows, rowSize);
+    S->rows = calloc(rows, sizeof(struct termRow *));
+
+    for(int i = 0; i < rows; i++)
+        S->rows[i] = S->rowBase + i * rowSize;
+
+    S->cRow = S->cCol = 0;
+
+    S->wRows = rows;
+    S->wCols = cols;
+
+    S->tScroll = 0;
+    S->bScroll = rows - 1;
 }
 
 
@@ -446,7 +464,7 @@ void dispatch_csi(struct emulatorState *S, uint8_t lastch)
                 case 2:
                     break;
             }
-            row_fill(S->rows[S->cRow], from, to - from,
+            row_fill(S->rows[S->cRow], from, to - from + 1,
                      ATTR_PACK(' ', S->cursorAttr));
             break;
 
