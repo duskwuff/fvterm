@@ -11,6 +11,7 @@ FONTS = \
 	fixed-13 \
 	monaco-12 \
 	vga-16 \
+	terminus-16 \
 	terminus-32
 
 APPEXTRAS = Info.plist Credits.rtf fvterm.icns

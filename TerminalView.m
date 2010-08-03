@@ -17,7 +17,7 @@ static CGColorSpaceRef cspace = nil;
     running = NO;
 
     font = [[TerminalFont alloc] initWithFile:
-       [[NSBundle mainBundle] pathForResource:@"vga-16"
+       [[NSBundle mainBundle] pathForResource:@"terminus-16"
                                        ofType:@"vtf"]];
 
     if(cspace == nil)
