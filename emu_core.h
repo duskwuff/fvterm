@@ -12,7 +12,7 @@ struct termRow {
     uint64_t chars[];
 };
 
-struct emulatorState {
+struct emuState {
     void *parent;
 
     int cRow, cCol, saveRow, saveCol;
@@ -21,21 +21,12 @@ struct emulatorState {
     struct termRow **rows;
     void *rowBase;
 
-    enum emuState {
-        ST_GROUND,
-        ST_ESC,
-        //ST_ESC_INT - folded into ST_ESC
-        ST_CSI,
-        ST_CSI_INT,
-        ST_CSI_PARM,
-        ST_CSI_IGNORE,
-    } state;
     uint32_t cursorAttr, saveAttr;
 
     int wrapnext, tScroll, bScroll;
     uint64_t flags;
 
-    int params[MAX_PARAMS], paramPtr, paramVal, priv, intermed;
+    int coreState, params[MAX_PARAMS], paramPtr, paramVal, priv, intermed;
 };
 
 #define ATTR_FG_MASK    0x000000FFUL
@@ -48,6 +39,7 @@ struct emulatorState {
 #define ATTR_BLINK      0x00040000UL
 #define ATTR_REVERSE    0x00080000UL
 #define ATTR_ITALIC     0x00100000UL
+#define ATTR_STRIKE     0x00200000UL
 #define ATTR_CUSTFG     0x10000000UL
 #define ATTR_CUSTBG     0x20000000UL
 
@@ -64,13 +56,9 @@ struct emulatorState {
 #define MODE_CURSORKEYS     0x0080
 #define MODE_INVERT         0x0100
 
-void TerminalEmulator_init(struct emulatorState *S, int rows, int cols);
-void TerminalEmulator_free(struct emulatorState *S);
-int TerminalEmulator_run(struct emulatorState *S, const uint8_t *bytes, size_t len);
-void TerminalEmulator_handleResize(struct emulatorState *S, int rows, int cols);
+void TerminalEmulator_bell(struct emuState *S);
+void TerminalEmulator_setTitle(struct emuState *S, const char *title);
+void TerminalEmulator_resize(struct emuState *S, int rows, int cols);
+void TerminalEmulator_write(struct emuState *S, char *bytes, size_t len);
+void TerminalEmulator_writeStr(struct emuState *S, char *bytes);
 
-void TerminalEmulator_bell(struct emulatorState *S);
-void TerminalEmulator_setTitle(struct emulatorState *S, const char *title);
-void TerminalEmulator_resize(struct emulatorState *S, int rows, int cols);
-void TerminalEmulator_write(struct emulatorState *S, char *bytes, size_t len);
-void TerminalEmulator_writeStr(struct emulatorState *S, char *bytes);

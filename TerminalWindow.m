@@ -6,6 +6,11 @@
 
 #import "ConsoleKeyMappings.h"
 
+void emu_core_init(struct emuState *S, int rows, int cols);
+void emu_core_resize(struct emuState *S, int rows, int cols);
+int  emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len);
+void emu_core_free(struct emuState *S);
+
 @implementation TerminalWindow
 
 - (NSString *)windowNibName
@@ -30,8 +35,10 @@
     title = @"Terminal";
 
     int rows = 24, cols = 80; // XXX
-    TerminalEmulator_init(&emuState, rows, cols);
-    emuState.parent = self;
+
+    state.parent = self;
+    emu_core_init(&state, rows, cols);
+
     pty = [[TerminalPTY alloc] initWithParent:self rows:rows cols:cols];
 
     [view resizeForTerminal];
@@ -40,7 +47,8 @@
 
 - (void)dealloc
 {
-    TerminalEmulator_free(&emuState);
+    emu_core_free(&state);
+
     [title release];
     [pty release];
     [super dealloc];
@@ -127,13 +135,13 @@
 
 - (void)viewDidResize:(NSView *)src rows:(int)rows cols:(int)cols;
 {
-    TerminalEmulator_handleResize(&emuState, rows, cols);
+    emu_core_resize(&state, rows, cols);
 }
 
 
 - (void)ptyInput:(TerminalPTY *)pty data:(NSData *)data
 {
-    int n = TerminalEmulator_run(&emuState, [data bytes], [data length]);
+    int n = emu_core_run(&state, [data bytes], [data length]);
     [view triggerRedrawWithDataLength:n];
 }
 
@@ -149,13 +157,13 @@
 //////////////////////////////////////////////////////////////////////////////
 
 
-void TerminalEmulator_bell(struct emulatorState *S)
+void TerminalEmulator_bell(struct emuState *S)
 {
     NSBeep();
 }
 
 
-void TerminalEmulator_setTitle(struct emulatorState *S, const char *newTitle)
+void TerminalEmulator_setTitle(struct emuState *S, const char *newTitle)
 {
     TerminalWindow *self = S->parent;
     [self->title release];
@@ -165,13 +173,13 @@ void TerminalEmulator_setTitle(struct emulatorState *S, const char *newTitle)
 }
 
 
-void TerminalEmulator_resize(struct emulatorState *S, int rows, int cols)
+void TerminalEmulator_resize(struct emuState *S, int rows, int cols)
 {
     abort();
 }
 
 
-void TerminalEmulator_write(struct emulatorState *S, char *bytes, size_t len)
+void TerminalEmulator_write(struct emuState *S, char *bytes, size_t len)
 {
     TerminalWindow *self = S->parent;
     [self->pty writeData:[NSData dataWithBytesNoCopy:bytes length:len
@@ -179,7 +187,7 @@ void TerminalEmulator_write(struct emulatorState *S, char *bytes, size_t len)
 }
 
 
-void TerminalEmulator_writeStr(struct emulatorState *S, char *bytes)
+void TerminalEmulator_writeStr(struct emuState *S, char *bytes)
 {
     TerminalEmulator_write(S, bytes, strlen(bytes));
 }

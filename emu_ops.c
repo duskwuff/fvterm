@@ -1,51 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-
-#include "TerminalEmulator.h"
+#include "emu_utils.h"
 #include "DefaultColors.h"
 
 
-//////////////////////////////////////////////////////////////////////////////
-
-
-#ifndef unlikely
-# define unlikely(x) __builtin_expect((x), 0)
-#endif
-
-#ifndef likely
-# define likely(x) __builtin_expect((x), 1)
-#endif
-
-#define DEFAULT(n, def) ((n) == 0 ? (def) : (n))
-
-#define CAP_MIN(val, vmin) do { \
-    if((val) < (vmin)) val = vmin; \
-} while(0)
-
-#define CAP_MAX(val, vmax) do { \
-    if((val) > (vmax)) val = vmax; \
-} while(0)
-
-#define CAP_MIN_MAX(val, vmin, vmax) do { \
-    CAP_MIN(val, vmin); \
-    CAP_MAX(val, vmax); \
-} while(0)
-
-#define ATTR_PACK(ch, attr) (((uint64_t) (attr) << 32) | ((uint32_t) ch))
-#define APPLY_FLAG(mask) do { \
-    if(val) S->flags |= (mask); \
-    else S->flags &= ~(mask); \
-} while(0)
-
-#define CHAR2(c1, c2) ((c1 << 8) | (c2))
-
-
-//////////////////////////////////////////////////////////////////////////////
-
-
-void TerminalEmulator_init(struct emulatorState *S, int rows, int cols)
+void emu_ops_init(struct emuState *S, int rows, int cols)
 {
     size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * cols;
     S->rowBase = calloc(rows, rowSize);
@@ -68,7 +25,14 @@ void TerminalEmulator_init(struct emulatorState *S, int rows, int cols)
 }
 
 
-void TerminalEmulator_handleResize(struct emulatorState *S, int rows, int cols)
+void emu_ops_free(struct emuState *S)
+{
+    free(S->rowBase);
+    free(S->rows);
+}
+
+
+void emu_ops_resize(struct emuState *S, int rows, int cols)
 {
     // FIXME: this is the simplest and worst possible resize impl (erase all)
 
@@ -92,12 +56,6 @@ void TerminalEmulator_handleResize(struct emulatorState *S, int rows, int cols)
 }
 
 
-void TerminalEmulator_free(struct emulatorState *S)
-{
-    // FIXME
-}
-
-
 //////////////////////////////////////////////////////////////////////////////
 
 
@@ -115,7 +73,7 @@ static void row_fill(struct termRow *row, int start, int count, uint64_t value)
 }
 
 
-static void scroll_down(struct emulatorState *S, int top, int btm, int count)
+static void scroll_down(struct emuState *S, int top, int btm, int count)
 {
     assert(count > 0);
     int clearStart;
@@ -140,7 +98,7 @@ static void scroll_down(struct emulatorState *S, int top, int btm, int count)
 }
 
 
-static void scroll_up(struct emulatorState *S, int top, int btm, int count)
+static void scroll_up(struct emuState *S, int top, int btm, int count)
 {
     // FIXME: this is unoptimized.
     assert(count > 0);
@@ -155,7 +113,7 @@ static void scroll_up(struct emulatorState *S, int top, int btm, int count)
 }
 
 
-static void term_index(struct emulatorState *S, int count)
+static void term_index(struct emuState *S, int count)
 {
     if(unlikely(count == 0)) return;
 
@@ -181,33 +139,12 @@ static void term_index(struct emulatorState *S, int count)
 }
 
 
-static void term_cursorHorz(struct emulatorState *S, int count)
+static void term_cursorHorz(struct emuState *S, int count)
 {
     // XXX: reverse wraparound?
     S->cCol += count;
     CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
     S->wrapnext = 0;
-}
-
-
-static void output_char(struct emulatorState *S, uint32_t uch)
-{
-    if(unlikely(S->wrapnext)) {
-        if(S->flags & MODE_WRAPAROUND) {
-            S->rows[S->cRow]->flags |= TERMROW_WRAPPED;
-            term_index(S, 1);
-            S->cCol = 0;
-        }
-        S->wrapnext = 0;
-    }
-
-    S->rows[S->cRow]->chars[S->cCol++] = ATTR_PACK(uch, S->cursorAttr);
-    S->rows[S->cRow]->flags |= TERMROW_DIRTY;
-
-    if(unlikely(S->cCol == S->wCols)) {
-        S->cCol = S->wCols - 1;
-        S->wrapnext = 1;
-    }
 }
 
 
@@ -238,75 +175,97 @@ static const char * safeHex(uint32_t ch)
 //////////////////////////////////////////////////////////////////////////////
 
 
-static void do_csi_sgr(struct emulatorState *S)
+static void do_modes(struct emuState *S, int flag)
+{
+    for(int i = 0; i < S->paramPtr; i++) {
+        int mode = (S->intermed << 8) | S->params[i];
+        switch(mode) {
+#ifdef DEBUG
+            default:
+                printf("unhandled mode %x/%d\n", S->intermed, mode);
+#endif
+        }
+    }
+}
+
+
+static void do_csi_sgr(struct emuState *S)
 {
     for(int i = 0; i < S->paramPtr; i++) {
         switch(S->params[i]) {
             case 0:
                 S->cursorAttr = 0;
                 break;
-            case 1:
+            case 1: // bold / increased intensity
                 S->cursorAttr |= ATTR_BOLD;
                 break;
-            case 4:
+            // case 2: faint
+            case 3: // italic
+                S->cursorAttr |= ATTR_ITALIC;
+                break;
+            case 4: // single underline
                 S->cursorAttr |= ATTR_UNDERLINE;
                 break;
-            case 5:
+            case 5: // slow blink
+            case 6: // fast blink (!)
                 S->cursorAttr |= ATTR_BLINK;
                 break;
-            case 7:
+            case 7: // negative image
                 S->cursorAttr |= ATTR_REVERSE;
                 break;
-
-                //case 8: invisible? FIXME
-
-            case 22:
+            // case 8: invisible
+            case 9: // crossed out
+                S->cursorAttr |= ATTR_STRIKE;
+                break;
+            // case 10 ... 19: alt fonts
+            // case 20: fraktur?!
+            case 21: // double underline
+                S->cursorAttr |= ATTR_UNDERLINE;
+                break;
+            case 22: // unbold / unfaint
                 S->cursorAttr &= ~ATTR_BOLD;
                 break;
-            case 24:
+            case 23: // un-italic / unFraktur
+                S->cursorAttr &= ~ATTR_ITALIC;
+                break;
+            case 24: // un-underline ("derline"?)
                 S->cursorAttr &= ~ATTR_UNDERLINE;
                 break;
-            case 25:
+            case 25: // un-blink
                 S->cursorAttr &= ~ATTR_BLINK;
                 break;
-            case 27:
+            // case 26: un-used
+            case 27: // un-reverse
                 S->cursorAttr &= ~ATTR_REVERSE;
                 break;
-
-                //case 28: invisible? FIXME
-
-            case 30 ... 37:
+            //case 28: un-invisible
+            case 29: // un-crosssed-out
+                S->cursorAttr &= ~ATTR_STRIKE;
+                break;
+            case 30 ... 37: // foreground colors
                 S->cursorAttr &= ~ATTR_FG_MASK;
                 S->cursorAttr |= ATTR_CUSTFG | (S->params[i] - 30);
                 break;
-
-                //case 38: extended FG, FIXME
-
+            //case 38: extended FG, FIXME
             case 39: // default FG
                 S->cursorAttr &= ~(ATTR_FG_MASK | ATTR_CUSTFG);
                 break;
-
-            case 40 ... 47:
+            case 40 ... 47: // background colors
                 S->cursorAttr &= ~ATTR_BG_MASK;
                 S->cursorAttr |= ATTR_CUSTBG | (S->params[i] - 40) << 8;
                 break;
-
-                // case 48: extended BG, FIXME
-
+            // case 48: extended BG, FIXME
             case 49: // default FG
                 S->cursorAttr &= ~(ATTR_BG_MASK | ATTR_CUSTBG);
                 break;
-
-            case 90 ... 97:
+            case 90 ... 97: // bright foreground colors (not in ECMA048)
                 S->cursorAttr &= ~ATTR_FG_MASK;
                 S->cursorAttr |= ATTR_CUSTFG | (8 + S->params[i] - 90);
                 break;
-
-            case 100 ... 107:
+            case 100 ... 107: // bright background colors (not in ECMA048)
                 S->cursorAttr &= ~ATTR_BG_MASK;
                 S->cursorAttr |= ATTR_CUSTBG | (8 + S->params[i] - 100) << 8;
                 break;
-
 #ifdef DEBUG
             default:
                 printf("unhandled SGR %d\n", S->params[i]);
@@ -316,15 +275,48 @@ static void do_csi_sgr(struct emulatorState *S)
 }
 
 
-void dispatch_esc(struct emulatorState *S, uint8_t lastch)
+static void dispatch_ctrl(struct emuState *S, uint8_t ch)
+{
+    switch(ch) {
+        case 0x07: // BEL
+            TerminalEmulator_bell(S);
+            break;
+
+        case 0x08: // BS
+            term_cursorHorz(S, -1);
+            break;
+
+        case 0x09: // HT
+            // FIXME
+            break;
+
+        case 0x0A: // NL
+        case 0x0B: // VT
+        case 0x0C: // NP
+            term_index(S, 1);
+            if(S->flags & MODE_NEWLINE)
+                S->cCol = 0;
+            S->wrapnext = 0;
+            break;
+
+        case 0x0D: // CR
+            S->cCol = 0;
+            S->wrapnext = 0;
+            break;
+
+        // case 0x1B: ESC is handled upstream
+
+#ifdef DEBUG
+        default:
+            printf("Unknown control char %s\n", safeHex(ch));
+#endif
+    }
+}
+
+
+static void dispatch_esc(struct emuState *S, uint8_t lastch)
 {
     uint32_t ch = (S->intermed << 8) | lastch;
-    if(ch < 0x30) { // intermediate
-        S->intermed = ch;
-        CAP_MAX(S->intermed, 0xffff);
-        S->state = ST_ESC; // more!
-        return;
-    }
 
     switch(ch) {
         case '7': // DECSC (Save Cursor)
@@ -354,12 +346,7 @@ void dispatch_esc(struct emulatorState *S, uint8_t lastch)
             term_index(S, -1);
             break;
 
-        case '[': // CSI
-            S->state = ST_CSI;
-            S->paramPtr = S->paramVal = 0;
-            S->priv = S->intermed = 0;
-            bzero(S->params, sizeof(S->params));
-            break;
+        // case '[': CSI is handled upstream
 
         case CHAR2('#', '8'): // DECALN
             for(int i = 0; i < S->wRows; i++)
@@ -376,7 +363,7 @@ void dispatch_esc(struct emulatorState *S, uint8_t lastch)
 }
 
 
-void dispatch_csi(struct emulatorState *S, uint8_t lastch)
+static void dispatch_csi(struct emuState *S, uint8_t lastch)
 {
     uint32_t ch = (S->intermed << 8) | lastch;
     int from, to, top, btm, row; // common var names
@@ -472,6 +459,14 @@ void dispatch_csi(struct emulatorState *S, uint8_t lastch)
             TerminalEmulator_writeStr(S, "\e[?1;2c");
             break;
 
+        case 'h':
+            do_modes(S, 1);
+            break;
+
+        case 'l':
+            do_modes(S, 0);
+            break;
+
         case 'm': // SGR
             do_csi_sgr(S);
             break;
@@ -501,123 +496,51 @@ void dispatch_csi(struct emulatorState *S, uint8_t lastch)
 }
 
 
-int TerminalEmulator_run(struct emulatorState *S, const uint8_t *bytes, size_t len)
+//////////////////////////////////////////////////////////////////////////////
+
+
+void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len)
 {
+    // FIXME: accelerate
     for(int i = 0; i < len; i++) {
-        uint8_t ch = bytes[i];
-
-        if(ch < 0x20) {
-            switch(ch) {
-                case 0x07: // BEL
-                    TerminalEmulator_bell(S);
-                    break;
-
-                case 0x08: // BS
-                    term_cursorHorz(S, -1);
-                    break;
-
-                case 0x09: // HT
-                    // FIXME
-                    break;
-
-                case 0x0A: // NL
-                case 0x0B: // VT
-                case 0x0C: // NP
-                    term_index(S, 1);
-                    if(S->flags & MODE_NEWLINE)
-                        S->cCol = 0;
-                    S->wrapnext = 0;
-                    break;
-
-                case 0x0D: // CR
-                    S->cCol = 0;
-                    S->wrapnext = 0;
-                    break;
-
-                case 0x1B: // ESC
-                    S->priv = S->intermed = 0;
-                    S->state = ST_ESC;
-                    break;
-
-#ifdef DEBUG
-                default:
-                    printf("Unknown control char %s\n", safeHex(ch));
-#endif
+        if(unlikely(S->wrapnext)) {
+            if(S->flags & MODE_WRAPAROUND) {
+                S->rows[S->cRow]->flags |= TERMROW_WRAPPED;
+                term_index(S, 1);
+                S->cCol = 0;
             }
-            continue;
+            S->wrapnext = 0;
         }
 
-        switch(S->state) {
-            case ST_GROUND:
-                output_char(S, ch);
-                break;
+        S->rows[S->cRow]->chars[S->cCol++] = ATTR_PACK(bytes[i], S->cursorAttr);
+        S->rows[S->cRow]->flags |= TERMROW_DIRTY;
 
-            case ST_ESC:
-                if(ch < 0x30) {
-                    if(S->intermed >= 0xffff)
-                        S->intermed = 0xffff;
-                    else
-                        S->intermed = (S->intermed << 8) | ch;
-                    break;
-                } else {
-                    S->state = ST_GROUND;
-                    dispatch_esc(S, ch);
-                }
-                break;
-
-            case ST_CSI:
-            case ST_CSI_INT:
-            case ST_CSI_PARM:
-                if(ch < 0x30) { // intermediate char
-                    if(S->intermed >= 0xffff)
-                        S->intermed = 0xffff;
-                    else
-                        S->intermed = (S->intermed << 8) | ch;
-                } else if(ch < 0x3A) { // digit
-                    if(S->state == ST_CSI_INT) { // invalid!
-                        S->state = ST_CSI_IGNORE;
-                        break;
-                    }
-                    S->paramVal = 10 * S->paramVal + (ch - 0x30);
-                    CAP_MAX(S->paramVal, 16383);
-                    S->state = ST_CSI_PARM;
-                } else if(ch == 0x3A) { // colon (invalid)
-                    S->state = ST_CSI_IGNORE;
-                } else if(ch == 0x3B) { // semicolon
-                    if(S->state == ST_CSI_INT) {
-                        S->state = ST_CSI_IGNORE;
-                    } else {
-                        if(S->paramPtr < MAX_PARAMS)
-                            S->params[S->paramPtr++] = S->paramVal;
-                        S->paramVal = 0;
-                        S->state = ST_CSI_PARM;
-                    }
-                } else if(ch < 0x40) { // private
-                    if(S->state != ST_CSI) {
-                        S->state = ST_CSI_IGNORE;
-                    } else {
-                        S->priv = ch;
-                        S->state = ST_CSI_PARM;
-                    }
-                } else {
-                    // flush last param
-                    if(S->paramPtr < MAX_PARAMS)
-                        S->params[S->paramPtr++] = S->paramVal;
-                    dispatch_csi(S, ch);
-                    S->state = ST_GROUND;
-                }
-                break;
-
-            case ST_CSI_IGNORE:
-                if(ch >= 0x40)
-                    S->state = ST_GROUND;
-                break;
-
-            default:
-                abort(); // WTF
+        if(unlikely(S->cCol == S->wCols)) {
+            S->cCol = S->wCols - 1;
+            S->wrapnext = 1;
         }
     }
-
-    return len;
 }
+
+
+void emu_ops_exec(struct emuState *S, enum emuOpType type, uint8_t final)
+{
+    switch(type) {
+        case EMUOP_CTRL:
+            dispatch_ctrl(S, final);
+            break;
+
+        case EMUOP_ESC:
+            dispatch_esc(S, final);
+            break;
+
+        case EMUOP_CSI:
+            dispatch_csi(S, final);
+            break;
+
+        default:
+            abort();
+    }
+}
+
 

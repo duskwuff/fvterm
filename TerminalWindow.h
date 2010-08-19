@@ -1,4 +1,4 @@
-#import "TerminalEmulator.h"
+#import "emu_core.h"
 
 @class TerminalPTY;
 @class TerminalView;
@@ -10,7 +10,7 @@
     TerminalPTY *pty;
     NSString *title;
 @public
-    struct emulatorState emuState;
+    struct emuState state;
 }
 
 - (void)eventKeyInput:(TerminalView *)view event:(NSEvent *)evt;

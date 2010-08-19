@@ -3,7 +3,7 @@ APP_FILES = \
 	TerminalPTY \
 	TerminalView \
 	TerminalWindow \
-	TerminalEmulator \
+	emu_core emu_ops \
 	main
 
 NIBS = MainMenu TerminalWindow
@@ -35,7 +35,7 @@ LDFLAGS = -framework Cocoa
 
 
 
-default: build/fvterm.bin build/libfvterm.dylib $(NIBS:%=build/%.nib) $(FONTS:%=build/%.vtf)
+default: build/fvterm.bin $(NIBS:%=build/%.nib) $(FONTS:%=build/%.vtf)
 	@mkdir -p $(APPDIR)/{MacOS,Resources}/
 	cp build/fvterm.bin $(APPDIR)/MacOS/fvterm
 	cp -a $(NIBS:%=build/%.nib) $(FONTS:%=build/%.vtf) $(APPEXTRAS) \
@@ -47,9 +47,6 @@ build/fontpacker: build/TerminalFont.o build/fontpacker.o
 
 build/fvterm.bin: $(APP_FILES:%=build/%.o)
 	$(CC) $(LDFLAGS) $+ -o $@
-
-build/libfvterm.dylib: build/TerminalEmulator.o build/libfvterm.o
-	libtool -dynamic -lc -exported_symbols_list libfvterm.exp $+ -o $@
 
 build/%.gch: %.h
 	$(CC) -c $(CFLAGS) -x objective-c-header $< -o $@

@@ -119,10 +119,10 @@ static const uint8_t * getPage(TerminalFont *font, int page, unichar *glyph) {
 static void render(TerminalView *view, struct termRow *row)
 {
     TerminalFont *font = view->font;
-    uint32_t *plt = view->parent->emuState.palette;
+    uint32_t *plt = view->parent->state.palette;
     int charHeight = font->height;
     int charWidth = font->width;
-    int cols = view->parent->emuState.wCols;
+    int cols = view->parent->state.wCols;
 
     size_t rowLen = charWidth * cols * sizeof(uint32_t);
 
@@ -191,15 +191,15 @@ static void render(TerminalView *view, struct termRow *row)
     CGContextSetGrayFillColor(ctx, 0.133, 1.0); // XXX: constant??
     CGContextFillRect(ctx, NSRectToCGRect([self frame]));
 
-    int width = parent->emuState.wCols * font->width;
+    int width = parent->state.wCols * font->width;
     CGRect dstRect = {
         .origin = { HSPACE, VSPACE },
         .size = { width, font->height },
     };
 
     // Draw rows, rendering as necessary
-    for(int r = 0; r < parent->emuState.wRows; r++) {
-        struct termRow *row = parent->emuState.rows[r];
+    for(int r = 0; r < parent->state.wRows; r++) {
+        struct termRow *row = parent->state.rows[r];
         if(row->flags & TERMROW_DIRTY)
             render(self, row);
         CGContextDrawImage(ctx, dstRect, row->bitmaps[1]);
@@ -207,8 +207,8 @@ static void render(TerminalView *view, struct termRow *row)
     }
 
     CGRect cursor = { .origin = { HSPACE, VSPACE }, .size = { font->width, font->height } };
-    cursor.origin.x += font->width  * parent->emuState.cCol;
-    cursor.origin.y += font->height * parent->emuState.cRow;
+    cursor.origin.x += font->width  * parent->state.cCol;
+    cursor.origin.y += font->height * parent->state.cRow;
 
     CGContextSetRGBFillColor(ctx, 0.0, 1.0, 0.0, 0.7); // XXX: Cursor color shouldn't be constant
     CGContextFillRect(ctx, cursor);
@@ -220,8 +220,8 @@ static void render(TerminalView *view, struct termRow *row)
 
 - (void)resizeForTerminal
 {
-    int termWidth = parent->emuState.wCols * font->width + 2 * HSPACE;
-    int termHeight = parent->emuState.wRows * font->height + 2 * VSPACE;
+    int termWidth = parent->state.wCols * font->width + 2 * HSPACE;
+    int termHeight = parent->state.wRows * font->height + 2 * VSPACE;
     NSRect new_cr = NSMakeRect(0, 0, termWidth, termHeight);
 
     NSRect old_frame = [[self window] frame];
@@ -261,10 +261,10 @@ static void render(TerminalView *view, struct termRow *row)
     NSRect frame = [self frame];
     int newRows = (frame.size.height - 2 * VSPACE) / font->height;
     int newCols = (frame.size.width  - 2 * HSPACE) / font->width;
-    if(newRows != parent->emuState.wRows || newCols != parent->emuState.wCols) {
+    if(newRows != parent->state.wRows || newCols != parent->state.wCols) {
         [parent viewDidResize:self rows:newRows cols:newCols];
     }
-    //if(newsize.ws_col != parent->emuState.wCols || newsize.ws_row != parent->emuState.wRows)
+    //if(newsize.ws_col != parent->state.wCols || newsize.ws_row != parent->state.wRows)
     //    [parent setWinSize:newsize];
 }
 
