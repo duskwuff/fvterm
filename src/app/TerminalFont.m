@@ -42,42 +42,6 @@ static NSDictionary *fontPlist = NULL;
     [super dealloc];
 }
 
-- (id)initWithWidth:(int)in_width height:(int)in_height
-{
-    if(!(self = [super init])) {
-        return nil;
-    }
-
-    width = in_width;
-    height = in_height;
-
-    return self;
-}
-
-- (BOOL)loadPage:(int)page fromImage:(NSImage *)img
-{
-    NSBitmapImageRep *rep = nil;
-
-    if(!rep) {
-        NSLog(@"Couldn't find a representation of the right size for this font!\n");
-        return NO;
-    }
-
-    uint8_t *packbuf = calloc(height * width * FVFONT_CHARS_HIGH * FVFONT_CHARS_WIDE, sizeof(uint8_t));
-    uint8_t *packptr = packbuf;
-
-    for(int y = 0; y < height * FVFONT_CHARS_HIGH; y++) {
-        for(int x = 0; x < width * FVFONT_CHARS_WIDE; x++) {
-            NSColor *c = [rep colorAtX:x y:y];
-            CGFloat components[8];
-            [c getComponents:components];
-            *packptr++ = (components[0] > 0.5) ? 0x00 : 0xff;
-        }
-    }
-
-    return YES;
-}
-
 - (BOOL)unpackPage:(int)page
 {
     if(page < 0 || page >= FVFONT_NPAGES)
