@@ -95,7 +95,7 @@ static NSDictionary *fontPlist = NULL;
         return NO;
     }
 
-    NSBitmapImageRep *rep;
+    NSBitmapImageRep *rep = NULL;
     for(NSBitmapImageRep *r in [img representations]) {
         if([r class] != [NSBitmapImageRep class]) {
             NSLog(@"Found unexpected %@ representation...", r);
