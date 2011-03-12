@@ -22,7 +22,7 @@ void emu_core_free(struct emuState *S)
     emu_ops_free(S);
 }
 
-int emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
+size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
 {
     enum emuCoreState lstate = S->coreState;
     int first_ground = -1, ground_len = 0;

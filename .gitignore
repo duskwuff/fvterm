@@ -1,6 +1,4 @@
 .DS_Store
-build/
-fvterm.xcodeproj/*.mode1v3
-fvterm.xcodeproj/*.pbxuser
-tasks
-fonts/consolefonts/
+/fvterm.xcodeproj/*.xcworkspace
+/fvterm.xcodeproj/xcuserdata
+/tasks

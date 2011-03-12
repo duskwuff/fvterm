@@ -1,5 +1,3 @@
-#import "Prefix.h"
-
 #import "TerminalView.h"
 #import "TerminalPTY.h"
 #import "TerminalWindow.h"
@@ -16,9 +14,7 @@ static CGColorSpaceRef cspace = nil;
 {
     running = NO;
 
-    font = [[TerminalFont alloc] initWithFile:
-       [[NSBundle mainBundle] pathForResource:@"terminus-16"
-                                       ofType:@"vtf"]];
+    font = [TerminalFont loadFont:@"terminus16"];
 
     if(cspace == nil)
         cspace = CGColorSpaceCreateDeviceRGB();

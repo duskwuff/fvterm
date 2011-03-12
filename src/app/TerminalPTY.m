@@ -1,5 +1,3 @@
-#import "Prefix.h"
-
 #import "TerminalPTY.h"
 #import "TerminalWindow.h"
 

@@ -47,7 +47,7 @@ enum emuOpType {
 
 void emu_core_init(struct emuState *S, int rows, int cols);
 void emu_core_resize(struct emuState *S, int rows, int cols);
-int  emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len);
+size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len);
 void emu_core_free(struct emuState *S);
 
 void emu_ops_init(struct emuState *S, int rows, int cols);
