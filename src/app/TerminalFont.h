@@ -14,9 +14,11 @@ struct fvfont_header {
 @public
     int width, height;
     void *unpackedPages[FVFONT_NPAGES];
+    BOOL brightbold;
 }
 
 + (id)loadFont:(NSString *)name;
+- (id)initWithConfig:(NSDictionary *)dict;
 - (BOOL)unpackPage:(int)page;
 
 @end

@@ -4,6 +4,8 @@
 <dict>
 	<key>fixed13</key>
 	<dict>
+		<key>brightbold</key>
+		<true/>
 		<key>height</key>
 		<integer>13</integer>
 		<key>pages</key>
@@ -30,6 +32,8 @@
 	</dict>
 	<key>monaco12</key>
 	<dict>
+		<key>brightbold</key>
+		<true/>
 		<key>height</key>
 		<integer>12</integer>
 		<key>pages</key>
@@ -42,6 +46,8 @@
 	</dict>
 	<key>terminus16</key>
 	<dict>
+		<key>brightbold</key>
+		<true/>
 		<key>height</key>
 		<integer>16</integer>
 		<key>pages</key>
@@ -112,6 +118,8 @@
 	</dict>
 	<key>terminus32</key>
 	<dict>
+		<key>brightbold</key>
+		<true/>
 		<key>height</key>
 		<integer>32</integer>
 		<key>pages</key>
@@ -182,14 +190,14 @@
 	</dict>
 	<key>vga16</key>
 	<dict>
+		<key>brightbold</key>
+		<true/>
 		<key>height</key>
 		<integer>16</integer>
 		<key>pages</key>
 		<dict>
 			<key>000</key>
 			<string>vga16-r-00</string>
-			<key>100</key>
-			<string>vga16-b-00</string>
 		</dict>
 		<key>width</key>
 		<integer>8</integer>
