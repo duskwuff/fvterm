@@ -93,8 +93,7 @@ static void scroll_down(struct emuState *S, int top, int btm, int count)
     }
 
     for(int i = clearStart; i <= btm; i++)
-        row_fill(S->rows[i], 0, S->wCols,
-                 ATTR_PACK(' ', S->cursorAttr));
+        row_fill(S->rows[i], 0, S->wCols, APPLY_ATTR(' '));
 }
 
 
@@ -107,8 +106,7 @@ static void scroll_up(struct emuState *S, int top, int btm, int count)
         for(int i = btm; i > top; i--)
             S->rows[i] = S->rows[i - 1];
         S->rows[top] = movingRow;
-        row_fill(movingRow, 0, S->wCols,
-                 ATTR_PACK(' ', S->cursorAttr));
+        row_fill(movingRow, 0, S->wCols, APPLY_ATTR(' '));
     }
 }
 
@@ -350,8 +348,7 @@ static void dispatch_esc(struct emuState *S, uint8_t lastch)
 
         case CHAR2('#', '8'): // DECALN
             for(int i = 0; i < S->wRows; i++)
-                row_fill(S->rows[i], 0, S->wCols,
-                         ATTR_PACK('E', S->cursorAttr));
+                row_fill(S->rows[i], 0, S->wCols, APPLY_ATTR('E'));
             break;
 
 #ifdef DEBUG
@@ -433,8 +430,7 @@ static void dispatch_csi(struct emuState *S, uint8_t lastch)
                     break;
             }
             for(int i = from; i <= to; i++)
-                row_fill(S->rows[i], 0, S->wCols,
-                         ATTR_PACK(' ', S->cursorAttr));
+                row_fill(S->rows[i], 0, S->wCols, APPLY_ATTR(' '));
             // FALL THROUGH (intentionally -- ED erases partial lines too)
 
         case 'K': // EL
@@ -451,8 +447,7 @@ static void dispatch_csi(struct emuState *S, uint8_t lastch)
                 case 2:
                     break;
             }
-            row_fill(S->rows[S->cRow], from, to - from + 1,
-                     ATTR_PACK(' ', S->cursorAttr));
+            row_fill(S->rows[S->cRow], from, to - from + 1, APPLY_ATTR(' '));
             break;
 
         case 'c': // DA
@@ -512,7 +507,7 @@ void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len)
             S->wrapnext = 0;
         }
 
-        S->rows[S->cRow]->chars[S->cCol++] = ATTR_PACK(bytes[i], S->cursorAttr);
+        S->rows[S->cRow]->chars[S->cCol++] = APPLY_ATTR(bytes[i]);
         S->rows[S->cRow]->flags |= TERMROW_DIRTY;
 
         if(unlikely(S->cCol == S->wCols)) {

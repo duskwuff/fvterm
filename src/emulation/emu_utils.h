@@ -28,7 +28,8 @@
     CAP_MAX(val, vmax); \
 } while(0)
 
-#define ATTR_PACK(ch, attr) (((uint64_t) (attr) << 32) | ((uint32_t) ch))
+#define APPLY_ATTR(ch) ((((uint64_t) S->cursorAttr) << 32) | (ch))
+
 #define APPLY_FLAG(mask) do { \
     if(val) S->flags |= (mask); \
     else S->flags &= ~(mask); \
