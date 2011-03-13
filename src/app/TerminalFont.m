@@ -7,28 +7,40 @@ static NSDictionary *fontPlist = NULL;
 + (id) loadFont:(NSString *)name
 {
     if(!fontPlist) {
-        fontPlist = [NSDictionary dictionaryWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"fonts" ofType:@"plist"]];
+        fontPlist = [[NSDictionary dictionaryWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"fonts" ofType:@"plist"]] retain];
         NSAssert(fontPlist != NULL, @"couldn't load fonts.plist");
     }
     
     NSDictionary *fontInfo = [fontPlist objectForKey:name];
     if(!fontInfo) return nil;
     
-    TerminalFont *font = [[TerminalFont alloc] init];
-    font->width =  [(NSNumber *)[fontInfo objectForKey:@"width"] intValue];
-    font->height = [(NSNumber *)[fontInfo objectForKey:@"height"] intValue];
-    for(int i = 0; i < FVFONT_NPAGES; i++) {
-        font->pageFiles[i] = NULL;
-    }
-    NSDictionary *pages = [fontInfo objectForKey:@"pages"];
+    return [[TerminalFont alloc] initWithConfig:fontInfo];
+}
+                          
+- (id)initWithConfig:(NSDictionary *)dict
+{
+    if(!(self = [super init])) return nil;
+    
+    width = [[dict objectForKey:@"width"] intValue];
+    height = [[dict objectForKey:@"height"] intValue];
+    brightbold = [[dict objectForKey:@"brightbold"] boolValue];
+    
+    for(int i = 0; i < FVFONT_NPAGES; i++)
+        pageFiles[i] = NULL;
+    
+    NSDictionary *pages = [dict objectForKey:@"pages"];
+    
     for(NSString *k in pages) {
         int pageno = -1;
         sscanf([k UTF8String], "%x", &pageno);
-        if(pageno < 0 || pageno > FVFONT_NPAGES) continue;
+        if(pageno < 0 || pageno > FVFONT_NPAGES)
+            continue;
         NSString *filename = [[NSBundle mainBundle] pathForImageResource:[pages objectForKey:k]];
-        if(filename) font->pageFiles[pageno] = [filename retain];
+        if(filename)
+            pageFiles[pageno] = [filename retain];
     }
-    return font;
+
+    return self;
 }
 
 - (void) dealloc
