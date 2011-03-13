@@ -139,7 +139,6 @@ static void render(TerminalView *view, struct termRow *row)
                 charFG = (charAttr & ATTR_FG_MASK);
             if(charAttr & ATTR_CUSTBG)
                 charBG = (charAttr & ATTR_BG_MASK) >> 8;
-            if(charAttr & ATTR_BOLD) fontPage += 256;
 
             // reverse video = swap fg/bg
             if(charAttr & ATTR_REVERSE) {
@@ -148,6 +147,16 @@ static void render(TerminalView *view, struct termRow *row)
                 charBG = tmp;
             }
 
+            if(charAttr & ATTR_BOLD) {
+                fontPage += 256;
+                if(font->brightbold) {
+                    if(charFG < 8)
+                        charFG += 8;
+                    if(charFG == PAL_DEFAULT_FG)
+                        charFG = 15;
+                }
+            }
+            
             const uint8_t *src = getPage(font, fontPage, &charGlyph);
             OFFSET_FONT(src, lrow, charGlyph);
 
