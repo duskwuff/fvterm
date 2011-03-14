@@ -1,64 +1,6 @@
 #include "emu_utils.h"
 #include "DefaultColors.h"
 
-
-void emu_ops_init(struct emuState *S, int rows, int cols)
-{
-    size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * cols;
-    S->rowBase = calloc(rows, rowSize);
-    S->rows = calloc(rows, sizeof(struct termRow *));
-
-    for(int i = 0; i < rows; i++)
-        S->rows[i] = S->rowBase + i * rowSize;
-
-    for(int i = 0; i < 258; i++)
-        S->palette[i] = (default_colormap[i] << 8) | 0xff;
-
-    S->wRows = rows;
-    S->wCols = cols;
-
-    S->tScroll = 0;
-    S->bScroll = rows - 1;
-
-    S->flags = MODE_WRAPAROUND;
-    S->cursorAttr = 0;
-}
-
-
-void emu_ops_free(struct emuState *S)
-{
-    free(S->rowBase);
-    free(S->rows);
-}
-
-
-void emu_ops_resize(struct emuState *S, int rows, int cols)
-{
-    // FIXME: this is the simplest and worst possible resize impl (erase all)
-
-    free(S->rowBase);
-    free(S->rows);
-
-    size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * cols;
-    S->rowBase = calloc(rows, rowSize);
-    S->rows = calloc(rows, sizeof(struct termRow *));
-
-    for(int i = 0; i < rows; i++)
-        S->rows[i] = S->rowBase + i * rowSize;
-
-    S->cRow = S->cCol = 0;
-
-    S->wRows = rows;
-    S->wCols = cols;
-
-    S->tScroll = 0;
-    S->bScroll = rows - 1;
-}
-
-
-//////////////////////////////////////////////////////////////////////////////
-
-
 static void row_fill(struct termRow *row, int start, int count, uint64_t value)
 {
 #ifdef NOT_DARWIN
@@ -492,6 +434,62 @@ static void dispatch_csi(struct emuState *S, uint8_t lastch)
 
 
 //////////////////////////////////////////////////////////////////////////////
+
+
+void emu_ops_init(struct emuState *S, int rows, int cols)
+{
+    for(int i = 0; i < 258; i++)
+        S->palette[i] = (default_colormap[i] << 8) | 0xff;
+    
+    S->wRows = rows;
+    S->wCols = cols;
+    
+    S->tScroll = 0;
+    S->bScroll = rows - 1;
+    
+    S->flags = MODE_WRAPAROUND;
+    S->cursorAttr = 0;
+
+    size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * cols;
+    S->rowBase = calloc(rows, rowSize);
+    S->rows = calloc(rows, sizeof(struct termRow *));
+    
+    for(int i = 0; i < rows; i++) {
+        S->rows[i] = S->rowBase + i * rowSize;
+        row_fill(S->rows[i], 0, cols, APPLY_ATTR(' '));
+    }        
+}
+
+
+void emu_ops_free(struct emuState *S)
+{
+    free(S->rowBase);
+    free(S->rows);
+}
+
+
+void emu_ops_resize(struct emuState *S, int rows, int cols)
+{
+    // FIXME: this is the simplest and worst possible resize impl (erase all)
+    
+    free(S->rowBase);
+    free(S->rows);
+    
+    size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * cols;
+    S->rowBase = calloc(rows, rowSize);
+    S->rows = calloc(rows, sizeof(struct termRow *));
+    
+    for(int i = 0; i < rows; i++)
+        S->rows[i] = S->rowBase + i * rowSize;
+    
+    S->cRow = S->cCol = 0;
+    
+    S->wRows = rows;
+    S->wCols = cols;
+    
+    S->tScroll = 0;
+    S->bScroll = rows - 1;
+}
 
 
 void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len)
