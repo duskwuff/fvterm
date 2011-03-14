@@ -14,7 +14,7 @@ static NSDictionary *fontPlist = NULL;
     NSDictionary *fontInfo = [fontPlist objectForKey:name];
     if(!fontInfo) return nil;
     
-    return [[TerminalFont alloc] initWithConfig:fontInfo];
+    return [[[TerminalFont alloc] initWithConfig:fontInfo] autorelease];
 }
                           
 - (id)initWithConfig:(NSDictionary *)dict

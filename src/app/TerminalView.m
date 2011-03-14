@@ -14,7 +14,7 @@ static CGColorSpaceRef cspace = nil;
 {
     running = NO;
 
-    font = [TerminalFont loadFont:@"terminus16"];
+    font = [[TerminalFont loadFont:@"terminus16"] retain];
 
     if(cspace == nil)
         cspace = CGColorSpaceCreateDeviceRGB();
@@ -36,6 +36,7 @@ static CGColorSpaceRef cspace = nil;
 
 - (void)dealloc
 {
+    [font release];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [[NSRunLoop mainRunLoop] cancelPerformSelector:@selector(_delayedRedraw:)
                                             target:self
