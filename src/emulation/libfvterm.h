@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 struct fvterm {
-    struct emulatorState *state;
+    struct emuState *state;
     char output[1024], title[256];
     int beeps, outputp;
 };

@@ -92,6 +92,11 @@
 		CC9EC8F1132C28E500675B90 /* terminus32-r-26.png in Resources */ = {isa = PBXBuildFile; fileRef = CC7E47A4132C0F2C00C9B890 /* terminus32-r-26.png */; };
 		CC9EC8F2132C28E500675B90 /* terminus32-r-f6.png in Resources */ = {isa = PBXBuildFile; fileRef = CC7E47A5132C0F2C00C9B890 /* terminus32-r-f6.png */; };
 		CC9EC8F3132C28E500675B90 /* terminus32-r-ff.png in Resources */ = {isa = PBXBuildFile; fileRef = CC7E47A6132C0F2C00C9B890 /* terminus32-r-ff.png */; };
+		CC9F3DDD1338FE1E00C1D3B3 /* emu_core.c in Sources */ = {isa = PBXBuildFile; fileRef = CC7E4728132C0A1100C9B890 /* emu_core.c */; };
+		CC9F3DDF1338FE2600C1D3B3 /* emu_ops.c in Sources */ = {isa = PBXBuildFile; fileRef = CC7E472A132C0A1100C9B890 /* emu_ops.c */; };
+		CC9F3DE01338FE2600C1D3B3 /* emu_utils.h in Headers */ = {isa = PBXBuildFile; fileRef = CC7E472B132C0A1100C9B890 /* emu_utils.h */; };
+		CC9F3DE41338FE7800C1D3B3 /* libfvterm.c in Sources */ = {isa = PBXBuildFile; fileRef = CC9F3DE11338FE7700C1D3B3 /* libfvterm.c */; };
+		CC9F3DE61338FE7800C1D3B3 /* libfvterm.h in Headers */ = {isa = PBXBuildFile; fileRef = CC9F3DE31338FE7800C1D3B3 /* libfvterm.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -194,6 +199,9 @@
 		CC7E47A6132C0F2C00C9B890 /* terminus32-r-ff.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "terminus32-r-ff.png"; sourceTree = "<group>"; };
 		CC7E47A9132C0F2C00C9B890 /* vga16-r-00.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vga16-r-00.png"; sourceTree = "<group>"; };
 		CC7E47AA132C0F2C00C9B890 /* vga16-b-00.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vga16-b-00.png"; sourceTree = "<group>"; };
+		CC9F3DD81338FDEC00C1D3B3 /* libfvterm.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libfvterm.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC9F3DE11338FE7700C1D3B3 /* libfvterm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = libfvterm.c; sourceTree = "<group>"; };
+		CC9F3DE31338FE7800C1D3B3 /* libfvterm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libfvterm.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -202,6 +210,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				CC7E4706132C09A900C9B890 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC9F3DD51338FDEC00C1D3B3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -224,6 +239,7 @@
 			isa = PBXGroup;
 			children = (
 				CC7E4701132C09A900C9B890 /* fvterm.app */,
+				CC9F3DD81338FDEC00C1D3B3 /* libfvterm.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -282,6 +298,8 @@
 		CC7E4753132C0AE100C9B890 /* emulation */ = {
 			isa = PBXGroup;
 			children = (
+				CC9F3DE11338FE7700C1D3B3 /* libfvterm.c */,
+				CC9F3DE31338FE7800C1D3B3 /* libfvterm.h */,
 				CC7E4728132C0A1100C9B890 /* emu_core.c */,
 				CC7E4729132C0A1100C9B890 /* emu_core.h */,
 				CC7E472A132C0A1100C9B890 /* emu_ops.c */,
@@ -418,6 +436,18 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		CC9F3DD61338FDEC00C1D3B3 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC9F3DE01338FE2600C1D3B3 /* emu_utils.h in Headers */,
+				CC9F3DE61338FE7800C1D3B3 /* libfvterm.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
 		CC7E4700132C09A900C9B890 /* fvterm */ = {
 			isa = PBXNativeTarget;
@@ -435,6 +465,23 @@
 			productName = fvterm;
 			productReference = CC7E4701132C09A900C9B890 /* fvterm.app */;
 			productType = "com.apple.product-type.application";
+		};
+		CC9F3DD71338FDEC00C1D3B3 /* libfvterm */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC9F3DDB1338FDEC00C1D3B3 /* Build configuration list for PBXNativeTarget "libfvterm" */;
+			buildPhases = (
+				CC9F3DD41338FDEC00C1D3B3 /* Sources */,
+				CC9F3DD51338FDEC00C1D3B3 /* Frameworks */,
+				CC9F3DD61338FDEC00C1D3B3 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = libfvterm;
+			productName = libfvterm;
+			productReference = CC9F3DD81338FDEC00C1D3B3 /* libfvterm.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
 		};
 /* End PBXNativeTarget section */
 
@@ -454,6 +501,7 @@
 			projectRoot = "";
 			targets = (
 				CC7E4700132C09A900C9B890 /* fvterm */,
+				CC9F3DD71338FDEC00C1D3B3 /* libfvterm */,
 			);
 		};
 /* End PBXProject section */
@@ -560,6 +608,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CC9F3DD41338FDEC00C1D3B3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC9F3DDD1338FE1E00C1D3B3 /* emu_core.c in Sources */,
+				CC9F3DDF1338FE2600C1D3B3 /* emu_ops.c in Sources */,
+				CC9F3DE41338FE7800C1D3B3 /* libfvterm.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
@@ -625,6 +683,30 @@
 			};
 			name = Release;
 		};
+		CC9F3DD91338FDEC00C1D3B3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				EXECUTABLE_PREFIX = lib;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				PRODUCT_NAME = fvterm;
+			};
+			name = Debug;
+		};
+		CC9F3DDA1338FDEC00C1D3B3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				EXECUTABLE_PREFIX = lib;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				PRODUCT_NAME = fvterm;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -645,6 +727,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		CC9F3DDB1338FDEC00C1D3B3 /* Build configuration list for PBXNativeTarget "libfvterm" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC9F3DD91338FDEC00C1D3B3 /* Debug */,
+				CC9F3DDA1338FDEC00C1D3B3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};

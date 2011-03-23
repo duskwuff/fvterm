@@ -33,7 +33,6 @@ struct emuState {
 #define ATTR_BG_MASK    0x0000FF00UL
 #define ATTR_MD_MASK    0xFFFF0000UL
 
-//#define ATTR_BOLD     0x00010008UL
 #define ATTR_BOLD       0x00010000UL
 #define ATTR_UNDERLINE  0x00020000UL
 #define ATTR_BLINK      0x00040000UL
@@ -61,4 +60,3 @@ void TerminalEmulator_setTitle(struct emuState *S, const char *title);
 void TerminalEmulator_resize(struct emuState *S, int rows, int cols);
 void TerminalEmulator_write(struct emuState *S, char *bytes, size_t len);
 void TerminalEmulator_writeStr(struct emuState *S, char *bytes);
-
