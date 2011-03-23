@@ -76,6 +76,7 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
                     S->priv = S->intermed = 0;
                     bzero(S->params, sizeof(S->params));
                 } else {
+                    lstate = ST_GROUND;
                     emu_ops_exec(S, EMUOP_ESC, ch);
                 }
                 break;
