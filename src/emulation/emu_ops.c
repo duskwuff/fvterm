@@ -1,5 +1,9 @@
+#include "emu_core.h"
 #include "emu_utils.h"
 #include "DefaultColors.h"
+
+#include <assert.h>
+#include <string.h>
 
 static void row_fill(struct termRow *row, int start, int count, uint64_t value)
 {
@@ -89,6 +93,8 @@ static void term_cursorHorz(struct emuState *S, int count)
 
 
 #ifdef DEBUG
+#include <stdio.h>
+
 static const char * safeHex(uint32_t ch)
 {
     // Remember, kids, always practice safe hex.

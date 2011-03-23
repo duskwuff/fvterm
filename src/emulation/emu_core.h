@@ -1,4 +1,8 @@
+#ifndef _EMU_CORE_H
+#define _EMU_CORE_H
+
 #include <stdint.h>
+#include <stdlib.h>
 
 #define BITMAP_PTRS 2
 #define TERMROW_DIRTY   0x0001
@@ -55,8 +59,32 @@ struct emuState {
 #define MODE_CURSORKEYS     0x0080
 #define MODE_INVERT         0x0100
 
+// Functions defined in emu_core
+
+enum emuOpType {
+    EMUOP_CTRL,
+    EMUOP_ESC,
+    EMUOP_CSI,
+    EMUOP_OSC,
+};
+
+void emu_core_init(struct emuState *S, int rows, int cols);
+void emu_core_resize(struct emuState *S, int rows, int cols);
+size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len);
+void emu_core_free(struct emuState *S);
+
+void emu_ops_init(struct emuState *S, int rows, int cols);
+void emu_ops_resize(struct emuState *S, int rows, int cols);
+void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len);
+void emu_ops_exec(struct emuState *S, enum emuOpType type, uint8_t final);
+void emu_ops_free(struct emuState *S);
+
+// Functions to be defined by clients of emu_core
+
 void TerminalEmulator_bell(struct emuState *S);
 void TerminalEmulator_setTitle(struct emuState *S, const char *title);
 void TerminalEmulator_resize(struct emuState *S, int rows, int cols);
 void TerminalEmulator_write(struct emuState *S, char *bytes, size_t len);
 void TerminalEmulator_writeStr(struct emuState *S, char *bytes);
+
+#endif // _EMU_CORE_H

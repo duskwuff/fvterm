@@ -1,3 +1,6 @@
+#ifndef _LIBFVTERM_H
+#define _LIBFVTERM_H
+
 #include <stdint.h>
 #include <unistd.h>
 
@@ -16,3 +19,5 @@ void fvterm_getsize(struct fvterm *self, int *rows, int *cols);
 void fvterm_getcursor(struct fvterm *self, int *row, int *col);
 int fvterm_getrowflags(struct fvterm *self, int row);
 uint64_t fvterm_getglyph(struct fvterm *self, int row, int col);
+
+#endif // _LIBFVTERM_H

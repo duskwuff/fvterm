@@ -4,11 +4,6 @@
 
 #import "ConsoleKeyMappings.h"
 
-void emu_core_init(struct emuState *S, int rows, int cols);
-void emu_core_resize(struct emuState *S, int rows, int cols);
-int  emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len);
-void emu_core_free(struct emuState *S);
-
 @implementation TerminalWindow
 
 - (NSString *)windowNibName
@@ -139,8 +134,8 @@ void emu_core_free(struct emuState *S);
 
 - (void)ptyInput:(TerminalPTY *)pty data:(NSData *)data
 {
-    int n = emu_core_run(&state, [data bytes], [data length]);
-    [view triggerRedrawWithDataLength:n];
+    size_t n = emu_core_run(&state, [data bytes], [data length]);
+    [view triggerRedrawWithDataLength:(int) n];
 }
 
 

@@ -1,4 +1,8 @@
+#include "emu_core.h"
 #include "emu_utils.h"
+
+#include <assert.h>
+#include <string.h>
 
 enum emuCoreState {
     ST_GROUND,

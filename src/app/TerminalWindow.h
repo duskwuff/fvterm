@@ -3,8 +3,6 @@
 @class TerminalPTY;
 @class TerminalView;
 
-#define BITMAP_PTRS     2
-
 @interface TerminalWindow : NSDocument {
     IBOutlet TerminalView *view;
     TerminalPTY *pty;
