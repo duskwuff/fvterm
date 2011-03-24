@@ -121,14 +121,20 @@ static const char * safeHex(uint32_t ch)
 //////////////////////////////////////////////////////////////////////////////
 
 
+#define MODE(priv, intermed, mode) (((priv) << 16) | ((intermed) << 8) | (mode))
+
 static void do_modes(struct emuState *S, int flag)
 {
     for(int i = 0; i < S->paramPtr; i++) {
-        int mode = (S->intermed << 8) | S->params[i];
-        switch(mode) {
+        switch(MODE(S->priv, S->intermed, S->params[i])) {
+            case MODE('?', 0, 6): // DECOM (origin mode)
+                APPLY_FLAG(MODE_ORIGIN, flag);
+                break;
+
 #ifdef DEBUG
             default:
-                printf("unhandled mode %x/%d\n", S->intermed, mode);
+                printf("unhandled mode %x/%x/%d (flag: %d)\n",
+                       S->priv, S->intermed, S->params[i], flag);
 #endif
         }
     }
