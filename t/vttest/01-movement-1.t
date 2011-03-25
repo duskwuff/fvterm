@@ -14,6 +14,7 @@ IN ^[[17;30H^[[2K
 SEQ 1 80 IN ^[[24;\#f*^[[1;\#f*
 
 IN ^[[2;2H
+
 REP 22 IN +^[[1D^[D
 
 IN ^[[23;79H
@@ -117,5 +118,3 @@ OUT 12 10 E middle  there should be a frame of E's around this  text E
 OUT 13 10 E with  one (1) free position around it.    Push <RETURN>  E
 
 CURSOR 13 67
-
-DUMP text
