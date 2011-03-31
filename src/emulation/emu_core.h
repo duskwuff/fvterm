@@ -83,7 +83,7 @@ void emu_ops_free(struct emuState *S);
 
 void TerminalEmulator_bell(struct emuState *S);
 void TerminalEmulator_setTitle(struct emuState *S, const char *title);
-void TerminalEmulator_resize(struct emuState *S, int rows, int cols);
+void TerminalEmulator_resize(struct emuState *S);
 void TerminalEmulator_write(struct emuState *S, char *bytes, size_t len);
 void TerminalEmulator_writeStr(struct emuState *S, char *bytes);
 

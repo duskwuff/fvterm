@@ -166,9 +166,10 @@ void TerminalEmulator_setTitle(struct emuState *S, const char *newTitle)
 }
 
 
-void TerminalEmulator_resize(struct emuState *S, int rows, int cols)
+void TerminalEmulator_resize(struct emuState *S)
 {
-    abort();
+    TerminalWindow *self = S->parent;
+    [self->view resizeForTerminal];
 }
 
 

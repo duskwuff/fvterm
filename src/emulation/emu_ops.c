@@ -127,6 +127,11 @@ static void do_modes(struct emuState *S, int flag)
 {
     for(int i = 0; i < S->paramPtr; i++) {
         switch(MODE(S->priv, S->intermed, S->params[i])) {
+            case MODE('?', 0, 3): // DECCOLM (132/80 switch)
+                emu_ops_resize(S, S->wRows, flag ? 132 : 80);
+                TerminalEmulator_resize(S); // XXX
+                break;
+                
             case MODE('?', 0, 6): // DECOM (origin mode)
                 APPLY_FLAG(MODE_ORIGIN, flag);
                 break;
@@ -491,8 +496,10 @@ void emu_ops_resize(struct emuState *S, int rows, int cols)
     S->rowBase = calloc(rows, rowSize);
     S->rows = calloc(rows, sizeof(struct termRow *));
     
-    for(int i = 0; i < rows; i++)
+    for(int i = 0; i < rows; i++) {
         S->rows[i] = S->rowBase + i * rowSize;
+        row_fill(S->rows[i], 0, cols, APPLY_ATTR(' '));
+    }
     
     S->cRow = S->cCol = 0;
     
