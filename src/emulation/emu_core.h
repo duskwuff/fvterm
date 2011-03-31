@@ -59,25 +59,21 @@ struct emuState {
 #define MODE_CURSORKEYS     0x0080
 #define MODE_INVERT         0x0100
 
-// Functions defined in emu_core
-
-enum emuOpType {
-    EMUOP_CTRL,
-    EMUOP_ESC,
-    EMUOP_CSI,
-    EMUOP_OSC,
-};
-
 void emu_core_init(struct emuState *S, int rows, int cols);
 void emu_core_resize(struct emuState *S, int rows, int cols);
 size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len);
 void emu_core_free(struct emuState *S);
 
-void emu_ops_init(struct emuState *S, int rows, int cols);
-void emu_ops_resize(struct emuState *S, int rows, int cols);
+void emu_row_fill(struct termRow *row, int start, int count, uint64_t value);
+
+//void emu_ops_init(struct emuState *S, int rows, int cols);
+//void emu_ops_resize(struct emuState *S, int rows, int cols);
 void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len);
-void emu_ops_exec(struct emuState *S, enum emuOpType type, uint8_t final);
-void emu_ops_free(struct emuState *S);
+//void emu_ops_exec(struct emuState *S, enum emuOpType type, uint8_t final);
+//void emu_ops_free(struct emuState *S);
+void emu_ops_do_ctrl(struct emuState *S, uint8_t ch);
+void emu_ops_do_esc(struct emuState *S, uint8_t ch);
+void emu_ops_do_csi(struct emuState *S, uint8_t ch);
 
 // Functions to be defined by clients of emu_core
 

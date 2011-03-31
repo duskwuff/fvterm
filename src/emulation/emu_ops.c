@@ -1,22 +1,8 @@
 #include "emu_core.h"
 #include "emu_utils.h"
-#include "DefaultColors.h"
 
 #include <assert.h>
 #include <string.h>
-
-static void row_fill(struct termRow *row, int start, int count, uint64_t value)
-{
-#ifdef NOT_DARWIN
-    // bah, we have to do this the hard way
-    for(int i = 0; i < count; i++)
-        row->chars[start + i] = value;
-#else
-    // memset_pattern8 is highly optimized on x86 :)
-    memset_pattern8(&row->chars[start], &value, count * 8);
-#endif
-    row->flags = TERMROW_DIRTY;
-}
 
 
 static void scroll_down(struct emuState *S, int top, int btm, int count)
@@ -39,7 +25,7 @@ static void scroll_down(struct emuState *S, int top, int btm, int count)
     }
 
     for(int i = clearStart; i <= btm; i++)
-        row_fill(S->rows[i], 0, S->wCols, APPLY_ATTR(' '));
+        emu_row_fill(S->rows[i], 0, S->wCols, APPLY_ATTR(' '));
 }
 
 
@@ -52,7 +38,7 @@ static void scroll_up(struct emuState *S, int top, int btm, int count)
         for(int i = btm; i > top; i--)
             S->rows[i] = S->rows[i - 1];
         S->rows[top] = movingRow;
-        row_fill(movingRow, 0, S->wCols, APPLY_ATTR(' '));
+        emu_row_fill(movingRow, 0, S->wCols, APPLY_ATTR(' '));
     }
 }
 
@@ -128,7 +114,7 @@ static void do_modes(struct emuState *S, int flag)
     for(int i = 0; i < S->paramPtr; i++) {
         switch(MODE(S->priv, S->intermed, S->params[i])) {
             case MODE('?', 0, 3): // DECCOLM (132/80 switch)
-                emu_ops_resize(S, S->wRows, flag ? 132 : 80);
+                emu_core_resize(S, S->wRows, flag ? 132 : 80);
                 TerminalEmulator_resize(S); // XXX
                 break;
                 
@@ -232,7 +218,7 @@ static void do_csi_sgr(struct emuState *S)
 }
 
 
-static void dispatch_ctrl(struct emuState *S, uint8_t ch)
+void emu_ops_do_ctrl(struct emuState *S, uint8_t ch)
 {
     switch(ch) {
         case 0x07: // BEL
@@ -271,7 +257,7 @@ static void dispatch_ctrl(struct emuState *S, uint8_t ch)
 }
 
 
-static void dispatch_esc(struct emuState *S, uint8_t lastch)
+void emu_ops_do_esc(struct emuState *S, uint8_t lastch)
 {
     uint32_t ch = (S->intermed << 8) | lastch;
 
@@ -307,7 +293,7 @@ static void dispatch_esc(struct emuState *S, uint8_t lastch)
 
         case CHAR2('#', '8'): // DECALN
             for(int i = 0; i < S->wRows; i++)
-                row_fill(S->rows[i], 0, S->wCols, APPLY_ATTR('E'));
+                emu_row_fill(S->rows[i], 0, S->wCols, APPLY_ATTR('E'));
             break;
 
 #ifdef DEBUG
@@ -319,7 +305,7 @@ static void dispatch_esc(struct emuState *S, uint8_t lastch)
 }
 
 
-static void dispatch_csi(struct emuState *S, uint8_t lastch)
+void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
 {
     uint32_t ch = (S->intermed << 8) | lastch;
     int from, to, top, btm, row; // common var names
@@ -389,7 +375,7 @@ static void dispatch_csi(struct emuState *S, uint8_t lastch)
                     break;
             }
             for(int i = from; i <= to; i++)
-                row_fill(S->rows[i], 0, S->wCols, APPLY_ATTR(' '));
+                emu_row_fill(S->rows[i], 0, S->wCols, APPLY_ATTR(' '));
             // FALL THROUGH (intentionally -- ED erases partial lines too)
 
         case 'K': // EL
@@ -406,7 +392,7 @@ static void dispatch_csi(struct emuState *S, uint8_t lastch)
                 case 2:
                     break;
             }
-            row_fill(S->rows[S->cRow], from, to - from + 1, APPLY_ATTR(' '));
+            emu_row_fill(S->rows[S->cRow], from, to - from + 1, APPLY_ATTR(' '));
             break;
 
         case 'c': // DA
@@ -450,67 +436,6 @@ static void dispatch_csi(struct emuState *S, uint8_t lastch)
 }
 
 
-//////////////////////////////////////////////////////////////////////////////
-
-
-void emu_ops_init(struct emuState *S, int rows, int cols)
-{
-    for(int i = 0; i < 258; i++)
-        S->palette[i] = (default_colormap[i] << 8) | 0xff;
-    
-    S->wRows = rows;
-    S->wCols = cols;
-    
-    S->tScroll = 0;
-    S->bScroll = rows - 1;
-    
-    S->flags = MODE_WRAPAROUND;
-    S->cursorAttr = 0;
-
-    size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * cols;
-    S->rowBase = calloc(rows, rowSize);
-    S->rows = calloc(rows, sizeof(struct termRow *));
-    
-    for(int i = 0; i < rows; i++) {
-        S->rows[i] = S->rowBase + i * rowSize;
-        row_fill(S->rows[i], 0, cols, APPLY_ATTR(' '));
-    }        
-}
-
-
-void emu_ops_free(struct emuState *S)
-{
-    free(S->rowBase);
-    free(S->rows);
-}
-
-
-void emu_ops_resize(struct emuState *S, int rows, int cols)
-{
-    // FIXME: this is the simplest and worst possible resize impl (erase all)
-    
-    free(S->rowBase);
-    free(S->rows);
-    
-    size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * cols;
-    S->rowBase = calloc(rows, rowSize);
-    S->rows = calloc(rows, sizeof(struct termRow *));
-    
-    for(int i = 0; i < rows; i++) {
-        S->rows[i] = S->rowBase + i * rowSize;
-        row_fill(S->rows[i], 0, cols, APPLY_ATTR(' '));
-    }
-    
-    S->cRow = S->cCol = 0;
-    
-    S->wRows = rows;
-    S->wCols = cols;
-    
-    S->tScroll = 0;
-    S->bScroll = rows - 1;
-}
-
-
 void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len)
 {
     // FIXME: accelerate
@@ -533,26 +458,3 @@ void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len)
         }
     }
 }
-
-
-void emu_ops_exec(struct emuState *S, enum emuOpType type, uint8_t final)
-{
-    switch(type) {
-        case EMUOP_CTRL:
-            dispatch_ctrl(S, final);
-            break;
-
-        case EMUOP_ESC:
-            dispatch_esc(S, final);
-            break;
-
-        case EMUOP_CSI:
-            dispatch_csi(S, final);
-            break;
-
-        default:
-            abort();
-    }
-}
-
-

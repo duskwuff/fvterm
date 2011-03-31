@@ -1,5 +1,6 @@
 #include "emu_core.h"
 #include "emu_utils.h"
+#include "DefaultColors.h"
 
 #include <assert.h>
 #include <string.h>
@@ -13,17 +14,58 @@ enum emuCoreState {
 void emu_core_init(struct emuState *S, int rows, int cols)
 {
     S->coreState = ST_GROUND;
-    emu_ops_init(S, rows, cols);
+
+    for(int i = 0; i < 258; i++)
+        S->palette[i] = (default_colormap[i] << 8) | 0xff;
+    
+    S->wRows = rows;
+    S->wCols = cols;
+    
+    S->tScroll = 0;
+    S->bScroll = rows - 1;
+    
+    S->flags = MODE_WRAPAROUND;
+    S->cursorAttr = 0;
+
+    size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * cols;
+    S->rowBase = calloc(rows, rowSize);
+    S->rows = calloc(rows, sizeof(struct termRow *));
+    
+    for(int i = 0; i < rows; i++) {
+        S->rows[i] = S->rowBase + i * rowSize;
+        emu_row_fill(S->rows[i], 0, cols, APPLY_ATTR(' '));
+    }
 }
 
 void emu_core_resize(struct emuState *S, int rows, int cols)
 {
-    emu_ops_resize(S, rows, cols);
+    // FIXME: this is the simplest and worst possible resize impl (erase all)
+    
+    free(S->rowBase);
+    free(S->rows);
+    
+    size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * cols;
+    S->rowBase = calloc(rows, rowSize);
+    S->rows = calloc(rows, sizeof(struct termRow *));
+    
+    for(int i = 0; i < rows; i++) {
+        S->rows[i] = S->rowBase + i * rowSize;
+        emu_row_fill(S->rows[i], 0, cols, APPLY_ATTR(' '));
+    }
+    
+    S->cRow = S->cCol = 0;
+    
+    S->wRows = rows;
+    S->wCols = cols;
+    
+    S->tScroll = 0;
+    S->bScroll = rows - 1;
 }
 
 void emu_core_free(struct emuState *S)
 {
-    emu_ops_free(S);
+    free(S->rowBase);
+    free(S->rows);
 }
 
 size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
@@ -47,7 +89,7 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
                 S->priv = S->intermed = 0;
                 lstate = ST_ESC;
             } else {
-                emu_ops_exec(S, EMUOP_CTRL, ch);
+                emu_ops_do_ctrl(S, ch);
             }
             continue;
         }
@@ -77,7 +119,7 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
                     bzero(S->params, sizeof(S->params));
                 } else {
                     lstate = ST_GROUND;
-                    emu_ops_exec(S, EMUOP_ESC, ch);
+                    emu_ops_do_esc(S, ch);
                 }
                 break;
 
@@ -102,7 +144,7 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
                 } else { // dispatch
                     if(S->paramPtr < MAX_PARAMS)
                         S->params[S->paramPtr++] = S->paramVal;
-                    emu_ops_exec(S, EMUOP_CSI, ch);
+                    emu_ops_do_csi(S, ch);
                     lstate = ST_GROUND;
                 }
                 break;
@@ -115,4 +157,22 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
     return len;
 
 #undef GROUND_FLUSH
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Utilities used by both emu_core and emu_ops
+
+void emu_row_fill(struct termRow *row, int start, int count, uint64_t value)
+{
+#ifdef NOT_DARWIN
+    // bah, we have to do this the hard way
+    for(int i = 0; i < count; i++)
+        row->chars[start + i] = value;
+#else
+    // memset_pattern8 is highly optimized on x86 :)
+    memset_pattern8(&row->chars[start], &value, count * 8);
+#endif
+    row->flags = TERMROW_DIRTY;
 }
