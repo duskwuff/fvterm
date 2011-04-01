@@ -94,7 +94,7 @@
 		CC9EC8F3132C28E500675B90 /* terminus32-r-ff.png in Resources */ = {isa = PBXBuildFile; fileRef = CC7E47A6132C0F2C00C9B890 /* terminus32-r-ff.png */; };
 		CC9F3DDD1338FE1E00C1D3B3 /* emu_core.c in Sources */ = {isa = PBXBuildFile; fileRef = CC7E4728132C0A1100C9B890 /* emu_core.c */; };
 		CC9F3DDF1338FE2600C1D3B3 /* emu_ops.c in Sources */ = {isa = PBXBuildFile; fileRef = CC7E472A132C0A1100C9B890 /* emu_ops.c */; };
-		CC9F3DE01338FE2600C1D3B3 /* emu_utils.h in Headers */ = {isa = PBXBuildFile; fileRef = CC7E472B132C0A1100C9B890 /* emu_utils.h */; };
+		CC9F3DE01338FE2600C1D3B3 /* emu_ops.h in Headers */ = {isa = PBXBuildFile; fileRef = CC7E472B132C0A1100C9B890 /* emu_ops.h */; };
 		CC9F3DE41338FE7800C1D3B3 /* libfvterm.c in Sources */ = {isa = PBXBuildFile; fileRef = CC9F3DE11338FE7700C1D3B3 /* libfvterm.c */; };
 		CC9F3DE61338FE7800C1D3B3 /* libfvterm.h in Headers */ = {isa = PBXBuildFile; fileRef = CC9F3DE31338FE7800C1D3B3 /* libfvterm.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
@@ -116,7 +116,7 @@
 		CC7E4728132C0A1100C9B890 /* emu_core.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = emu_core.c; sourceTree = "<group>"; };
 		CC7E4729132C0A1100C9B890 /* emu_core.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = emu_core.h; sourceTree = "<group>"; };
 		CC7E472A132C0A1100C9B890 /* emu_ops.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = emu_ops.c; sourceTree = "<group>"; };
-		CC7E472B132C0A1100C9B890 /* emu_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = emu_utils.h; sourceTree = "<group>"; };
+		CC7E472B132C0A1100C9B890 /* emu_ops.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = emu_ops.h; sourceTree = "<group>"; };
 		CC7E4732132C0A1C00C9B890 /* MainMenu.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		CC7E4737132C0A2700C9B890 /* TerminalFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TerminalFont.h; sourceTree = "<group>"; };
 		CC7E4738132C0A2700C9B890 /* TerminalFont.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TerminalFont.m; sourceTree = "<group>"; };
@@ -303,7 +303,7 @@
 				CC7E4728132C0A1100C9B890 /* emu_core.c */,
 				CC7E4729132C0A1100C9B890 /* emu_core.h */,
 				CC7E472A132C0A1100C9B890 /* emu_ops.c */,
-				CC7E472B132C0A1100C9B890 /* emu_utils.h */,
+				CC7E472B132C0A1100C9B890 /* emu_ops.h */,
 			);
 			name = emulation;
 			path = src/emulation;
@@ -441,7 +441,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CC9F3DE01338FE2600C1D3B3 /* emu_utils.h in Headers */,
+				CC9F3DE01338FE2600C1D3B3 /* emu_ops.h in Headers */,
 				CC9F3DE61338FE7800C1D3B3 /* libfvterm.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -735,6 +735,7 @@
 				CC9F3DDA1338FDEC00C1D3B3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

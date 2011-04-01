@@ -1,5 +1,5 @@
 #include "emu_core.h"
-#include "emu_utils.h"
+#include "emu_ops.h"
 
 #include <assert.h>
 #include <string.h>
@@ -107,18 +107,15 @@ static const char * safeHex(uint32_t ch)
 //////////////////////////////////////////////////////////////////////////////
 
 
-#define MODE(priv, intermed, mode) (((priv) << 16) | ((intermed) << 8) | (mode))
-
 static void do_modes(struct emuState *S, int flag)
 {
     for(int i = 0; i < S->paramPtr; i++) {
-        switch(MODE(S->priv, S->intermed, S->params[i])) {
-            case MODE('?', 0, 3): // DECCOLM (132/80 switch)
+        switch(PACK3(S->priv, S->intermed, S->params[i])) {
+            case PACK3('?', 0, 3): // DECCOLM (132/80 switch)
                 emu_core_resize(S, S->wRows, flag ? 132 : 80);
-                TerminalEmulator_resize(S); // XXX
                 break;
                 
-            case MODE('?', 0, 6): // DECOM (origin mode)
+            case PACK3('?', 0, 6): // DECOM (origin mode)
                 APPLY_FLAG(MODE_ORIGIN, flag);
                 break;
 
@@ -291,7 +288,7 @@ void emu_ops_do_esc(struct emuState *S, uint8_t lastch)
 
         // case '[': CSI is handled upstream
 
-        case CHAR2('#', '8'): // DECALN
+        case PACK2('#', '8'): // DECALN
             for(int i = 0; i < S->wRows; i++)
                 emu_row_fill(S->rows[i], 0, S->wCols, APPLY_ATTR('E'));
             break;

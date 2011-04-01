@@ -31,6 +31,8 @@
     else S->flags &= ~(mask); \
 } while(0)
 
-#define CHAR2(c1, c2) ((c1 << 8) | (c2))
+#define PACK2(c1, c2) ((c1 << 8) | (c2))
+#define PACK3(c1, c2, c3) (((c1) << 16) | ((c2) << 8) | (c3))
+#define PACK4(c1, c2, c3, c4) (((c1) << 24) | ((c2) << 16) | ((c3) << 8) | (c4))
 
 #endif // _EMU_UTILS_H

@@ -1,5 +1,5 @@
 #include "emu_core.h"
-#include "emu_utils.h"
+#include "emu_ops.h"
 #include "DefaultColors.h"
 
 #include <assert.h>
@@ -18,6 +18,8 @@ void emu_core_init(struct emuState *S, int rows, int cols)
     for(int i = 0; i < 258; i++)
         S->palette[i] = (default_colormap[i] << 8) | 0xff;
     
+    S->cRow = S->cCol = S->saveRow = S->saveCol = 0;
+    
     S->wRows = rows;
     S->wCols = cols;
     
@@ -25,7 +27,7 @@ void emu_core_init(struct emuState *S, int rows, int cols)
     S->bScroll = rows - 1;
     
     S->flags = MODE_WRAPAROUND;
-    S->cursorAttr = 0;
+    S->cursorAttr = S->saveAttr = 0;
 
     size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * cols;
     S->rowBase = calloc(rows, rowSize);
@@ -53,13 +55,15 @@ void emu_core_resize(struct emuState *S, int rows, int cols)
         emu_row_fill(S->rows[i], 0, cols, APPLY_ATTR(' '));
     }
     
-    S->cRow = S->cCol = 0;
+    S->cRow = S->cCol = S->saveRow = S->saveCol = 0;
     
     S->wRows = rows;
     S->wCols = cols;
     
     S->tScroll = 0;
     S->bScroll = rows - 1;
+    
+    TerminalEmulator_resize(S);
 }
 
 void emu_core_free(struct emuState *S)
