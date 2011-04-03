@@ -1,6 +1,8 @@
 #ifndef _EMU_UTILS_H
 #define _EMU_UTILS_H
 
+#include "emu_core.h"
+
 #ifndef unlikely
 # define unlikely(x) __builtin_expect((x), 0)
 #endif
@@ -9,7 +11,7 @@
 # define likely(x) __builtin_expect((x), 1)
 #endif
 
-#define DEFAULT(n, def) ((n) == 0 ? (def) : (n))
+#define GETARG(S, n, def) (S->params[n] == 0 ? (def) : S->params[n])
 
 #define CAP_MIN(val, vmin) do { \
     if((val) < (vmin)) val = vmin; \
@@ -25,6 +27,8 @@
 } while(0)
 
 #define APPLY_ATTR(ch) ((((uint64_t) S->cursorAttr) << 32) | (ch))
+
+#define EMPTY_FIELD APPLY_ATTR(0x20)
 
 #define APPLY_FLAG(mask, val) do { \
     if(val) S->flags |= (mask); \

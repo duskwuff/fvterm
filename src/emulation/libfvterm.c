@@ -99,7 +99,7 @@ void TerminalEmulator_setTitle(struct emuState *S, const char *title)
     self->title[sizeof(self->title) - 1] = 0;
 }
 
-void TerminalEmulator_resize(struct emuState *S, int rows, int cols)
+void TerminalEmulator_resize(struct emuState *S)
 {
     // ...
 }

@@ -66,11 +66,7 @@ void emu_core_free(struct emuState *S);
 
 void emu_row_fill(struct termRow *row, int start, int count, uint64_t value);
 
-//void emu_ops_init(struct emuState *S, int rows, int cols);
-//void emu_ops_resize(struct emuState *S, int rows, int cols);
 void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len);
-//void emu_ops_exec(struct emuState *S, enum emuOpType type, uint8_t final);
-//void emu_ops_free(struct emuState *S);
 void emu_ops_do_ctrl(struct emuState *S, uint8_t ch);
 void emu_ops_do_esc(struct emuState *S, uint8_t ch);
 void emu_ops_do_csi(struct emuState *S, uint8_t ch);

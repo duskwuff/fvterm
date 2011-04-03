@@ -25,7 +25,7 @@ static void scroll_down(struct emuState *S, int top, int btm, int count)
     }
 
     for(int i = clearStart; i <= btm; i++)
-        emu_row_fill(S->rows[i], 0, S->wCols, APPLY_ATTR(' '));
+        emu_row_fill(S->rows[i], 0, S->wCols, EMPTY_FIELD);
 }
 
 
@@ -38,7 +38,7 @@ static void scroll_up(struct emuState *S, int top, int btm, int count)
         for(int i = btm; i > top; i--)
             S->rows[i] = S->rows[i - 1];
         S->rows[top] = movingRow;
-        emu_row_fill(movingRow, 0, S->wCols, APPLY_ATTR(' '));
+        emu_row_fill(movingRow, 0, S->wCols, EMPTY_FIELD);
     }
 }
 
@@ -66,15 +66,6 @@ static void term_index(struct emuState *S, int count)
             scroll_up(S, S->tScroll, S->bScroll, count - dist);
         }
     }
-}
-
-
-static void term_cursorHorz(struct emuState *S, int count)
-{
-    // XXX: reverse wraparound?
-    S->cCol += count;
-    CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
-    S->wrapnext = 0;
 }
 
 
@@ -107,29 +98,209 @@ static const char * safeHex(uint32_t ch)
 //////////////////////////////////////////////////////////////////////////////
 
 
-static void do_modes(struct emuState *S, int flag)
+static void do_BEL(struct emuState *S)
 {
-    for(int i = 0; i < S->paramPtr; i++) {
-        switch(PACK3(S->priv, S->intermed, S->params[i])) {
-            case PACK3('?', 0, 3): // DECCOLM (132/80 switch)
-                emu_core_resize(S, S->wRows, flag ? 132 : 80);
-                break;
-                
-            case PACK3('?', 0, 6): // DECOM (origin mode)
-                APPLY_FLAG(MODE_ORIGIN, flag);
-                break;
+    TerminalEmulator_bell(S);
+}
 
-#ifdef DEBUG
-            default:
-                printf("unhandled mode %x/%x/%d (flag: %d)\n",
-                       S->priv, S->intermed, S->params[i], flag);
-#endif
-        }
+static void do_BS(struct emuState *S)
+{
+    S->cCol -= 1;
+    CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
+    S->wrapnext = 0;
+}
+
+static void do_CHA(struct emuState *S)
+{
+    int p1 = GETARG(S, 0, 1);
+    S->cCol = p1 - 1;
+    S->wrapnext = 0;
+    CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
+}
+
+static void do_CNL(struct emuState *S)
+{
+    int p1 = GETARG(S, 0, 1);
+    term_index(S, p1);
+    S->cCol = 0;
+}
+
+static void do_CPL(struct emuState *S)
+{
+    int p1 = GETARG(S, 0, 1);
+    term_index(S, -p1);
+    S->cCol = 0;
+}
+
+static void do_CR(struct emuState *S)
+{
+    S->cCol = 0;
+    S->wrapnext = 0;
+}
+
+static void do_CUB(struct emuState *S)
+{
+    S->cCol -= GETARG(S, 0, 1);
+    CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
+    S->wrapnext = 0;
+}
+
+static void do_CUF(struct emuState *S)
+{
+    S->cCol += GETARG(S, 0, 1);
+    CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
+    S->wrapnext = 0;
+}
+
+static void do_CUU(struct emuState *S)
+{
+    int p1 = GETARG(S, 0, 1);
+    int row = S->cRow;
+    S->cRow -= p1;
+    CAP_MIN_MAX(S->cRow, (row < S->tScroll) ? 0 : S->tScroll, S->wCols - 1);
+    S->wrapnext = 0;
+}
+
+static void do_CUD(struct emuState *S)
+{
+    int p1 = GETARG(S, 0, 1);
+    int row = S->cRow;
+    S->cRow += p1;
+    CAP_MIN_MAX(S->cRow, 0, (row > S->bScroll) ? S->wRows - 1 : S->bScroll);
+    S->wrapnext = 0;
+}
+
+static void do_CUP_HVP(struct emuState *S)
+{
+    int p1 = GETARG(S, 0, 1);
+    int p2 = GETARG(S, 1, 1);
+    S->cRow = p1 - 1;
+    S->cCol = p2 - 1;
+    if(S->flags & MODE_ORIGIN) {
+        S->cRow += S->tScroll;
+        CAP_MIN_MAX(S->cRow, 0, S->bScroll);
+    } else {
+        CAP_MIN_MAX(S->cRow, 0, S->wRows - 1);
+    }
+    CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
+    S->wrapnext = 0;
+}
+
+static void do_DA(struct emuState *S)
+{
+    TerminalEmulator_writeStr(S, "\e[?1;2c");
+}
+
+static void do_DECALN(struct emuState *S)
+{
+    for(int i = 0; i < S->wRows; i++)
+        emu_row_fill(S->rows[i], 0, S->wCols, APPLY_ATTR('E'));
+}
+
+static void do_DECRC(struct emuState *S)
+{
+    S->cRow = S->saveRow;
+    S->cCol = S->saveCol;
+    S->cursorAttr = S->saveAttr;
+    CAP_MAX(S->cRow, S->wRows - 1);
+    CAP_MAX(S->cCol, S->wCols - 1);
+}
+
+static void do_DECSC(struct emuState *S)
+{
+    S->saveRow  = S->cRow;
+    S->saveCol  = S->cCol;
+    S->saveAttr = S->cursorAttr;
+}
+
+static void do_DECSTBM(struct emuState *S)
+{
+    int p1 = GETARG(S, 0, 1);
+    int p2 = GETARG(S, 1, 65535);
+    CAP_MIN(p1, 1);
+    CAP_MAX(p2, S->wRows);
+    if(p2 > p1) { // FIXME: is this correct?
+        S->tScroll = p1 - 1;
+        S->bScroll = p2 - 1;
+        S->cRow = (S->flags & MODE_ORIGIN) ? S->tScroll : 0;
+        S->cRow = 0;
     }
 }
 
+static void do_ED(struct emuState *S)
+{
+    int p1 = GETARG(S, 0, 0);
+    int from = 0;
+    int to = S->wRows - 1;
+    switch(p1) {
+        default:
+        case 0:
+            from = S->cRow + 1;
+            break;
+        case 1:
+            to = S->cRow - 1;
+            break;
+        case 2:
+            break;
+    }
+    for(int i = from; i <= to; i++)
+        emu_row_fill(S->rows[i], 0, S->wCols, EMPTY_FIELD);
+    // ED erases partial lines too...
+    if(p1 == 1)
+        emu_row_fill(S->rows[S->cRow], 0, S->cCol + 1, EMPTY_FIELD);
+    else if(p1 != 2) // 0 or default
+        emu_row_fill(S->rows[S->cRow], S->cCol, S->wCols - S->cCol, EMPTY_FIELD);
+}
 
-static void do_csi_sgr(struct emuState *S)
+static void do_EL(struct emuState *S)
+{
+    int from = 0;
+    int to = S->wCols - 1;
+    switch(GETARG(S, 0, 0)) {
+        default:
+        case 0:
+            from = S->cCol;
+            break;
+        case 1:
+            to = S->cCol;
+            break;
+        case 2:
+            break;
+    }
+    emu_row_fill(S->rows[S->cRow], from, to - from + 1, EMPTY_FIELD);
+}
+
+static void do_HT(struct emuState *S)
+{
+    // TODO
+}
+
+static void do_IND(struct emuState *S)
+{
+    term_index(S, 1);
+}
+
+static void do_NEL(struct emuState *S)
+{
+    term_index(S, 1);
+    S->cCol = 0;
+    S->wrapnext = 0;
+}
+
+static void do_NL(struct emuState *S)
+{
+    term_index(S, 1);
+    if(S->flags & MODE_NEWLINE)
+        S->cCol = 0;
+    S->wrapnext = 0;
+}
+
+static void do_RI(struct emuState *S)
+{
+    term_index(S, -1);
+}
+
+static void do_SGR(struct emuState *S)
 {
     for(int i = 0; i < S->paramPtr; i++) {
         switch(S->params[i]) {
@@ -139,7 +310,7 @@ static void do_csi_sgr(struct emuState *S)
             case 1: // bold / increased intensity
                 S->cursorAttr |= ATTR_BOLD;
                 break;
-            // case 2: faint
+                // case 2: faint
             case 3: // italic
                 S->cursorAttr |= ATTR_ITALIC;
                 break;
@@ -153,12 +324,12 @@ static void do_csi_sgr(struct emuState *S)
             case 7: // negative image
                 S->cursorAttr |= ATTR_REVERSE;
                 break;
-            // case 8: invisible
+                // case 8: invisible
             case 9: // crossed out
                 S->cursorAttr |= ATTR_STRIKE;
                 break;
-            // case 10 ... 19: alt fonts
-            // case 20: fraktur?!
+                // case 10 ... 19: alt fonts
+                // case 20: fraktur?!
             case 21: // double underline
                 S->cursorAttr |= ATTR_UNDERLINE;
                 break;
@@ -174,11 +345,11 @@ static void do_csi_sgr(struct emuState *S)
             case 25: // un-blink
                 S->cursorAttr &= ~ATTR_BLINK;
                 break;
-            // case 26: un-used
+                // case 26: un-used
             case 27: // un-reverse
                 S->cursorAttr &= ~ATTR_REVERSE;
                 break;
-            //case 28: un-invisible
+                //case 28: un-invisible
             case 29: // un-crosssed-out
                 S->cursorAttr &= ~ATTR_STRIKE;
                 break;
@@ -186,7 +357,7 @@ static void do_csi_sgr(struct emuState *S)
                 S->cursorAttr &= ~ATTR_FG_MASK;
                 S->cursorAttr |= ATTR_CUSTFG | (S->params[i] - 30);
                 break;
-            //case 38: extended FG, FIXME
+                //case 38: extended FG, FIXME
             case 39: // default FG
                 S->cursorAttr &= ~(ATTR_FG_MASK | ATTR_CUSTFG);
                 break;
@@ -194,7 +365,7 @@ static void do_csi_sgr(struct emuState *S)
                 S->cursorAttr &= ~ATTR_BG_MASK;
                 S->cursorAttr |= ATTR_CUSTBG | (S->params[i] - 40) << 8;
                 break;
-            // case 48: extended BG, FIXME
+                // case 48: extended BG, FIXME
             case 49: // default FG
                 S->cursorAttr &= ~(ATTR_BG_MASK | ATTR_CUSTBG);
                 break;
@@ -214,37 +385,44 @@ static void do_csi_sgr(struct emuState *S)
     }
 }
 
+static void do_modes(struct emuState *S, int flag)
+{
+    for(int i = 0; i < S->paramPtr; i++) {
+        switch(PACK3(S->priv, S->intermed, S->params[i])) {
+            case PACK3('?', 0, 3): // DECCOLM (132/80 switch)
+                emu_core_resize(S, S->wRows, flag ? 132 : 80);
+                break;
+                
+            case PACK3('?', 0, 6): // DECOM (origin mode)
+                APPLY_FLAG(MODE_ORIGIN, flag);
+                break;
+                
+#ifdef DEBUG
+            default:
+                printf("unhandled mode %x/%x/%d (flag: %d)\n",
+                       S->priv, S->intermed, S->params[i], flag);
+#endif
+        }
+    }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+
+#define CASE(frm, to) case frm: to(S); break
+#define CASE2(frm, frm2, to) CASE(PACK2(frm, frm2), to)
 
 void emu_ops_do_ctrl(struct emuState *S, uint8_t ch)
 {
     switch(ch) {
-        case 0x07: // BEL
-            TerminalEmulator_bell(S);
-            break;
-
-        case 0x08: // BS
-            term_cursorHorz(S, -1);
-            break;
-
-        case 0x09: // HT
-            // FIXME
-            break;
-
-        case 0x0A: // NL
-        case 0x0B: // VT
-        case 0x0C: // NP
-            term_index(S, 1);
-            if(S->flags & MODE_NEWLINE)
-                S->cCol = 0;
-            S->wrapnext = 0;
-            break;
-
-        case 0x0D: // CR
-            S->cCol = 0;
-            S->wrapnext = 0;
-            break;
-
-        // case 0x1B: ESC is handled upstream
+            CASE(0x07, do_BEL);
+            CASE(0x08, do_BS);
+            CASE(0x09, do_HT);
+            CASE(0x0A, do_NL);
+            CASE(0x0B, do_NL); // VT -> NL
+            CASE(0x0C, do_NL); // NP -> NL
+            CASE(0x0D, do_CR);
 
 #ifdef DEBUG
         default:
@@ -259,39 +437,14 @@ void emu_ops_do_esc(struct emuState *S, uint8_t lastch)
     uint32_t ch = (S->intermed << 8) | lastch;
 
     switch(ch) {
-        case '7': // DECSC (Save Cursor)
-            S->saveRow  = S->cRow;
-            S->saveCol  = S->cCol;
-            S->saveAttr = S->cursorAttr;
-            break;
-
-        case '8': // DECRC (Restore Cursor)
-            S->cRow = S->saveRow;
-            S->cCol = S->saveCol;
-            S->cursorAttr = S->saveAttr;
-            CAP_MAX(S->cRow, S->wRows - 1);
-            CAP_MAX(S->cCol, S->wCols - 1);
-            break;
+            CASE('7', do_DECSC);
+            CASE('8', do_DECRC);
             
-        case 'D': // IND
-            term_index(S, 1);
-            break;
-
-        case 'E': // NEL
-            term_index(S, 1);
-            S->cCol = 0;
-            break;
-
-        case 'M': // RI
-            term_index(S, -1);
-            break;
-
-        // case '[': CSI is handled upstream
-
-        case PACK2('#', '8'): // DECALN
-            for(int i = 0; i < S->wRows; i++)
-                emu_row_fill(S->rows[i], 0, S->wCols, APPLY_ATTR('E'));
-            break;
+            CASE('D', do_IND);
+            CASE('E', do_NEL);
+            CASE('M', do_RI);
+            
+            CASE2('#', '8', do_DECALN);
 
 #ifdef DEBUG
         default:
@@ -301,123 +454,32 @@ void emu_ops_do_esc(struct emuState *S, uint8_t lastch)
     }
 }
 
-
 void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
 {
     uint32_t ch = (S->intermed << 8) | lastch;
-    int from, to, top, btm, row; // common var names
-    switch(ch) {
-        case 'A': // CUU
-            row = S->cRow;
-            S->cRow -= DEFAULT(S->params[0], 1);
-            CAP_MIN(S->cRow, (row < S->tScroll) ? 0 : S->tScroll);
-            S->wrapnext = 0;
-            break;
-
-        case 'B': // CUD
-            row = S->cRow;
-            S->cRow += DEFAULT(S->params[0], 1);
-            CAP_MAX(S->cRow, (row > S->bScroll) ? S->wRows - 1 : S->bScroll);
-            S->wrapnext = 0;
-            break;
-
-        case 'C': // CUF
-            term_cursorHorz(S, DEFAULT(S->params[0], 1));
-            break;
-
-        case 'D': // CUB
-            term_cursorHorz(S, -DEFAULT(S->params[0], 1));
-            break;
-
-        case 'E': // CNL
-            term_index(S, DEFAULT(S->params[0], 1));
-            S->cCol = 0;
-            break;
-
-        case 'F': // CPL
-            term_index(S, -DEFAULT(S->params[0], 1));
-            S->cCol = 0;
-            break;
-
-        case 'G': // CHA
-            S->cCol = S->params[0];
-            CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
-            break;
-
-        case 'H': // CUP
-        case 'f': // HVP
-            S->cRow = DEFAULT(S->params[0], 1) - 1;
-            S->cCol = DEFAULT(S->params[1], 1) - 1;
-            if(S->flags & MODE_ORIGIN) {
-                S->cRow += S->tScroll;
-                CAP_MAX(S->cRow, S->bScroll);
-            } else
-                CAP_MIN_MAX(S->cRow, 0, S->wRows - 1);
-            CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
-            S->wrapnext = 0;
-            break;
-
-        case 'J': // ED
-            from = 0;
-            to = S->wRows - 1;
-            switch(S->params[0]) {
-                default:
-                case 0:
-                    from = S->cRow + 1;
-                    break;
-                case 1:
-                    to = S->cRow - 1;
-                    break;
-                case 2:
-                    break;
-            }
-            for(int i = from; i <= to; i++)
-                emu_row_fill(S->rows[i], 0, S->wCols, APPLY_ATTR(' '));
-            // FALL THROUGH (intentionally -- ED erases partial lines too)
-
-        case 'K': // EL
-            from = 0;
-            to = S->wCols - 1;
-            switch(S->params[0]) {
-                default:
-                case 0:
-                    from = S->cCol;
-                    break;
-                case 1:
-                    to = S->cCol;
-                    break;
-                case 2:
-                    break;
-            }
-            emu_row_fill(S->rows[S->cRow], from, to - from + 1, APPLY_ATTR(' '));
-            break;
-
-        case 'c': // DA
-            TerminalEmulator_writeStr(S, "\e[?1;2c");
-            break;
-
+    switch(PACK2(S->intermed, lastch)) {
+            CASE('A', do_CUU);
+            CASE('B', do_CUD);
+            CASE('C', do_CUF);
+            CASE('D', do_CUB);
+            CASE('E', do_CNL);
+            CASE('F', do_CPL);
+            CASE('G', do_CHA);
+            CASE('H', do_CUP_HVP);
+            CASE('J', do_ED);
+            CASE('K', do_EL);
+            
+            CASE('c', do_DA);
+            CASE('f', do_CUP_HVP);
+            CASE('r', do_DECSTBM);
+            CASE('m', do_SGR);
+            
         case 'h':
             do_modes(S, 1);
             break;
 
         case 'l':
             do_modes(S, 0);
-            break;
-
-        case 'm': // SGR
-            do_csi_sgr(S);
-            break;
-
-        case 'r': // DECSTBM
-            top = DEFAULT(S->params[0], 1);
-            btm = DEFAULT(S->params[1], 65535);
-            CAP_MAX(btm, S->wRows);
-            if(btm > top) { // FIXME: is this correct?
-                S->tScroll = top - 1;
-                S->bScroll = btm - 1;
-                S->cRow = (S->flags & MODE_ORIGIN) ? S->tScroll : 0;
-                S->cRow = 0;
-            }
             break;
 
 #ifdef DEBUG

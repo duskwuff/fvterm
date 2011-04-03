@@ -35,7 +35,7 @@ void emu_core_init(struct emuState *S, int rows, int cols)
     
     for(int i = 0; i < rows; i++) {
         S->rows[i] = S->rowBase + i * rowSize;
-        emu_row_fill(S->rows[i], 0, cols, APPLY_ATTR(' '));
+        emu_row_fill(S->rows[i], 0, cols, EMPTY_FIELD);
     }
 }
 
@@ -52,7 +52,7 @@ void emu_core_resize(struct emuState *S, int rows, int cols)
     
     for(int i = 0; i < rows; i++) {
         S->rows[i] = S->rowBase + i * rowSize;
-        emu_row_fill(S->rows[i], 0, cols, APPLY_ATTR(' '));
+        emu_row_fill(S->rows[i], 0, cols, EMPTY_FIELD);
     }
     
     S->cRow = S->cCol = S->saveRow = S->saveCol = 0;
