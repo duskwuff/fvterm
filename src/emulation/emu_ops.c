@@ -344,6 +344,15 @@ static void do_modes(struct emuState *S, int flag)
     }
 }
 
+static void do_SM(struct emuState *S)
+{
+    do_modes(S, 1);
+}
+
+static void do_RM(struct emuState *S)
+{
+    do_modes(S, 0);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -409,17 +418,11 @@ void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
             
             CASE('c', do_DA);
             CASE('f', do_CUP_HVP);
+            CASE('h', do_SM);
+            CASE('l', do_RM);
             CASE('r', do_DECSTBM);
             CASE('m', do_SGR);
             
-        case 'h':
-            do_modes(S, 1);
-            break;
-
-        case 'l':
-            do_modes(S, 0);
-            break;
-
 #ifdef DEBUG
         default:
             printf("unhandled CSI");
