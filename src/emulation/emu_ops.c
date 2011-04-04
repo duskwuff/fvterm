@@ -4,71 +4,6 @@
 #include <assert.h>
 #include <string.h>
 
-
-static void scroll_down(struct emuState *S, int top, int btm, int count)
-{
-    assert(count > 0);
-    int clearStart;
-    if(count > btm - top) {
-        // every row's getting cleared, so we don't need to bother
-        // changing the pointers at all!
-        clearStart = top;
-    } else {
-        clearStart = btm - count + 1;
-        struct termRow *keepBuf[count];
-        memcpy(keepBuf, &S->rows[top],
-                count * sizeof(struct termRow *));
-        memmove(&S->rows[top], &S->rows[top + count],
-                (clearStart - top) * sizeof(struct termRow *));
-        memcpy(&S->rows[clearStart], keepBuf,
-                count * sizeof(struct termRow *));
-    }
-
-    for(int i = clearStart; i <= btm; i++)
-        emu_row_fill(S->rows[i], 0, S->wCols, EMPTY_FIELD);
-}
-
-
-static void scroll_up(struct emuState *S, int top, int btm, int count)
-{
-    // FIXME: this is unoptimized.
-    assert(count > 0);
-    while(count--) {
-        struct termRow *movingRow = S->rows[btm];
-        for(int i = btm; i > top; i--)
-            S->rows[i] = S->rows[i - 1];
-        S->rows[top] = movingRow;
-        emu_row_fill(movingRow, 0, S->wCols, EMPTY_FIELD);
-    }
-}
-
-
-static void term_index(struct emuState *S, int count)
-{
-    if(unlikely(count == 0)) return;
-
-    if(likely(count > 0)) {
-        // positive scroll - scroll down
-        int dist = S->bScroll - S->cRow;
-        if(dist >= count) {
-            S->cRow += count;
-        } else {
-            S->cRow = S->bScroll;
-            scroll_down(S, S->tScroll, S->bScroll, count - dist);
-        }
-    } else {
-        count = -count; // scroll up
-        int dist = S->cRow - S->tScroll;
-        if(dist >= count)
-            S->cRow -= count;
-        else {
-            S->cRow = S->tScroll;
-            scroll_up(S, S->tScroll, S->bScroll, count - dist);
-        }
-    }
-}
-
-
 #ifdef DEBUG
 #include <stdio.h>
 
@@ -121,15 +56,17 @@ static void do_CHA(struct emuState *S)
 static void do_CNL(struct emuState *S)
 {
     int p1 = GETARG(S, 0, 1);
-    term_index(S, p1);
+    emu_term_index(S, p1);
     S->cCol = 0;
+    S->wrapnext = 0;
 }
 
 static void do_CPL(struct emuState *S)
 {
     int p1 = GETARG(S, 0, 1);
-    term_index(S, -p1);
+    emu_term_index(S, -p1);
     S->cCol = 0;
+    S->wrapnext = 0;
 }
 
 static void do_CR(struct emuState *S)
@@ -176,6 +113,7 @@ static void do_CUP_HVP(struct emuState *S)
     int p2 = GETARG(S, 1, 1);
     S->cRow = p1 - 1;
     S->cCol = p2 - 1;
+    S->wrapnext = 0;
     if(S->flags & MODE_ORIGIN) {
         S->cRow += S->tScroll;
         CAP_MIN_MAX(S->cRow, 0, S->bScroll);
@@ -183,7 +121,6 @@ static void do_CUP_HVP(struct emuState *S)
         CAP_MIN_MAX(S->cRow, 0, S->wRows - 1);
     }
     CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
-    S->wrapnext = 0;
 }
 
 static void do_DA(struct emuState *S)
@@ -201,6 +138,7 @@ static void do_DECRC(struct emuState *S)
 {
     S->cRow = S->saveRow;
     S->cCol = S->saveCol;
+    S->wrapnext = 0;
     S->cursorAttr = S->saveAttr;
     CAP_MAX(S->cRow, S->wRows - 1);
     CAP_MAX(S->cCol, S->wCols - 1);
@@ -277,19 +215,19 @@ static void do_HT(struct emuState *S)
 
 static void do_IND(struct emuState *S)
 {
-    term_index(S, 1);
+    emu_term_index(S, 1);
 }
 
 static void do_NEL(struct emuState *S)
 {
-    term_index(S, 1);
+    emu_term_index(S, 1);
     S->cCol = 0;
     S->wrapnext = 0;
 }
 
 static void do_NL(struct emuState *S)
 {
-    term_index(S, 1);
+    emu_term_index(S, 1);
     if(S->flags & MODE_NEWLINE)
         S->cCol = 0;
     S->wrapnext = 0;
@@ -297,7 +235,7 @@ static void do_NL(struct emuState *S)
 
 static void do_RI(struct emuState *S)
 {
-    term_index(S, -1);
+    emu_term_index(S, -1);
 }
 
 static void do_SGR(struct emuState *S)
@@ -502,7 +440,7 @@ void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len)
         if(unlikely(S->wrapnext)) {
             if(S->flags & MODE_WRAPAROUND) {
                 S->rows[S->cRow]->flags |= TERMROW_WRAPPED;
-                term_index(S, 1);
+                emu_term_index(S, 1);
                 S->cCol = 0;
             }
             S->wrapnext = 0;

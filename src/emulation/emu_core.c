@@ -166,7 +166,7 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// Utilities used by both emu_core and emu_ops
+// Buffer-manipulating utilities
 
 void emu_row_fill(struct termRow *row, int start, int count, uint64_t value)
 {
@@ -179,4 +179,68 @@ void emu_row_fill(struct termRow *row, int start, int count, uint64_t value)
     memset_pattern8(&row->chars[start], &value, count * 8);
 #endif
     row->flags = TERMROW_DIRTY;
+}
+
+
+void emu_scroll_down(struct emuState *S, int top, int btm, int count)
+{
+    assert(count > 0);
+    int clearStart;
+    if(count > btm - top) {
+        // every row's getting cleared, so we don't need to bother
+        // changing the pointers at all!
+        clearStart = top;
+    } else {
+        clearStart = btm - count + 1;
+        struct termRow *keepBuf[count];
+        memcpy(keepBuf, &S->rows[top],
+               count * sizeof(struct termRow *));
+        memmove(&S->rows[top], &S->rows[top + count],
+                (clearStart - top) * sizeof(struct termRow *));
+        memcpy(&S->rows[clearStart], keepBuf,
+               count * sizeof(struct termRow *));
+    }
+    
+    for(int i = clearStart; i <= btm; i++)
+        emu_row_fill(S->rows[i], 0, S->wCols, EMPTY_FIELD);
+}
+
+
+void emu_scroll_up(struct emuState *S, int top, int btm, int count)
+{
+    // FIXME: this is unoptimized.
+    assert(count > 0);
+    while(count--) {
+        struct termRow *movingRow = S->rows[btm];
+        for(int i = btm; i > top; i--)
+            S->rows[i] = S->rows[i - 1];
+        S->rows[top] = movingRow;
+        emu_row_fill(movingRow, 0, S->wCols, EMPTY_FIELD);
+    }
+}
+
+
+void emu_term_index(struct emuState *S, int count)
+{
+    if(unlikely(count == 0)) return;
+    
+    if(likely(count > 0)) {
+        // positive scroll - scroll down
+        int dist = S->bScroll - S->cRow;
+        if(dist >= count) {
+            S->cRow += count;
+        } else {
+            S->cRow = S->bScroll;
+            emu_scroll_down(S, S->tScroll, S->bScroll, count - dist);
+        }
+    } else {
+        count = -count; // scroll up
+        int dist = S->cRow - S->tScroll;
+        if(dist >= count)
+            S->cRow -= count;
+        else {
+            S->cRow = S->tScroll;
+            emu_scroll_up(S, S->tScroll, S->bScroll, count - dist);
+        }
+    }
 }

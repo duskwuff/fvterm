@@ -65,6 +65,9 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len);
 void emu_core_free(struct emuState *S);
 
 void emu_row_fill(struct termRow *row, int start, int count, uint64_t value);
+void emu_scroll_up(struct emuState *S, int top, int btm, int count);
+void emu_scroll_down(struct emuState *S, int top, int btm, int count);
+void emu_term_index(struct emuState *S, int count);
 
 void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len);
 void emu_ops_do_ctrl(struct emuState *S, uint8_t ch);
