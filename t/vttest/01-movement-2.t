@@ -1,5 +1,6 @@
+# Test of autowrap, mixing control and print characters
+
 RES 80 24
-CRNL 0
 
 IN ^[[3;21r
 IN ^[[?6h
@@ -56,6 +57,6 @@ OUT 17 76 \20\20\20x
 OUT 18 76 \20\20\20y
 OUT 19 76 \20\20\20z
 
-CURSOR 20 0
+CURSOR 20 79
 OUT 20  0 \20\20\20\20
 OUT 20 76 \20\20\20\20

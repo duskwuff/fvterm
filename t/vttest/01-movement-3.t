@@ -1,3 +1,7 @@
+# Test of cursor-control characters inside ESC sequences
+
+RES 80 24
+
 IN A B C D E F G H I
 IN ^M^J
 IN A^[[2^HCB^[[2^HCC^[[2^HCD^[[2^HCE^[[2^HCF^[[2^HCG^[[2^HCH^[[2^HCI

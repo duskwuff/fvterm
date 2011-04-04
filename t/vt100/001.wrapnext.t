@@ -12,7 +12,7 @@ CURSOR 0 70
 IN 12345678
 CURSOR 0 78
 OUT 0 77 8
-OUT 0 78 ^@
+OUT 0 78 \s
 
 # closer...
 IN 9

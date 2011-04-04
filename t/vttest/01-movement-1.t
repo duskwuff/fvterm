@@ -1,5 +1,6 @@
+# Various basic movement commands and DECALN
+
 RES 80 24
-CRNL 1
 
 IN ^[#8
 
