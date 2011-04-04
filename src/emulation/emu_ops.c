@@ -210,7 +210,11 @@ static void do_EL(struct emuState *S)
 
 static void do_HT(struct emuState *S)
 {
-    // TODO
+    // FIXME: stub implementation!
+    S->cCol += 8;
+    S->cCol &= ~7;
+    CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
+    S->wrapnext = 0;
 }
 
 static void do_IND(struct emuState *S)
