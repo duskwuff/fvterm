@@ -28,6 +28,7 @@ void emu_core_init(struct emuState *S, int rows, int cols)
     S->bScroll = rows - 1;
     
     S->flags = MODE_WRAPAROUND;
+    S->viewFlags = VMODE_SHOWCURSOR;
     S->cursorAttr = S->saveAttr = 0;
 
     size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * cols;

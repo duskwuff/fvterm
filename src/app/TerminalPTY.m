@@ -35,7 +35,7 @@
         setsid();
         chdir(homedir);
 
-        setenv("TERM", "vt100+", 1); // XXX: need to make this flexible
+        setenv("TERM", "xterm", 1); // XXX: need to make this flexible
 
         struct passwd *pwd = getpwuid(getuid());
         char *shell = (pwd && pwd->pw_shell) ? pwd->pw_shell : "/bin/sh";

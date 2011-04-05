@@ -28,7 +28,7 @@ struct emuState {
     uint32_t cursorAttr, saveAttr;
 
     int wrapnext, tScroll, bScroll;
-    uint64_t flags;
+    uint64_t flags, viewFlags;
 
     int coreState, paramPtr, paramVal, priv, intermed;
     
@@ -64,6 +64,8 @@ struct emuState {
 #define MODE_NEWLINE        0x0040
 #define MODE_CURSORKEYS     0x0080
 #define MODE_INVERT         0x0100
+
+#define VMODE_SHOWCURSOR    0x0001
 
 void emu_core_init(struct emuState *S, int rows, int cols);
 void emu_core_resize(struct emuState *S, int rows, int cols);

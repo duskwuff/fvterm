@@ -165,6 +165,12 @@ static void do_DECSTBM(struct emuState *S)
     }
 }
 
+static void do_DL(struct emuState *S)
+{
+    if(S->cRow >= S->tScroll && S->cRow <= S->bScroll)
+        emu_scroll_down(S, S->cRow, S->bScroll, GETARG(S, 0, 1));
+}
+
 static void do_ED(struct emuState *S)
 {
     int p1 = GETARG(S, 0, 0);
@@ -215,6 +221,12 @@ static void do_HT(struct emuState *S)
     S->cCol &= ~7;
     CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
     S->wrapnext = 0;
+}
+
+static void do_IL(struct emuState *S)
+{
+    if(S->cRow >= S->tScroll && S->cRow <= S->bScroll)
+        emu_scroll_up(S, S->cRow, S->bScroll, GETARG(S, 0, 1));
 }
 
 static void do_IND(struct emuState *S)
@@ -343,6 +355,26 @@ static void do_modes(struct emuState *S, int flag)
                 APPLY_FLAG(MODE_WRAPAROUND, flag);
                 break;
                 
+            case PACK3('?', 0, 12): // cursor blink
+                // TODO
+                break;
+                
+            case PACK3('?', 0, 25): // visible cursor
+                APPLY_VFLAG(VMODE_SHOWCURSOR, flag);
+                break;
+                
+            case PACK3('?', 0, 1000): // various forms of mouse tracking
+            case PACK3('?', 0, 1001):
+            case PACK3('?', 0, 1002):
+            case PACK3('?', 0, 1003):
+                // TODO
+                break;
+                
+            case PACK3('?', 0, 1047): // alternate buffer
+            case PACK3('?', 0, 1049): // alternate buffer/cursor
+                // TODO
+                break;
+                
 #ifdef DEBUG
             default:
                 printf("unhandled mode %x/%x/%d (flag: %d)\n",
@@ -423,6 +455,8 @@ void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
             CASE('H', do_CUP_HVP);
             CASE('J', do_ED);
             CASE('K', do_EL);
+            CASE('L', do_IL);
+            CASE('M', do_DL);
             
             CASE('c', do_DA);
             CASE('f', do_CUP_HVP);

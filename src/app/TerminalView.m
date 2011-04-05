@@ -212,12 +212,14 @@ static void render(TerminalView *view, struct termRow *row)
         dstRect.origin.y += font->height;
     }
 
-    CGRect cursor = { .origin = { HSPACE, VSPACE }, .size = { font->width, font->height } };
-    cursor.origin.x += font->width  * parent->state.cCol;
-    cursor.origin.y += font->height * parent->state.cRow;
+    if(parent->state.viewFlags & VMODE_SHOWCURSOR) {
+        CGRect cursor = { .origin = { HSPACE, VSPACE }, .size = { font->width, font->height } };
+        cursor.origin.x += font->width  * parent->state.cCol;
+        cursor.origin.y += font->height * parent->state.cRow;
 
-    CGContextSetRGBFillColor(ctx, 0.0, 1.0, 0.0, 0.7); // XXX: Cursor color shouldn't be constant
-    CGContextFillRect(ctx, cursor);
+        CGContextSetRGBFillColor(ctx, 0.0, 1.0, 0.0, 0.7); // XXX: Cursor color shouldn't be constant
+        CGContextFillRect(ctx, cursor);
+    }
 
     running = YES;
     redrawPending = NO;
