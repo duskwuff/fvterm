@@ -129,6 +129,7 @@
 - (void)viewDidResize:(NSView *)src rows:(int)rows cols:(int)cols;
 {
     emu_core_resize(&state, rows, cols);
+    [pty setRows:rows cols:cols];
 }
 
 
