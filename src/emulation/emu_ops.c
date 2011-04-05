@@ -339,6 +339,10 @@ static void do_modes(struct emuState *S, int flag)
                 APPLY_FLAG(MODE_ORIGIN, flag);
                 break;
                 
+            case PACK3('?', 0, 7): // DECAWM (wraparound mode)
+                APPLY_FLAG(MODE_WRAPAROUND, flag);
+                break;
+                
 #ifdef DEBUG
             default:
                 printf("unhandled mode %x/%x/%d (flag: %d)\n",
@@ -439,6 +443,22 @@ void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
     }
 }
 
+
+void emu_ops_do_osc(struct emuState *S, int op)
+{
+    switch(op) {
+        case 0: // xterm: set icon name and window title
+        case 1: // xterm: set icon name
+        case 2: // xterm: set window title
+            TerminalEmulator_setTitle(S, S->oscBuf);
+            break;
+            
+#ifdef DEBUG
+        default:
+            printf("unhandled OSC %d; '%s'\n", op, S->oscBuf);
+#endif
+    }
+}
 
 void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len)
 {

@@ -9,6 +9,7 @@ enum emuCoreState {
     ST_GROUND,
     ST_ESC,
     ST_CSI,
+    ST_OSC,
 };
 
 void emu_core_init(struct emuState *S, int rows, int cols)
@@ -87,7 +88,7 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
     for(int i = 0; i < len; i++) {
         uint8_t ch = bytes[i];
 
-        if(ch < 0x20) {
+        if(ch < 0x20 && lstate != ST_OSC) {
             GROUND_FLUSH();
             if(ch == 0x1B) { // State-changing - trap this locally
                 S->priv = S->intermed = 0;
@@ -116,11 +117,16 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
                     S->intermed = (S->intermed << 8) | ch;
                     if(S->intermed >= 0xffff)
                         S->intermed = 0xffff;
-                } else if(ch == '[') { // CSI introducer!
+                } else if(ch == '[') { // CSI introducer
                     lstate = ST_CSI;
                     S->paramPtr = S->paramVal = 0;
                     S->priv = S->intermed = 0;
                     bzero(S->params, sizeof(S->params));
+                } else if(ch == ']') { // OSC introducer
+                    lstate = ST_OSC;
+                    S->paramPtr = S->paramVal = 0;
+                    S->priv = S->intermed = 0;
+                    bzero(S->oscBuf, sizeof(S->oscBuf));
                 } else {
                     lstate = ST_GROUND;
                     emu_ops_do_esc(S, ch);
@@ -149,6 +155,40 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
                     if(S->paramPtr < MAX_PARAMS)
                         S->params[S->paramPtr++] = S->paramVal;
                     emu_ops_do_csi(S, ch);
+                    lstate = ST_GROUND;
+                }
+                break;
+                
+            case ST_OSC:
+                // OSC is heavily underspecified in ECMA48. I've come up with
+                // some rules here that mimic xterm's behavior.
+                if(S->priv == 0) {
+                    if(ch >= 0x30 && ch < 0x3A) {
+                        S->paramVal = 10 * S->paramVal + (ch - 0x30);
+                    } else if(ch == 0x3b) {
+                        S->priv = 1;
+                    } else {
+                        lstate = ST_GROUND; // eh, whatever
+                    }
+                    break;
+                }
+                
+                if(ch == 0x07 || ch == 0x9C || (ch == 0x5C && S->priv == 2)) {
+                    // ECMA48 specifies ST (ESC 0x5C or 0x9C), vt100 uses BEL.
+                    // We allow both.
+                    emu_ops_do_osc(S, S->paramVal);
+                    lstate = ST_GROUND;
+                }
+                
+                if((ch >= 0x20 && ch < 0x7f) || (ch >= 0xa0)) {
+                    // ECMA48 allows for "00/08 to 00/13 and 02/00 to 07/14",
+                    // but I've tweaked the conditions a bit to allow UTF8 text
+                    // and disallow control characters.
+                    if(S->paramPtr < sizeof(S->oscBuf) - 1)
+                        S->oscBuf[S->paramPtr++] = ch;
+                } else {
+                    // Invalid characters terminate OSC, so that you don't get
+                    // stuck in OSC mode forever.
                     lstate = ST_GROUND;
                 }
                 break;

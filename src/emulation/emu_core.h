@@ -30,7 +30,13 @@ struct emuState {
     int wrapnext, tScroll, bScroll;
     uint64_t flags;
 
-    int coreState, params[MAX_PARAMS], paramPtr, paramVal, priv, intermed;
+    int coreState, paramPtr, paramVal, priv, intermed;
+    
+    // We'll only be using one of these at a time, so they share storage
+    union {
+        int params[MAX_PARAMS];
+        char oscBuf[512];
+    };
 };
 
 #define ATTR_FG_MASK    0x000000FFUL
@@ -73,6 +79,7 @@ void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len);
 void emu_ops_do_ctrl(struct emuState *S, uint8_t ch);
 void emu_ops_do_esc(struct emuState *S, uint8_t ch);
 void emu_ops_do_csi(struct emuState *S, uint8_t ch);
+void emu_ops_do_osc(struct emuState *S, int op);
 
 // Functions to be defined by clients of emu_core
 
