@@ -424,6 +424,73 @@ static void do_RM(struct emuState *S)
     do_modes(S, 0);
 }
 
+static void do_dterm_window(struct emuState *S)
+{
+    int p1 = GETARG(S, 0, 0);
+    int p2 = GETARG(S, 1, 0);
+    int p3 = GETARG(S, 2, 0);
+    switch(p1) {
+        case 0: // deiconify
+        case 1: // iconify
+        case 3: // move
+            // not implemented
+            break;
+            
+        case 4: // resize (pixels)
+            // XXX
+            break;
+            
+        case 5: // raise
+        case 6: // lower
+        case 7: // refresh
+            // not implemented
+            break;
+            
+        case 8: // resize (text)
+            if(p2 >= 1 && p3 >= 1 && p2 <= 999 && p3 <= 999)
+                emu_core_resize(S, p2, p3);
+            break;
+            
+        case 9: // zoom
+            // XXX
+            break;
+            
+        case 11: // report state
+            // XXX
+            break;
+            
+        case 13: // report position
+            // XXX
+            break;
+            
+        case 14: // report size (pixels)
+            // XXX
+            break;
+            
+        case 18: // report size (chars)
+            // XXX
+            break;
+            
+        case 19: // report size II (chars)
+            // XXX
+            break;
+            
+        case 20: // report icon label
+        case 21: // report title
+            // XXX
+            break;
+            
+        default:
+            if(p1 >= 24) { // resize to lines (DECSLPP)
+                emu_core_resize(S, GETARG(S, 0, 0), S->wCols);
+            } else {
+#ifdef DEBUG       
+                printf("unhandled xterm window manipulation %d\n", p1);
+#endif
+            }
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////////
 
 
@@ -494,8 +561,10 @@ void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
             CASE('g', do_TBC);
             CASE('h', do_SM);
             CASE('l', do_RM);
-            CASE('r', do_DECSTBM);
             CASE('m', do_SGR);
+            CASE('r', do_DECSTBM);
+            CASE('t', do_dterm_window);
+            
             
 #ifdef DEBUG
         default:
