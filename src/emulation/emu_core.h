@@ -24,6 +24,7 @@ struct emuState {
     int wRows, wCols;
     struct termRow **rows;
     void *rowBase;
+    uint8_t *colFlags;
 
     uint32_t cursorAttr, saveAttr;
 
@@ -66,6 +67,8 @@ struct emuState {
 #define MODE_INVERT         0x0100
 
 #define VMODE_SHOWCURSOR    0x0001
+
+#define COLFLAG_TAB         0x01
 
 void emu_core_init(struct emuState *S, int rows, int cols);
 void emu_core_resize(struct emuState *S, int rows, int cols);

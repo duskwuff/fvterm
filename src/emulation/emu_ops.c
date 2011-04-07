@@ -216,11 +216,16 @@ static void do_EL(struct emuState *S)
 
 static void do_HT(struct emuState *S)
 {
-    // FIXME: stub implementation!
-    S->cCol += 8;
-    S->cCol &= ~7;
+    do {
+        S->cCol++;
+    } while(!(S->cCol >= S->wCols || S->colFlags[S->cCol] & COLFLAG_TAB));
     CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
     S->wrapnext = 0;
+}
+
+static void do_HTS(struct emuState *S)
+{
+    S->colFlags[S->cCol] |= COLFLAG_TAB;
 }
 
 static void do_IL(struct emuState *S)
@@ -339,6 +344,31 @@ static void do_SGR(struct emuState *S)
     }
 }
 
+static void do_TBC(struct emuState *S)
+{
+    switch(GETARG(S, 0, 0)) {
+        case 0: // clear htab here
+            S->colFlags[S->cCol] &= ~COLFLAG_TAB;
+            break;
+
+        case 1: // clear vtab here (unimpl)
+        case 4: // clear all vtabs (unimpl)
+            break;
+            
+        case 2: // clear all htabs on this line
+            // Although ECMA048 implies that this is similar to Ps=3, neither
+            // xterm nor rxvt implement it that way, and vttest specifically
+            // ensures that it does not, describing it as a "no-op"!
+            break;
+            
+        case 3: // clear all htabs
+        case 5: // clear all tabs
+            for(int i = 0; i < S->wCols; i++)
+                S->colFlags[i] &= ~COLFLAG_TAB;
+            break;
+    }
+}
+
 static void do_modes(struct emuState *S, int flag)
 {
     for(int i = 0; i < S->paramPtr; i++) {
@@ -429,6 +459,7 @@ void emu_ops_do_esc(struct emuState *S, uint8_t lastch)
             
             CASE('D', do_IND);
             CASE('E', do_NEL);
+            CASE('H', do_HTS);
             CASE('M', do_RI);
             
             CASE2('#', '8', do_DECALN);
@@ -460,6 +491,7 @@ void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
             
             CASE('c', do_DA);
             CASE('f', do_CUP_HVP);
+            CASE('g', do_TBC);
             CASE('h', do_SM);
             CASE('l', do_RM);
             CASE('r', do_DECSTBM);

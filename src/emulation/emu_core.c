@@ -39,6 +39,12 @@ void emu_core_init(struct emuState *S, int rows, int cols)
         S->rows[i] = S->rowBase + i * rowSize;
         emu_row_fill(S->rows[i], 0, cols, EMPTY_FIELD);
     }
+    
+    S->colFlags = calloc(cols, sizeof(uint8_t));
+    for(int i = 0; i < cols; i++) {
+        if(i % 8 == 7)
+            S->colFlags[i] |= COLFLAG_TAB;
+    }
 }
 
 void emu_core_resize(struct emuState *S, int rows, int cols)
@@ -47,6 +53,7 @@ void emu_core_resize(struct emuState *S, int rows, int cols)
     
     free(S->rowBase);
     free(S->rows);
+    free(S->colFlags);
     
     size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * cols;
     S->rowBase = calloc(rows, rowSize);
@@ -55,6 +62,12 @@ void emu_core_resize(struct emuState *S, int rows, int cols)
     for(int i = 0; i < rows; i++) {
         S->rows[i] = S->rowBase + i * rowSize;
         emu_row_fill(S->rows[i], 0, cols, EMPTY_FIELD);
+    }
+    
+    S->colFlags = calloc(cols, sizeof(uint8_t));
+    for(int i = 0; i < cols; i++) {
+        if(i % 8 == 7)
+            S->colFlags[i] |= COLFLAG_TAB;
     }
     
     S->cRow = S->cCol = S->saveRow = S->saveCol = 0;
@@ -72,6 +85,7 @@ void emu_core_free(struct emuState *S)
 {
     free(S->rowBase);
     free(S->rows);
+    free(S->colFlags);
 }
 
 size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
