@@ -3,7 +3,8 @@
 RES 80 24
 
 IN ^[[?6l
-IN ^[[2J^[[24;1H
+IN ^[[23;24r
+IN ^[[24;1H
 IN Bottom
 IN ^[[1;1H
 IN Top

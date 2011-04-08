@@ -161,7 +161,7 @@ static void do_DECSTBM(struct emuState *S)
         S->tScroll = p1 - 1;
         S->bScroll = p2 - 1;
         S->cRow = (S->flags & MODE_ORIGIN) ? S->tScroll : 0;
-        S->cRow = 0;
+        S->cCol = 0;
     }
 }
 
@@ -377,6 +377,10 @@ static void do_modes(struct emuState *S, int flag)
                 emu_core_resize(S, S->wRows, flag ? 132 : 80);
                 break;
                 
+            case PACK3('?', 0, 4): // DECSCLM (smooth scrolling)
+                // Ignored - we don't implement this features.
+                break;
+                
             case PACK3('?', 0, 5): // DECSCNM (reverse video)
                 APPLY_FLAG(MODE_INVERT, flag);
                 for(int i = 0; i < S->wRows; i++)
@@ -385,10 +389,18 @@ static void do_modes(struct emuState *S, int flag)
                 
             case PACK3('?', 0, 6): // DECOM (origin mode)
                 APPLY_FLAG(MODE_ORIGIN, flag);
+                // Origin flag homes the cursor when set/reset
+                S->cRow = flag ? S->tScroll : 0;
+                S->cCol = 0;
                 break;
                 
             case PACK3('?', 0, 7): // DECAWM (wraparound mode)
                 APPLY_FLAG(MODE_WRAPAROUND, flag);
+                break;
+
+            case PACK3('?', 0, 8): // DECARM (autorepeat mode)
+            case PACK3('?', 0, 9): // DECINLM (interlace)
+                // Ignored - neither of these make sense on a software terminal.
                 break;
                 
             case PACK3('?', 0, 12): // cursor blink
@@ -524,9 +536,7 @@ void emu_ops_do_ctrl(struct emuState *S, uint8_t ch)
 
 void emu_ops_do_esc(struct emuState *S, uint8_t lastch)
 {
-    uint32_t ch = (S->intermed << 8) | lastch;
-
-    switch(ch) {
+    switch(PACK2(S->intermed, lastch)) {
             CASE('7', do_DECSC);
             CASE('8', do_DECRC);
             
@@ -539,7 +549,7 @@ void emu_ops_do_esc(struct emuState *S, uint8_t lastch)
 
 #ifdef DEBUG
         default:
-            printf("unknown ESC %s\n", safeHex(ch));
+            printf("unknown ESC %s\n", safeHex(PACK2(S->intermed, lastch)));
             break;
 #endif
     }
@@ -547,7 +557,6 @@ void emu_ops_do_esc(struct emuState *S, uint8_t lastch)
 
 void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
 {
-    uint32_t ch = (S->intermed << 8) | lastch;
     switch(PACK2(S->intermed, lastch)) {
             CASE('A', do_CUU);
             CASE('B', do_CUD);
@@ -579,7 +588,7 @@ void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
                 printf(" %d", S->params[0]);
             for(int i = 1; i < S->paramPtr; i++)
                 printf("; %d", S->params[i]);
-            printf(" %s\n", safeHex(ch));
+            printf(" %s\n", safeHex(PACK2(S->intermed, lastch)));
 #endif
     }
 }
