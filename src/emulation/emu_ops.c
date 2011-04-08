@@ -377,6 +377,12 @@ static void do_modes(struct emuState *S, int flag)
                 emu_core_resize(S, S->wRows, flag ? 132 : 80);
                 break;
                 
+            case PACK3('?', 0, 5): // DECSCNM (reverse video)
+                APPLY_FLAG(MODE_INVERT, flag);
+                for(int i = 0; i < S->wRows; i++)
+                    S->rows[i]->flags |= TERMROW_DIRTY; // redraw everything!
+                break;
+                
             case PACK3('?', 0, 6): // DECOM (origin mode)
                 APPLY_FLAG(MODE_ORIGIN, flag);
                 break;

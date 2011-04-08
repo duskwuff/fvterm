@@ -38,9 +38,7 @@ static CGColorSpaceRef cspace = nil;
 {
     [font release];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    [[NSRunLoop mainRunLoop] cancelPerformSelector:@selector(_delayedRedraw:)
-                                            target:self
-                                          argument:nil];
+    [[NSRunLoop mainRunLoop] cancelPerformSelectorsWithTarget:self];
     [super dealloc];
 }
 
@@ -131,7 +129,7 @@ static void render(TerminalView *view, struct termRow *row)
     for(int lrow = 0; lrow < charHeight; lrow++) {
         for(int col = 0; col < cols; col++) {
             uint64_t ch = row->chars[col];
-            unichar charGlyph = ch & 65535;
+            uint16_t charGlyph = ch & 65535;
             int fontPage = charGlyph >> 8;
 
             uint32_t charAttr = ch >> 32;
@@ -142,12 +140,13 @@ static void render(TerminalView *view, struct termRow *row)
                 charBG = (charAttr & ATTR_BG_MASK) >> 8;
 
             // reverse video = swap fg/bg
-            if(charAttr & ATTR_REVERSE) {
+            if(!!(view->parent->state.flags & MODE_INVERT) ^ !!(charAttr & ATTR_REVERSE)) {
                 int tmp = charFG;
                 charFG = charBG;
                 charBG = tmp;
             }
 
+            // try to make this char bold
             if(charAttr & ATTR_BOLD) {
                 fontPage += 256;
                 if(font->brightbold) {
@@ -158,11 +157,14 @@ static void render(TerminalView *view, struct termRow *row)
                 }
             }
             
-            const uint8_t *src = getPage(font, fontPage, &charGlyph);
-            OFFSET_FONT(src, lrow, charGlyph);
-
-            for(int i = 0; i < charWidth; i++) {
-                *bmap++ = src[i] ? plt[charFG] : plt[charBG];
+            if((charAttr & ATTR_UNDERLINE) && (lrow == font->baseline)) {
+                for(int i = 0; i < charWidth; i++)
+                    *bmap++ = plt[charFG];
+            } else {
+                const uint8_t *src = getPage(font, fontPage, &charGlyph);
+                OFFSET_FONT(src, lrow, charGlyph);
+                for(int i = 0; i < charWidth; i++)
+                    *bmap++ = src[i] ? plt[charFG] : plt[charBG];
             }
         }
     }

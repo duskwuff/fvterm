@@ -29,6 +29,8 @@
 		</dict>
 		<key>width</key>
 		<integer>6</integer>
+		<key>baseline</key>
+		<integer>0</integer>
 	</dict>
 	<key>monaco12</key>
 	<dict>
@@ -43,6 +45,8 @@
 		</dict>
 		<key>width</key>
 		<integer>6</integer>
+		<key>baseline</key>
+		<integer>1</integer>
 	</dict>
 	<key>terminus16</key>
 	<dict>
@@ -115,6 +119,8 @@
 		</dict>
 		<key>width</key>
 		<integer>8</integer>
+		<key>baseline</key>
+		<integer>2</integer>
 	</dict>
 	<key>terminus32</key>
 	<dict>
@@ -187,6 +193,8 @@
 		</dict>
 		<key>width</key>
 		<integer>16</integer>
+		<key>baseline</key>
+		<integer>4</integer>
 	</dict>
 	<key>vga16</key>
 	<dict>
@@ -201,6 +209,8 @@
 		</dict>
 		<key>width</key>
 		<integer>8</integer>
+		<key>baseline</key>
+		<integer>2</integer>
 	</dict>
 </dict>
 </plist>

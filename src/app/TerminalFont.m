@@ -23,6 +23,7 @@ static NSDictionary *fontPlist = NULL;
     
     width = [[dict objectForKey:@"width"] intValue];
     height = [[dict objectForKey:@"height"] intValue];
+    baseline = [[dict objectForKey:@"baseline"] intValue];
     brightbold = [[dict objectForKey:@"brightbold"] boolValue];
     
     for(int i = 0; i < FVFONT_NPAGES; i++)
