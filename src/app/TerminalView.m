@@ -120,52 +120,52 @@ static void render(TerminalView *view, struct termRow *row)
     int cols = view->parent->state.wCols;
 
     size_t rowLen = charWidth * cols * sizeof(uint32_t);
+    uint32_t *rowBitmap = row->bitmaps[0];
+    if(rowBitmap == NULL)
+        rowBitmap = row->bitmaps[0] = malloc(rowLen * charHeight);
 
-    if(row->bitmaps[0] == NULL)
-        row->bitmaps[0] = malloc(rowLen * charHeight);
-
-    uint32_t *bmap = row->bitmaps[0];
-
-    for(int lrow = 0; lrow < charHeight; lrow++) {
-        for(int col = 0; col < cols; col++) {
-            uint64_t ch = row->chars[col];
-            uint16_t charGlyph = ch & 65535;
-            int fontPage = charGlyph >> 8;
-
-            uint32_t charAttr = ch >> 32;
-            int charFG = PAL_DEFAULT_FG, charBG = PAL_DEFAULT_BG;
-            if(charAttr & ATTR_CUSTFG)
-                charFG = (charAttr & ATTR_FG_MASK);
-            if(charAttr & ATTR_CUSTBG)
-                charBG = (charAttr & ATTR_BG_MASK) >> 8;
-
-            // reverse video = swap fg/bg
-            if(!!(view->parent->state.flags & MODE_INVERT) ^ !!(charAttr & ATTR_REVERSE)) {
-                int tmp = charFG;
-                charFG = charBG;
-                charBG = tmp;
+    for(int i = 0; i < cols; i++) {
+        uint64_t ch = row->chars[i];
+        uint16_t charGlyph = ch & 65535;
+        int fontPage = charGlyph >> 8;
+        
+        uint32_t charAttr = ch >> 32;
+        int charFG = PAL_DEFAULT_FG, charBG = PAL_DEFAULT_BG;
+        if(charAttr & ATTR_CUSTFG)
+            charFG = (charAttr & ATTR_FG_MASK);
+        if(charAttr & ATTR_CUSTBG)
+            charBG = (charAttr & ATTR_BG_MASK) >> 8;
+        
+        // reverse video = swap fg/bg
+        if(!!(view->parent->state.flags & MODE_INVERT) ^ !!(charAttr & ATTR_REVERSE)) {
+            int tmp = charFG;
+            charFG = charBG;
+            charBG = tmp;
+        }
+        
+        // make this char bold
+        if(charAttr & ATTR_BOLD) {
+            fontPage += 256;
+            if(font->brightbold) {
+                if(charFG < 8)
+                    charFG += 8;
+                if(charFG == PAL_DEFAULT_FG)
+                    charFG = 15;
             }
-
-            // try to make this char bold
-            if(charAttr & ATTR_BOLD) {
-                fontPage += 256;
-                if(font->brightbold) {
-                    if(charFG < 8)
-                        charFG += 8;
-                    if(charFG == PAL_DEFAULT_FG)
-                        charFG = 15;
-                }
-            }
-            
-            if((charAttr & ATTR_UNDERLINE) && (lrow == font->baseline)) {
-                for(int i = 0; i < charWidth; i++)
-                    *bmap++ = plt[charFG];
-            } else {
-                const uint8_t *src = getPage(font, fontPage, &charGlyph);
-                OFFSET_FONT(src, lrow, charGlyph);
-                for(int i = 0; i < charWidth; i++)
-                    *bmap++ = src[i] ? plt[charFG] : plt[charBG];
-            }
+        }
+        
+        for(int cr = 0; cr < charHeight; cr++) {
+            uint32_t *dst = &rowBitmap[charWidth * (cols * cr + i)];
+            //bmap += charWidth * (cols * cr + i);
+            const uint8_t *src = getPage(font, fontPage, &charGlyph);
+            OFFSET_FONT(src, cr, charGlyph);
+            for(int cc = 0; cc < charWidth; cc++)
+                *dst++ = *src++ ? plt[charFG] : plt[charBG];
+        }
+        
+        if(charAttr & ATTR_UNDERLINE) {
+            uint32_t *dst = &rowBitmap[charWidth * (cols * font->baseline + i)];
+            memset_pattern4(dst, &plt[charFG], charWidth * sizeof(*dst));
         }
     }
 
