@@ -1,6 +1,7 @@
 #import "TerminalFont.h"
 
 static NSDictionary *fontPlist = NULL;
+static NSMutableDictionary *loadedFonts = NULL;
 
 @implementation TerminalFont
 
@@ -11,12 +12,22 @@ static NSDictionary *fontPlist = NULL;
         NSAssert(fontPlist != NULL, @"couldn't load fonts.plist");
     }
     
+    if(loadedFonts) {
+        id font = [loadedFonts objectForKey:name];
+        if(font) return font;
+    } else {
+        loadedFonts = [[NSMutableDictionary dictionary] retain];
+    }
+    
     NSDictionary *fontInfo = [fontPlist objectForKey:name];
     if(!fontInfo) return nil;
     
-    return [[[TerminalFont alloc] initWithConfig:fontInfo] autorelease];
+    id font = [[TerminalFont alloc] initWithConfig:fontInfo];
+    [loadedFonts setObject:font forKey:name];
+    
+    return [font autorelease];
 }
-                          
+
 - (id)initWithConfig:(NSDictionary *)dict
 {
     if(!(self = [super init])) return nil;
