@@ -64,6 +64,7 @@
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [term closeFile];
     [term release];
     [super dealloc];
 }
