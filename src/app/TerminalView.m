@@ -214,7 +214,7 @@ static void render(TerminalView *view, struct termRow *row)
         dstRect.origin.y += font->height;
     }
 
-    if(parent->state.viewFlags & VMODE_SHOWCURSOR) {
+    if(parent->state.flags & MODE_SHOWCURSOR) {
         CGRect cursor = { .origin = { HSPACE, VSPACE }, .size = { font->width, font->height } };
         cursor.origin.x += font->width  * parent->state.cCol;
         cursor.origin.y += font->height * parent->state.cRow;

@@ -12,77 +12,85 @@ enum emuCoreState {
     ST_OSC,
 };
 
-void emu_core_init(struct emuState *S, int rows, int cols)
+void emu_term_reset(struct emuState *S)
 {
     S->coreState = ST_GROUND;
-
+    S->utf8buf = S->utf8state = 0;
+    
     for(int i = 0; i < 258; i++)
         S->palette[i] = (default_colormap[i] << 8) | 0xff;
     
     S->cRow = S->cCol = S->saveRow = S->saveCol = 0;
     
-    S->wRows = rows;
-    S->wCols = cols;
-    
     S->tScroll = 0;
-    S->bScroll = rows - 1;
+    S->bScroll = S->wRows - 1;
     
-    S->flags = MODE_WRAPAROUND;
-    S->viewFlags = VMODE_SHOWCURSOR;
+    S->flags = MODE_WRAPAROUND | MODE_SHOWCURSOR;
     S->cursorAttr = S->saveAttr = 0;
+ 
+    for(int i = 0; i < S->wRows; i++)
+        emu_row_fill(S->rows[i], 0, S->wCols, EMPTY_FIELD);
 
-    size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * cols;
-    S->rowBase = calloc(rows, rowSize);
-    S->rows = calloc(rows, sizeof(struct termRow *));
-    
-    for(int i = 0; i < rows; i++) {
-        S->rows[i] = S->rowBase + i * rowSize;
-        emu_row_fill(S->rows[i], 0, cols, EMPTY_FIELD);
-    }
-    
-    S->colFlags = calloc(cols, sizeof(uint8_t));
-    for(int i = 0; i < cols; i++) {
+    for(int i = 0; i < S->wCols; i++) {
         if(i % 8 == 7)
             S->colFlags[i] |= COLFLAG_TAB;
     }
 }
 
-void emu_core_resize(struct emuState *S, int rows, int cols)
+static void allocBackBuffers(struct emuState *S)
 {
-    // FIXME: this is the simplest and worst possible resize impl (erase all)
+    size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * S->wCols;
+    S->rowBase = calloc(S->wRows, rowSize);
+    S->rows = calloc(S->wRows, sizeof(struct termRow *));
+    S->colFlags = calloc(S->wCols, sizeof(uint8_t));
     
-    free(S->rowBase);
-    free(S->rows);
-    free(S->colFlags);
-    
-    size_t rowSize = sizeof(struct termRow) + sizeof(uint64_t) * cols;
-    S->rowBase = calloc(rows, rowSize);
-    S->rows = calloc(rows, sizeof(struct termRow *));
-    
-    for(int i = 0; i < rows; i++) {
+    for(int i = 0; i < S->wRows; i++)
         S->rows[i] = S->rowBase + i * rowSize;
-        emu_row_fill(S->rows[i], 0, cols, EMPTY_FIELD);
-    }
-    
-    S->colFlags = calloc(cols, sizeof(uint8_t));
-    for(int i = 0; i < cols; i++) {
-        if(i % 8 == 7)
-            S->colFlags[i] |= COLFLAG_TAB;
-    }
-    
-    S->cRow = S->cCol = S->saveRow = S->saveCol = 0;
-    
+}
+
+void emu_core_init(struct emuState *S, int rows, int cols)
+{
     S->wRows = rows;
     S->wCols = cols;
     
-    S->tScroll = 0;
-    S->bScroll = rows - 1;
+    allocBackBuffers(S);
+    emu_term_reset(S);
+}
+
+void emu_core_resize(struct emuState *S, int rows, int cols)
+{
+    struct termRow **old_rows = S->rows;
+    uint8_t *old_colFlags = S->colFlags;
+    void *old_rowBase = S->rowBase;
+    
+    int old_wRows = S->wRows, old_wCols = S->wCols;
+    
+    S->wRows = rows;
+    S->wCols = cols;
+
+    allocBackBuffers(S);
+    emu_term_reset(S);
+    
+    // FIXME: Improve this.
+    for(int r = 0; r < rows && r < old_wRows; r++) {
+        for(int c = 0; c < cols && c < old_wCols; c++)
+            S->rows[r]->chars[c] = old_rows[r]->chars[c];
+        S->rows[r]->flags = TERMROW_DIRTY;
+    }
+    
+    for(int r = 0; r < old_wRows; r++)
+        TerminalEmulator_freeRowBitmaps(old_rows[r]);
+    free(old_rows);
+    free(old_colFlags);
+    free(old_rowBase);
     
     TerminalEmulator_resize(S);
 }
 
 void emu_core_free(struct emuState *S)
 {
+    for(int r = 0; r < S->wRows; r++)
+        TerminalEmulator_freeRowBitmaps(S->rows[r]);
     free(S->rowBase);
     free(S->rows);
     free(S->colFlags);
@@ -99,12 +107,15 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
         first_ground = -1; \
     } \
 } while(0)
+    
+#define UTF8_FLUSH() emu_ops_text(S, NULL, 0)
 
     for(int i = 0; i < len; i++) {
         uint8_t ch = bytes[i];
 
         if(ch < 0x20 && lstate != ST_OSC) {
             GROUND_FLUSH();
+            UTF8_FLUSH();
             if(ch == 0x1B) { // State-changing - trap this locally
                 S->priv = S->intermed = 0;
                 lstate = ST_ESC;
@@ -114,8 +125,10 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
             continue;
         }
 
-        if(lstate != ST_GROUND)
+        if(lstate != ST_GROUND) {
             GROUND_FLUSH();
+            UTF8_FLUSH();
+        }
 
         switch(lstate) {
             case ST_GROUND:

@@ -29,9 +29,10 @@ struct emuState {
     uint32_t cursorAttr, saveAttr;
 
     int wrapnext, tScroll, bScroll;
-    uint64_t flags, viewFlags;
+    uint64_t flags;
 
     int coreState, paramPtr, paramVal, priv, intermed;
+    int utf8buf, utf8state;
     
     // We'll only be using one of these at a time, so they share storage
     union {
@@ -65,8 +66,7 @@ struct emuState {
 #define MODE_NEWLINE        0x0040
 #define MODE_CURSORKEYS     0x0080
 #define MODE_INVERT         0x0100
-
-#define VMODE_SHOWCURSOR    0x0001
+#define MODE_SHOWCURSOR     0x0200
 
 #define COLFLAG_TAB         0x01
 
@@ -75,17 +75,6 @@ void emu_core_resize(struct emuState *S, int rows, int cols);
 size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len);
 void emu_core_free(struct emuState *S);
 
-void emu_row_fill(struct termRow *row, int start, int count, uint64_t value);
-void emu_scroll_up(struct emuState *S, int top, int btm, int count);
-void emu_scroll_down(struct emuState *S, int top, int btm, int count);
-void emu_term_index(struct emuState *S, int count);
-
-void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len);
-void emu_ops_do_ctrl(struct emuState *S, uint8_t ch);
-void emu_ops_do_esc(struct emuState *S, uint8_t ch);
-void emu_ops_do_csi(struct emuState *S, uint8_t ch);
-void emu_ops_do_osc(struct emuState *S, int op);
-
 // Functions to be defined by clients of emu_core
 
 void TerminalEmulator_bell(struct emuState *S);
@@ -93,5 +82,6 @@ void TerminalEmulator_setTitle(struct emuState *S, const char *title);
 void TerminalEmulator_resize(struct emuState *S);
 void TerminalEmulator_write(struct emuState *S, char *bytes, size_t len);
 void TerminalEmulator_writeStr(struct emuState *S, char *bytes);
+void TerminalEmulator_freeRowBitmaps(struct termRow *r);
 
 #endif // _EMU_CORE_H

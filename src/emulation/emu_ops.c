@@ -408,7 +408,7 @@ static void do_modes(struct emuState *S, int flag)
                 break;
                 
             case PACK3('?', 0, 25): // visible cursor
-                APPLY_VFLAG(VMODE_SHOWCURSOR, flag);
+                APPLY_FLAG(MODE_SHOWCURSOR, flag);
                 break;
                 
             case PACK3('?', 0, 1000): // various forms of mouse tracking
@@ -610,25 +610,63 @@ void emu_ops_do_osc(struct emuState *S, int op)
     }
 }
 
+static void do_unichar(struct emuState *S, uint16_t uc)
+{
+    if(unlikely(S->wrapnext)) {
+        if(S->flags & MODE_WRAPAROUND) {
+            S->rows[S->cRow]->flags |= TERMROW_WRAPPED;
+            emu_term_index(S, 1);
+            S->cCol = 0;
+        }
+        S->wrapnext = 0;
+    }
+    
+    S->rows[S->cRow]->chars[S->cCol++] = APPLY_ATTR(uc);
+    S->rows[S->cRow]->flags |= TERMROW_DIRTY;
+    
+    if(unlikely(S->cCol == S->wCols)) {
+        S->cCol = S->wCols - 1;
+        S->wrapnext = 1;
+    }
+}
+
 void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len)
 {
-    // FIXME: accelerate
+    if(len == 0) {
+        // XXX: Flush and recover partial UTF8 buffer
+        S->utf8buf = S->utf8state = 0;
+        return;
+    }
+    
     for(int i = 0; i < len; i++) {
-        if(unlikely(S->wrapnext)) {
-            if(S->flags & MODE_WRAPAROUND) {
-                S->rows[S->cRow]->flags |= TERMROW_WRAPPED;
-                emu_term_index(S, 1);
-                S->cCol = 0;
+        uint8_t c = bytes[i];
+        if(S->utf8state) {
+            if(c >= 0x80 && c < 0xc0) {
+                S->utf8buf = (S->utf8buf << 6) + (c & 0x3f);
+                S->utf8state--;
+                if(S->utf8state == 0)
+                    do_unichar(S, S->utf8buf);
+            } else {
+                // FIXME!
+                S->utf8buf = S->utf8state = 0;
             }
-            S->wrapnext = 0;
         }
-
-        S->rows[S->cRow]->chars[S->cCol++] = APPLY_ATTR(bytes[i]);
-        S->rows[S->cRow]->flags |= TERMROW_DIRTY;
-
-        if(unlikely(S->cCol == S->wCols)) {
-            S->cCol = S->wCols - 1;
-            S->wrapnext = 1;
+        if(c < 0x80) {
+            do_unichar(S, c);
+        } else if(c < 0xc2) {
+            ; // FIXME: invalid utf8
+        } else if(c < 0xe0) {
+            S->utf8buf = c & 0x3f;
+            S->utf8state = 1;
+        } else if(c < 0xf0) {
+            // FIXME: utf8 3-byte
+            S->utf8buf = c & 0x1f;
+            S->utf8state = 2;
+            ; 
+        } else if(c < 0xf5) {
+            ; // FIXME: utf8 4-byte
+        } else {
+            ; // FIXME: invalid utf8
         }
     }
 }

@@ -187,4 +187,9 @@ void TerminalEmulator_writeStr(struct emuState *S, char *bytes)
     TerminalEmulator_write(S, bytes, strlen(bytes));
 }
 
+void TerminalEmulator_freeRowBitmaps(struct termRow *r)
+{
+    [TerminalView releaseBitmaps:r->bitmaps];
+}
+
 @end

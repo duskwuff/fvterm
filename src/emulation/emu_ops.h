@@ -35,13 +35,21 @@
     else S->flags &= ~(mask); \
 } while(0)
 
-#define APPLY_VFLAG(mask, val) do { \
-    if(val) S->viewFlags |= (mask); \
-    else S->viewFlags &= ~(mask); \
-} while(0)
-
 #define PACK2(c1, c2) ((c1 << 8) | (c2))
 #define PACK3(c1, c2, c3) (((c1) << 16) | ((c2) << 8) | (c3))
 #define PACK4(c1, c2, c3, c4) (((c1) << 24) | ((c2) << 16) | ((c3) << 8) | (c4))
+
+void emu_term_reset(struct emuState *S);
+
+void emu_row_fill(struct termRow *row, int start, int count, uint64_t value);
+void emu_scroll_up(struct emuState *S, int top, int btm, int count);
+void emu_scroll_down(struct emuState *S, int top, int btm, int count);
+void emu_term_index(struct emuState *S, int count);
+
+void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len);
+void emu_ops_do_ctrl(struct emuState *S, uint8_t ch);
+void emu_ops_do_esc(struct emuState *S, uint8_t ch);
+void emu_ops_do_csi(struct emuState *S, uint8_t ch);
+void emu_ops_do_osc(struct emuState *S, int op);
 
 #endif // _EMU_UTILS_H
