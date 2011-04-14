@@ -31,6 +31,8 @@
 		<integer>6</integer>
 		<key>baseline</key>
 		<integer>0</integer>
+		<key>midline</key>
+		<integer>6</integer>
 	</dict>
 	<key>monaco12</key>
 	<dict>
@@ -47,6 +49,8 @@
 		<integer>6</integer>
 		<key>baseline</key>
 		<integer>1</integer>
+		<key>midline</key>
+		<integer>6</integer>
 	</dict>
 	<key>terminus16</key>
 	<dict>
@@ -121,6 +125,8 @@
 		<integer>8</integer>
 		<key>baseline</key>
 		<integer>2</integer>
+		<key>midline</key>
+		<integer>8</integer>
 	</dict>
 	<key>terminus32</key>
 	<dict>
@@ -195,6 +201,8 @@
 		<integer>16</integer>
 		<key>baseline</key>
 		<integer>4</integer>
+		<key>midline</key>
+		<integer>16</integer>
 	</dict>
 	<key>vga16</key>
 	<dict>
@@ -211,6 +219,8 @@
 		<integer>8</integer>
 		<key>baseline</key>
 		<integer>2</integer>
+		<key>midline</key>
+		<integer>8</integer>
 	</dict>
 </dict>
 </plist>

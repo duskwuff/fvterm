@@ -167,6 +167,11 @@ static void render(TerminalView *view, struct termRow *row)
             uint32_t *dst = &rowBitmap[charWidth * (cols * font->baseline + i)];
             memset_pattern4(dst, &plt[charFG], charWidth * sizeof(*dst));
         }
+
+        if(charAttr & ATTR_STRIKE) {
+            uint32_t *dst = &rowBitmap[charWidth * (cols * font->midline + i)];
+            memset_pattern4(dst, &plt[charFG], charWidth * sizeof(*dst));
+        }
     }
 
     CGDataProviderRef provider = CGDataProviderCreateWithData(nil, row->bitmaps[0], rowLen * charHeight, nil);

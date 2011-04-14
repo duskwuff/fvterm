@@ -5,7 +5,7 @@
 @interface TerminalFont : NSObject {
     NSString *pageFiles[FVFONT_NPAGES];
 @public
-    int width, height, baseline;
+    int width, height, baseline, midline;
     void *unpackedPages[FVFONT_NPAGES];
     BOOL brightbold;
 }
