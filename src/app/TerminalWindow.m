@@ -50,73 +50,65 @@
 
 - (void)eventKeyInput:(TerminalView *)view event:(NSEvent *)ev
 {
-    NSString *chars = [ev charactersIgnoringModifiers];
-    if(![chars length]) return;
-    unichar ch = [chars characterAtIndex:0];
+    uint8_t buf[64], ctr = 0;
+    uint64_t flags = [ev modifierFlags];
+    if(flags & NSCommandKeyMask) return; // we shouldn't have seen that
+    
+    NSString *rawKeys = [ev charactersIgnoringModifiers];
+    NSString *modKeys = [ev characters];
+    NSUInteger rkLen = [rawKeys length];
+    NSUInteger mkLen = [modKeys length];
+    if(rkLen == 0 || mkLen == 0) return; // um...
+    
+    uint16_t ch    = [modKeys characterAtIndex:0];
+    uint16_t rawch = [rawKeys characterAtIndex:0];
+    
+    int vtShift = !!(flags & NSShiftKeyMask);
+    int vtCtrl  = !!(flags & NSControlKeyMask);
+    int vtAlt   = !!(flags & NSAlternateKeyMask);
+    
+    int vtMode = 0;
+    if(vtShift) vtMode |= 1;
+    if(vtAlt)   vtMode |= 2;
+    if(vtCtrl)  vtMode |= 4;
 
-    NSUInteger flags = [ev modifierFlags];
-
-    if(flags & NSCommandKeyMask) return; // leave that shit alone
-
-    if(ch >= 0xF700 && ch < 0xF700 + (sizeof(consoleKeyMappings) / sizeof(*consoleKeyMappings))) {
-        struct ConsoleKeyMap ckm = consoleKeyMappings[ch - 0xF700];
-        char output[64] = "";
-        int mstate = (((flags & NSShiftKeyMask) ? 1 : 0) |
-                      ((flags & NSAlternateKeyMask) ? 2 : 0) |
-                      ((flags & NSControlKeyMask) ? 4 : 0));
-
-        switch(ckm.type) {
-            case CKM_IGNORE:
-                NSBeep();
-                break;
-            case CKM_CURS: // Cursor keys (nothing else!) get modified by cursorKeyMode
-                if(/*!cursorKeyMode &&*/ !mstate) {
-                    sprintf(output, "\e[%c", ckm.content);
-                    break;
-                }
-                // fall through
-            case CKM_CSI:
-                if(mstate)
-                    sprintf(output, "\e[1;%d%c", mstate + 1, ckm.content);
-                else
-                    sprintf(output, "\eO%c", ckm.content);
-                break;
-            case CKM_NUM:
-                if(mstate)
-                    sprintf(output, "\e[%d;%d~", ckm.content, mstate + 1);
-                else
-                    sprintf(output, "\e[%d~", ckm.content);
-                break;
+    if(ch >= 0xf700 && ch < 0xf8ff) { // function keys
+        int idx = ch - 0xf700;
+        if(idx >= sizeof(consoleKeyMappings) / sizeof(consoleKeyMappings[0]))
+            return; // not a key we recognize!
+        struct consoleKeyMap *ckm = &consoleKeyMappings[idx];
+        if(ckm->type == CKM_CURS && vtMode == 0)
+            ctr = snprintf((char *) buf, sizeof(buf), "\e%c%c",
+                           (state.flags & MODE_CURSORKEYS) ? 'O' : '[',
+                           ckm->content);
+        else if(ckm->type == CKM_PF && vtMode == 0)
+            ctr = snprintf((char *) buf, sizeof(buf), "\eO%c", ckm->content);
+        else if(ckm->type == CKM_PF || ckm->type == CKM_CURS)
+            ctr = snprintf((char *) buf, sizeof(buf), "\e[1;%d%c", vtMode + 1, ckm->content);
+        else if(ckm->type == CKM_NUM && vtMode == 0)
+            ctr = snprintf((char *) buf, sizeof(buf), "\e[%d~", ckm->content);
+        else if(ckm->type == CKM_NUM)
+            ctr = snprintf((char *) buf, sizeof(buf), "\e[%d;%d~", vtMode + 1, ckm->content);
+    } else {    
+        if(flags & 0x40) vtAlt = 0; // special case for rightopt
+        
+        if(vtAlt) {
+            buf[ctr++] = '\e';
+            ch = rawch; // undo the effects of option (hopefully)
         }
-        if(output[0])
-            [pty writeData:[NSData dataWithBytes:output length:strlen(output)]];
-
-    } else if(ch == 0x19) {
-        // XXX: need to explain wtf this is.
-        [pty writeData:[@"\e[Z" dataUsingEncoding:NSUTF8StringEncoding]];
-
-    } else {
-        unsigned char output[16];
-        int p = 0;
-
-        if(flags & NSAlternateKeyMask) output[p++] = 0x1B; // esc+char
-        if(flags & NSControlKeyMask) ch &= 0x1F; // control-ify
-
-        // fast and dirty UTF-8 conversion
-        if(ch < 0x80)
-            output[p++] = ch;
-        else if(ch < 0x800) {
-            output[p++] = 0xc0 | (ch >> 6);
-            output[p++] = 0x80 | (ch & 0x3f);
-        } else { /* XXX: non-BMP characters get screwed up due to UTF-16 encoding */
-                 /* (OTOH, who's about to type non-BMP chars?) */
-            output[p++] = 0xe0 | (ch >> 12);
-            output[p++] = 0x80 | ((ch >> 6) & 0x3f);
-            output[p++] = 0x80 | (ch & 0x3f);
+        if(ch < 0x80) {
+            buf[ctr++] = ch;
+        } else if(ch < 0x800) {
+            buf[ctr++] = 0xc0 | (ch >> 6);
+            buf[ctr++] = 0x80 | (ch & 0x3f);
+        } else {
+            buf[ctr++] = 0xe0 | (ch >> 12);
+            buf[ctr++] = 0x80 | ((ch >> 6) & 0x3f);
+            buf[ctr++] = 0x80 | (ch & 0x3f);
         }
-
-        [pty writeData:[NSData dataWithBytes:output length:p]];
     }
+    
+    if(ctr > 0) [pty writeData:[NSData dataWithBytes:buf length:ctr]];
 }
 
 
