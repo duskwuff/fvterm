@@ -1,3 +1,5 @@
+# Test IL/DL with DECSTBM
+
 RES 80 24
 
 IN ^[[2J^[[?3l^[[2J

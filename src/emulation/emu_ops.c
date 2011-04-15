@@ -128,6 +128,18 @@ static void do_DA(struct emuState *S)
     TerminalEmulator_writeStr(S, "\e[?1;2c");
 }
 
+static void do_DCH(struct emuState *S)
+{
+    int del = GETARG(S, 0, 1);
+    CAP_MIN_MAX(del, 0, S->wCols);
+    uint64_t *chars = S->rows[S->cRow]->chars;
+    for(int i = S->cCol; i < S->wCols; i++) {
+        int src = i + del;
+        chars[i] = (src < S->wCols) ? chars[src] : EMPTY_FIELD;
+    }
+    S->rows[S->cRow]->flags |= TERMROW_DIRTY;
+}
+
 static void do_DECALN(struct emuState *S)
 {
     for(int i = 0; i < S->wRows; i++)
@@ -599,6 +611,7 @@ void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
             CASE('K', do_EL);
             CASE('L', do_IL);
             CASE('M', do_DL);
+            CASE('P', do_DCH);
             
             CASE('c', do_DA);
             CASE('d', do_VPA);
@@ -649,6 +662,14 @@ static void do_unichar(struct emuState *S, uint16_t uc)
             S->cCol = 0;
         }
         S->wrapnext = 0;
+    }
+    
+    if(unlikely(S->flags & MODE_INSERT)) {
+        int toMove = S->wCols - S->cCol - 1;
+        if(toMove > 0) {
+            uint64_t *chars = S->rows[S->cRow]->chars;
+            memmove(&chars[S->cCol + 1], &chars[S->cCol], toMove);
+        }
     }
     
     S->rows[S->cRow]->chars[S->cCol++] = APPLY_ATTR(uc);
