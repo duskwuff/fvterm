@@ -15,7 +15,7 @@ enum emuCoreState {
 void emu_term_reset(struct emuState *S)
 {
     S->coreState = ST_GROUND;
-    S->utf8buf = S->utf8state = 0;
+    S->utf8state = 0;
     
     for(int i = 0; i < 258; i++)
         S->palette[i] = (default_colormap[i] << 8) | 0xff;

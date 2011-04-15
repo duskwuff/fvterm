@@ -32,7 +32,8 @@ struct emuState {
     uint64_t flags;
 
     int coreState, paramPtr, paramVal, priv, intermed;
-    int utf8buf, utf8state;
+    int utf8state;
+    uint8_t utf8buf[4];
     
     // We'll only be using one of these at a time, so they share storage
     union {

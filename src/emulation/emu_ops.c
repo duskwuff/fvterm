@@ -630,43 +630,100 @@ static void do_unichar(struct emuState *S, uint16_t uc)
     }
 }
 
-void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len)
+static void unwind_utf8(struct emuState *S)
+{
+    switch(S->utf8state) {
+        case 1:
+        case 2:
+        case 4:
+            do_unichar(S, S->utf8buf[0]);
+            break;
+            
+        case 3:
+        case 5:
+            do_unichar(S, S->utf8buf[1]);
+            do_unichar(S, S->utf8buf[0]);
+            break;
+            
+        case 6:
+            do_unichar(S, S->utf8buf[2]);
+            do_unichar(S, S->utf8buf[1]);
+            do_unichar(S, S->utf8buf[0]);
+            break;
+    }
+    S->utf8state = 0;
+}
+
+void emu_ops_text(struct emuState * restrict S, const uint8_t *bytes, size_t len)
 {
     if(len == 0) {
-        // XXX: Flush and recover partial UTF8 buffer
-        S->utf8buf = S->utf8state = 0;
+        unwind_utf8(S);
         return;
     }
     
     for(int i = 0; i < len; i++) {
         uint8_t c = bytes[i];
-        if(S->utf8state) {
-            if(c >= 0x80 && c < 0xc0) {
-                S->utf8buf = (S->utf8buf << 6) + (c & 0x3f);
-                S->utf8state--;
-                if(S->utf8state == 0)
-                    do_unichar(S, S->utf8buf);
+        if(unlikely(S->utf8state > 0)) {
+            if(c < 0x80 || c >= 0xc0) {
+                unwind_utf8(S);
             } else {
-                // FIXME!
-                S->utf8buf = S->utf8state = 0;
+                switch(S->utf8state) {
+                    case 1: // process 2/2
+                        do_unichar(S, ((S->utf8buf[0] & 0x3f) << 6)
+                                   |   (c & 0x3f));
+                        S->utf8state = 0;
+                        break;
+                        
+                    case 3: // process 3/3
+                        do_unichar(S, ((S->utf8buf[0] & 0x1f) << 12)
+                                   |  ((S->utf8buf[1] & 0x3f) << 6)
+                                   |   (c & 0x3f));
+                        S->utf8state = 0;
+                        break;
+                        
+                    case 6: // process 4/4
+                        do_unichar(S, ((S->utf8buf[0] & 0x0f) << 18)
+                                   |  ((S->utf8buf[1] & 0x3f) << 12)
+                                   |  ((S->utf8buf[2] & 0x3f) << 6)
+                                   |   (c & 0x3f));
+                        S->utf8state = 0;
+                        break;
+                        
+                    case 2: // process 2/3
+                    case 4: // process 2/4
+                        S->utf8buf[1] = c;
+                        S->utf8state++;
+                        break;
+                        
+                    case 5: // process 3/4
+                        S->utf8buf[2] = c;
+                        S->utf8state++;
+                        break;
+                }
+                continue;
             }
         }
-        if(c < 0x80) {
+        if(likely(c < 0x80)) {
+            // Just plain ASCII
             do_unichar(S, c);
         } else if(c < 0xc2) {
-            ; // FIXME: invalid utf8
+            // Invalid UTF8, valid ISO8859-1
+            do_unichar(S, c);
         } else if(c < 0xe0) {
-            S->utf8buf = c & 0x3f;
+            // First character of 2-byte sequence
+            S->utf8buf[0] = c;
             S->utf8state = 1;
         } else if(c < 0xf0) {
-            // FIXME: utf8 3-byte
-            S->utf8buf = c & 0x1f;
+            // First character of 3-byte sequence
+            S->utf8buf[0] = c;
             S->utf8state = 2;
-            ; 
         } else if(c < 0xf5) {
-            ; // FIXME: utf8 4-byte
+            // First character of 4-byte sequence
+            S->utf8buf[0] = c;
+            S->utf8state = 4;
         } else {
-            ; // FIXME: invalid utf8
+            // Invalid UTF8, valid ISO8859-1
+            do_unichar(S, c);
         }
     }
 }
