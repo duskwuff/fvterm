@@ -369,16 +369,45 @@ static void do_TBC(struct emuState *S)
     }
 }
 
+static void do_VPA(struct emuState *S)
+{
+    S->cRow = GETARG(S, 0, 1) - 1;
+    S->wrapnext = 0;
+    if(S->flags & MODE_ORIGIN) {
+        S->cRow += S->tScroll;
+        CAP_MIN_MAX(S->cRow, 0, S->bScroll);
+    } else {
+        CAP_MIN_MAX(S->cRow, 0, S->wRows - 1);
+    }
+}
+
 static void do_modes(struct emuState *S, int flag)
 {
     for(int i = 0; i < S->paramPtr; i++) {
         switch(PACK3(S->priv, S->intermed, S->params[i])) {
+                
+            case PACK3(0, 0, 4): // IRM (insert/replace mode)
+                APPLY_FLAG(MODE_INSERT, flag);
+                break;
+                
+            case PACK3(0, 0, 20): // LNM (normal linefeed mode)
+                APPLY_FLAG(MODE_LINEFEED, flag);
+                break;
+                
+            case PACK3('?', 0, 1): // DECCKM (cursor key mode)
+                APPLY_FLAG(MODE_CURSORKEYS, flag);
+                break;
+                
+            case PACK3('?', 0, 2): // DECANM (vt52 mode)
+                // FIXME (it's not just a mode, it's a way of life)
+                break;
+                
             case PACK3('?', 0, 3): // DECCOLM (132/80 switch)
                 emu_core_resize(S, S->wRows, flag ? 132 : 80);
                 break;
                 
             case PACK3('?', 0, 4): // DECSCLM (smooth scrolling)
-                // Ignored - we don't implement this features.
+                // Ignored - we don't implement this feature
                 break;
                 
             case PACK3('?', 0, 5): // DECSCNM (reverse video)
@@ -572,6 +601,7 @@ void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
             CASE('M', do_DL);
             
             CASE('c', do_DA);
+            CASE('d', do_VPA);
             CASE('f', do_CUP_HVP);
             CASE('g', do_TBC);
             CASE('h', do_SM);
