@@ -104,3 +104,7 @@ void TerminalEmulator_resize(struct emuState *S)
     // ...
 }
 
+void TerminalEmulator_freeRowBitmaps(struct termRow *r)
+{
+    // nothing
+}
