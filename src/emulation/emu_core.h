@@ -4,9 +4,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define _BIT(n) (1UL<<(n))
+
 #define BITMAP_PTRS 2
-#define TERMROW_DIRTY   0x0001
-#define TERMROW_WRAPPED 0x0002
 
 #define MAX_PARAMS 16
 
@@ -42,34 +42,37 @@ struct emuState {
     };
 };
 
-#define ATTR_FG_MASK    0x000000FFUL
-#define ATTR_BG_MASK    0x0000FF00UL
-#define ATTR_MD_MASK    0xFFFF0000UL
+#define TERMROW_DIRTY       _BIT(0)
+#define TERMROW_WRAPPED     _BIT(1)
 
-#define ATTR_BOLD       0x00010000UL
-#define ATTR_UNDERLINE  0x00020000UL
-#define ATTR_BLINK      0x00040000UL
-#define ATTR_REVERSE    0x00080000UL
-#define ATTR_ITALIC     0x00100000UL
-#define ATTR_STRIKE     0x00200000UL
-#define ATTR_CUSTFG     0x10000000UL
-#define ATTR_CUSTBG     0x20000000UL
+#define ATTR_FG_MASK        0x000000FFUL
+#define ATTR_BG_MASK        0x0000FF00UL
+#define ATTR_MD_MASK        0xFFFF0000UL
 
-#define PAL_DEFAULT_FG 256
-#define PAL_DEFAULT_BG 257
+#define ATTR_BOLD           _BIT(16)
+#define ATTR_UNDERLINE      _BIT(17)
+#define ATTR_BLINK          _BIT(18)
+#define ATTR_REVERSE        _BIT(19)
+#define ATTR_ITALIC         _BIT(20)
+#define ATTR_STRIKE         _BIT(21)
+#define ATTR_CUSTFG         _BIT(22)
+#define ATTR_CUSTBG         _BIT(23)
 
-#define MODE_WRAPAROUND     0x0001
-#define MODE_REVWRAP        0x0002
-#define MODE_ORIGIN         0x0004
-#define MODE_LINEFEED       0x0008
-#define MODE_INSERT         0x0010
-#define MODE_SOFTSCROLL     0x0020
-#define MODE_NEWLINE        0x0040
-#define MODE_CURSORKEYS     0x0080
-#define MODE_INVERT         0x0100
-#define MODE_SHOWCURSOR     0x0200
+#define MODE_WRAPAROUND     _BIT(0)
+#define MODE_REVWRAP        _BIT(1)
+#define MODE_ORIGIN         _BIT(2)
+#define MODE_LINEFEED       _BIT(3)
+#define MODE_INSERT         _BIT(4)
+#define MODE_SOFTSCROLL     _BIT(5)
+#define MODE_NEWLINE        _BIT(6)
+#define MODE_CURSORKEYS     _BIT(7)
+#define MODE_INVERT         _BIT(8)
+#define MODE_SHOWCURSOR     _BIT(9)
 
-#define COLFLAG_TAB         0x01
+#define COLFLAG_TAB         _BIT(0)
+
+#define PAL_DEFAULT_FG      (256+0)
+#define PAL_DEFAULT_BG      (256+1)
 
 void emu_core_init(struct emuState *S, int rows, int cols);
 void emu_core_resize(struct emuState *S, int rows, int cols);
