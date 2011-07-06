@@ -1,6 +1,7 @@
 #import "TerminalWindow.h"
 #import "TerminalView.h"
 #import "TerminalPTY.h"
+#import "TerminalFont.h"
 
 #import "ConsoleKeyMappings.h"
 
@@ -112,9 +113,83 @@
 }
 
 
-- (void)eventMouseInput:(TerminalView *)view event:(NSEvent *)ev
+- (void)eventMouseInput:(TerminalView *)v event:(NSEvent *)ev
 {
-    // FIXME
+    // Translate location
+    NSPoint relPt = [v convertPoint:[ev locationInWindow] fromView:nil];
+    int x = (relPt.x - TERMINALVIEW_HSPACE) / view->font->width;
+    int y = (relPt.y - TERMINALVIEW_VSPACE) / view->font->height;
+    
+    // xterm's button numbers don't match Apple's, so we translate
+    int xBtn;
+    switch([ev buttonNumber]) {
+        case 0: // left mouse
+        default:
+            xBtn = 0;
+            break;
+        case 1: // right mouse
+            xBtn = 2;
+            break;
+        case 2: // middle mouse, most likely
+            xBtn = 1;
+            break;
+    }
+    
+    uint8_t buf[64];
+    int ctr = 0;
+    buf[ctr++] = '\e'; // CSI M
+    buf[ctr++] = '[';
+    buf[ctr++] = 'M';
+    
+    switch([ev type]) {
+        case NSLeftMouseDown:
+        case NSRightMouseDown:
+        case NSOtherMouseDown:
+            if(!(state.flags & MODE_MOUSE_DOWN)) return;
+            buf[ctr++] = 32 + xBtn;
+            buf[ctr++] = 33 + x;
+            buf[ctr++] = 33 + y;
+            lastDragX = x;
+            lastDragY = y;
+            break;
+            
+        case NSLeftMouseUp:
+        case NSRightMouseUp:
+        case NSOtherMouseUp:
+            if(!(state.flags & MODE_MOUSE_UP)) break;
+            buf[ctr++] = 32 + 3; // 3 = release
+            buf[ctr++] = 33 + x;
+            buf[ctr++] = 33 + y;
+            break;
+
+        case NSLeftMouseDragged:
+        case NSRightMouseDragged:
+        case NSOtherMouseDragged:
+            if(!(state.flags & MODE_MOUSE_DRAG)) return;
+            if(x == lastDragX && y == lastDragY) return;
+            buf[ctr++] = 32 + 32 + xBtn; // yes this is correct
+            buf[ctr++] = 33 + x;
+            buf[ctr++] = 33 + y;
+            lastDragX = x;
+            lastDragY = y;
+            break;
+            
+        case NSScrollWheel:
+            if(!(state.flags & MODE_MOUSE_DOWN)) break;
+            if(fabs([ev deltaY]) < 0.05) return; // not significant, probably zero
+            xBtn = ([ev deltaY] > 0) ? 64 : 65;
+            buf[ctr++] = 32 + xBtn;
+            buf[ctr++] = 33 + x;
+            buf[ctr++] = 33 + y;
+            break;
+            
+        // FIXME: any other events we need to handle here?
+
+        default:
+            return;            
+    }
+    
+    [pty writeData:[NSData dataWithBytes:buf length:ctr]];
 }
 
 

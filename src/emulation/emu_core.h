@@ -4,7 +4,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define __MAX(x,y) (((x) > (y)) ? (x) : (y))
+#define __MIN(x,y) (((x) < (y)) ? (x) : (y))
+
 #define _BIT(n) (1UL<<(n))
+#define _BIT_RANGE(a,b) ((_BIT(__MAX(a,b)+1) - 1) & ~(_BIT(__MIN(a,b)) - 1))
 
 #define BITMAP_PTRS 2
 
@@ -45,9 +49,9 @@ struct emuState {
 #define TERMROW_DIRTY       _BIT(0)
 #define TERMROW_WRAPPED     _BIT(1)
 
-#define ATTR_FG_MASK        0x000000FFUL
-#define ATTR_BG_MASK        0x0000FF00UL
-#define ATTR_MD_MASK        0xFFFF0000UL
+#define ATTR_FG_MASK        _BIT_RANGE(0,  7)
+#define ATTR_BG_MASK        _BIT_RANGE(8,  15)
+#define ATTR_MD_MASK        _BIT_RANGE(16, 31)
 
 #define ATTR_BOLD           _BIT(16)
 #define ATTR_UNDERLINE      _BIT(17)
@@ -68,6 +72,21 @@ struct emuState {
 #define MODE_CURSORKEYS     _BIT(7)
 #define MODE_INVERT         _BIT(8)
 #define MODE_SHOWCURSOR     _BIT(9)
+
+#define MODE_MOUSE_DOWN     _BIT(10)
+#define MODE_MOUSE_UP       _BIT(11)
+#define MODE_MOUSE_MODS     _BIT(11) /* yes, same as _UP */
+#define MODE_MOUSE_DRAG     _BIT(12)
+#define MODE_MOUSE_HILITE   _BIT(13)
+#define MODE_MOUSE_MOTION   _BIT(14)
+
+#define MODE_MOUSE_X10      (MODE_MOUSE_DOWN)
+#define MODE_MOUSE_1000     (MODE_MOUSE_X10 | MODE_MOUSE_UP | MODE_MOUSE_MODS)
+#define MODE_MOUSE_1001     (MODE_MOUSE_1000 | MODE_MOUSE_HILITE)
+#define MODE_MOUSE_1002     (MODE_MOUSE_1000 | MODE_MOUSE_DRAG)
+#define MODE_MOUSE_1003     (MODE_MOUSE_1002 | MODE_MOUSE_MOTION)
+
+#define MODE_MOUSE_MASK     _BIT_RANGE(10, 14)
 
 #define COLFLAG_TAB         _BIT(0)
 

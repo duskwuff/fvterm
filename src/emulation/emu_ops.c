@@ -452,13 +452,28 @@ static void do_modes(struct emuState *S, int flag)
                 APPLY_FLAG(MODE_SHOWCURSOR, flag);
                 break;
                 
-            case PACK3('?', 0, 1000): // various forms of mouse tracking
-            case PACK3('?', 0, 1001):
-            case PACK3('?', 0, 1002):
-            case PACK3('?', 0, 1003):
-                // TODO
+            case PACK3('?', 0, 1000): // mouse tracking
+                S->flags &= ~MODE_MOUSE_MASK;
+                APPLY_FLAG(MODE_MOUSE_1000, flag);
                 break;
-                
+
+            case PACK3('?', 0, 1001):
+                S->flags &= ~MODE_MOUSE_MASK;
+                APPLY_FLAG(MODE_MOUSE_1001, flag);
+                break;
+
+            case PACK3('?', 0, 1002):
+                S->flags &= ~MODE_MOUSE_MASK;
+                APPLY_FLAG(MODE_MOUSE_1002, flag);
+                // FIXME
+                break;
+
+            case PACK3('?', 0, 1003):
+                S->flags &= ~MODE_MOUSE_MASK;
+                APPLY_FLAG(MODE_MOUSE_1003, flag);
+                // FIXME
+                break;
+
             case PACK3('?', 0, 1047): // alternate buffer
             case PACK3('?', 0, 1049): // alternate buffer/cursor
                 // TODO

@@ -7,6 +7,7 @@
     IBOutlet TerminalView *view;
     TerminalPTY *pty;
     NSString *title;
+    int lastDragX, lastDragY;
 @public
     struct emuState state;
 }

@@ -3,9 +3,6 @@
 #import "TerminalWindow.h"
 #import "TerminalFont.h"
 
-#define HSPACE 2
-#define VSPACE 2
-
 static CGColorSpaceRef cspace = nil;
 
 @implementation TerminalView
@@ -50,35 +47,22 @@ static CGColorSpaceRef cspace = nil;
     [parent eventKeyInput:self event:ev];
 }
 
-- (void)mouseDown:(NSEvent *)ev
-{
-    [parent eventMouseInput:self event:ev];
-}
+#define MOUSE_SELECTOR(selector) \
+- (void)selector:(NSEvent *)ev { [parent eventMouseInput:self event:ev]; }
 
-- (void)mouseDragged:(NSEvent *)ev
-{
-    [parent eventMouseInput:self event:ev];
-}
+MOUSE_SELECTOR(mouseDown)
+MOUSE_SELECTOR(mouseDragged)
+MOUSE_SELECTOR(mouseUp)
 
-- (void)mouseUp:(NSEvent *)ev
-{
-    [parent eventMouseInput:self event:ev];
-}
+MOUSE_SELECTOR(rightMouseDown)
+MOUSE_SELECTOR(rightMouseDragged)
+MOUSE_SELECTOR(rightMouseUp)
 
-- (BOOL)acceptsFirstResponder
-{
-    return YES;
-}
+MOUSE_SELECTOR(otherMouseDown)
+MOUSE_SELECTOR(otherMouseDragged)
+MOUSE_SELECTOR(otherMouseUp)
 
-- (BOOL)isOpaque
-{
-    return YES;
-}
-
-- (BOOL)isFlipped
-{
-    return YES;
-}
+MOUSE_SELECTOR(scrollWheel)
 
 
 #pragma mark Rendering
@@ -206,7 +190,7 @@ static void render(TerminalView *view, struct termRow *row)
 
     int width = parent->state.wCols * font->width;
     CGRect dstRect = {
-        .origin = { HSPACE, VSPACE },
+        .origin = { TERMINALVIEW_HSPACE, TERMINALVIEW_VSPACE },
         .size = { width, font->height },
     };
 
@@ -220,7 +204,10 @@ static void render(TerminalView *view, struct termRow *row)
     }
 
     if(parent->state.flags & MODE_SHOWCURSOR) {
-        CGRect cursor = { .origin = { HSPACE, VSPACE }, .size = { font->width, font->height } };
+        CGRect cursor = {
+            .origin = { TERMINALVIEW_HSPACE, TERMINALVIEW_VSPACE },
+            .size = { font->width, font->height },
+        };
         cursor.origin.x += font->width  * parent->state.cCol;
         cursor.origin.y += font->height * parent->state.cRow;
 
@@ -233,10 +220,28 @@ static void render(TerminalView *view, struct termRow *row)
     redrawCounter = 0;
 }
 
+- (BOOL)acceptsFirstResponder
+{
+    return YES;
+}
+
+- (BOOL)isOpaque
+{
+    return YES;
+}
+
+- (BOOL)isFlipped
+{
+    return YES;
+}
+
+
+#pragma mark Resizing
+
 - (void)resizeForTerminal
 {
-    int termWidth = parent->state.wCols * font->width + 2 * HSPACE;
-    int termHeight = parent->state.wRows * font->height + 2 * VSPACE;
+    int termWidth = parent->state.wCols * font->width + 2 * TERMINALVIEW_HSPACE;
+    int termHeight = parent->state.wRows * font->height + 2 * TERMINALVIEW_VSPACE;
     NSRect new_cr = NSMakeRect(0, 0, termWidth, termHeight);
 
     NSRect old_frame = [[self window] frame];
@@ -274,8 +279,8 @@ static void render(TerminalView *view, struct termRow *row)
     (void) note;
 
     NSRect frame = [self frame];
-    int newRows = (frame.size.height - 2 * VSPACE) / font->height;
-    int newCols = (frame.size.width  - 2 * HSPACE) / font->width;
+    int newRows = (frame.size.height - 2 * TERMINALVIEW_VSPACE) / font->height;
+    int newCols = (frame.size.width  - 2 * TERMINALVIEW_HSPACE) / font->width;
     if(newRows != parent->state.wRows || newCols != parent->state.wCols) {
         [parent viewDidResize:self rows:newRows cols:newCols];
     }
