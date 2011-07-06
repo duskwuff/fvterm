@@ -112,21 +112,21 @@ static void render(TerminalView *view, struct termRow *row)
         uint64_t ch = row->chars[i];
         uint16_t charGlyph = ch & 65535;
         int fontPage = charGlyph >> 8;
-        
+
         uint32_t charAttr = ch >> 32;
         int charFG = PAL_DEFAULT_FG, charBG = PAL_DEFAULT_BG;
         if(charAttr & ATTR_CUSTFG)
             charFG = (charAttr & ATTR_FG_MASK);
         if(charAttr & ATTR_CUSTBG)
             charBG = (charAttr & ATTR_BG_MASK) >> 8;
-        
+
         // reverse video = swap fg/bg
         if(!!(view->parent->state.flags & MODE_INVERT) ^ !!(charAttr & ATTR_REVERSE)) {
             int tmp = charFG;
             charFG = charBG;
             charBG = tmp;
         }
-        
+
         // make this char bold
         if(charAttr & ATTR_BOLD) {
             fontPage += 256;
@@ -137,7 +137,7 @@ static void render(TerminalView *view, struct termRow *row)
                     charFG = 15;
             }
         }
-        
+
         for(int cr = 0; cr < charHeight; cr++) {
             uint32_t *dst = &rowBitmap[charWidth * (cols * cr + i)];
             //bmap += charWidth * (cols * cr + i);
@@ -146,7 +146,7 @@ static void render(TerminalView *view, struct termRow *row)
             for(int cc = 0; cc < charWidth; cc++)
                 *dst++ = *src++ ? plt[charFG] : plt[charBG];
         }
-        
+
         if(charAttr & ATTR_UNDERLINE) {
             uint32_t *dst = &rowBitmap[charWidth * (cols * font->baseline + i)];
             memset_pattern4(dst, &plt[charFG], charWidth * sizeof(*dst));
@@ -164,7 +164,7 @@ static void render(TerminalView *view, struct termRow *row)
         CGImageRelease(row->bitmaps[1]);
 
     CGImageRef img = CGImageCreate(cols * charWidth, charHeight,
-                                   8, 32, rowLen, 
+                                   8, 32, rowLen,
                                    cspace, kCGBitmapByteOrder32Host,
                                    provider, nil, NO,
                                    kCGRenderingIntentDefault);

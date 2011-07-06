@@ -79,7 +79,7 @@
             .ws_ypixel = 0,
         };
         ioctl([term fileDescriptor], TIOCSWINSZ, &ws);
-        
+
         int pgrp;
         if(ioctl([term fileDescriptor], TIOCGPGRP, &pgrp) != -1) {
             killpg(pgrp, SIGWINCH);

@@ -11,38 +11,38 @@ static NSMutableDictionary *loadedFonts = NULL;
         fontPlist = [[NSDictionary dictionaryWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"fonts" ofType:@"plist"]] retain];
         NSAssert(fontPlist != NULL, @"couldn't load fonts.plist");
     }
-    
+
     if(loadedFonts) {
         id font = [loadedFonts objectForKey:name];
         if(font) return font;
     } else {
         loadedFonts = [[NSMutableDictionary dictionary] retain];
     }
-    
+
     NSDictionary *fontInfo = [fontPlist objectForKey:name];
     if(!fontInfo) return nil;
-    
+
     id font = [[TerminalFont alloc] initWithConfig:fontInfo];
     [loadedFonts setObject:font forKey:name];
-    
+
     return [font autorelease];
 }
 
 - (id)initWithConfig:(NSDictionary *)dict
 {
     if(!(self = [super init])) return nil;
-    
+
     width = [[dict objectForKey:@"width"] intValue];
     height = [[dict objectForKey:@"height"] intValue];
     baseline = [[dict objectForKey:@"baseline"] intValue];
     midline = [[dict objectForKey:@"midline"] intValue];
     brightbold = [[dict objectForKey:@"brightbold"] boolValue];
-    
+
     for(int i = 0; i < FVFONT_NPAGES; i++)
         pageFiles[i] = NULL;
-    
+
     NSDictionary *pages = [dict objectForKey:@"pages"];
-    
+
     for(NSString *k in pages) {
         int pageno = -1;
         sscanf([k UTF8String], "%x", &pageno);
@@ -94,13 +94,13 @@ static NSMutableDictionary *loadedFonts = NULL;
             rep = r;
         }
     }
-    
+
     if(!rep) {
         NSLog(@"couldn't find any appropriately sized/typed reps in %@", img);
         [img release];
         return NO;
     }
-    
+
     uint8_t *packptr = unpackedPages[page] = malloc(height * width * FVFONT_CHARS_WIDE * FVFONT_CHARS_HIGH);
 
     for(int y = 0; y < height * FVFONT_CHARS_HIGH; y++) {
@@ -110,7 +110,7 @@ static NSMutableDictionary *loadedFonts = NULL;
             *packptr++ = (components[0] > 0.5) ? 0x00 : 0xff;
         }
     }
-    
+
     [img release];
 
     return YES;

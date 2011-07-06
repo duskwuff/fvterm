@@ -366,13 +366,13 @@ static void do_TBC(struct emuState *S)
         case 1: // clear vtab here (unimpl)
         case 4: // clear all vtabs (unimpl)
             break;
-            
+
         case 2: // clear all htabs on this line
             // Although ECMA048 implies that this is similar to Ps=3, neither
             // xterm nor rxvt implement it that way, and vttest specifically
             // ensures that it does not, describing it as a "no-op"!
             break;
-            
+
         case 3: // clear all htabs
         case 5: // clear all tabs
             for(int i = 0; i < S->wCols; i++)
@@ -397,44 +397,44 @@ static void do_modes(struct emuState *S, int flag)
 {
     for(int i = 0; i < S->paramPtr; i++) {
         switch(PACK3(S->priv, S->intermed, S->params[i])) {
-                
+
             case PACK3(0, 0, 4): // IRM (insert/replace mode)
                 APPLY_FLAG(MODE_INSERT, flag);
                 break;
-                
+
             case PACK3(0, 0, 20): // LNM (normal linefeed mode)
                 APPLY_FLAG(MODE_LINEFEED, flag);
                 break;
-                
+
             case PACK3('?', 0, 1): // DECCKM (cursor key mode)
                 APPLY_FLAG(MODE_CURSORKEYS, flag);
                 break;
-                
+
             case PACK3('?', 0, 2): // DECANM (vt52 mode)
                 // FIXME (it's not just a mode, it's a way of life)
                 break;
-                
+
             case PACK3('?', 0, 3): // DECCOLM (132/80 switch)
                 emu_core_resize(S, S->wRows, flag ? 132 : 80);
                 break;
-                
+
             case PACK3('?', 0, 4): // DECSCLM (smooth scrolling)
                 // Ignored - we don't implement this feature
                 break;
-                
+
             case PACK3('?', 0, 5): // DECSCNM (reverse video)
                 APPLY_FLAG(MODE_INVERT, flag);
                 for(int i = 0; i < S->wRows; i++)
                     S->rows[i]->flags |= TERMROW_DIRTY; // redraw everything!
                 break;
-                
+
             case PACK3('?', 0, 6): // DECOM (origin mode)
                 APPLY_FLAG(MODE_ORIGIN, flag);
                 // Origin flag homes the cursor when set/reset
                 S->cRow = flag ? S->tScroll : 0;
                 S->cCol = 0;
                 break;
-                
+
             case PACK3('?', 0, 7): // DECAWM (wraparound mode)
                 APPLY_FLAG(MODE_WRAPAROUND, flag);
                 break;
@@ -443,15 +443,15 @@ static void do_modes(struct emuState *S, int flag)
             case PACK3('?', 0, 9): // DECINLM (interlace)
                 // Ignored - neither of these make sense on a software terminal.
                 break;
-                
+
             case PACK3('?', 0, 12): // cursor blink
                 // TODO
                 break;
-                
+
             case PACK3('?', 0, 25): // visible cursor
                 APPLY_FLAG(MODE_SHOWCURSOR, flag);
                 break;
-                
+
             case PACK3('?', 0, 1000): // mouse tracking
                 S->flags &= ~MODE_MOUSE_MASK;
                 APPLY_FLAG(MODE_MOUSE_1000, flag);
@@ -476,7 +476,7 @@ static void do_modes(struct emuState *S, int flag)
             case PACK3('?', 0, 1049): // alternate buffer/cursor
                 // TODO
                 break;
-                
+
 #ifdef DEBUG
             default:
                 printf("unhandled mode %x/%x/%d (flag: %d)\n",
@@ -507,56 +507,56 @@ static void do_dterm_window(struct emuState *S)
         case 3: // move
             // not implemented
             break;
-            
+
         case 4: // resize (pixels)
             // XXX
             break;
-            
+
         case 5: // raise
         case 6: // lower
         case 7: // refresh
             // not implemented
             break;
-            
+
         case 8: // resize (text)
             if(p2 >= 1 && p3 >= 1 && p2 <= 999 && p3 <= 999)
                 emu_core_resize(S, p2, p3);
             break;
-            
+
         case 9: // zoom
             // XXX
             break;
-            
+
         case 11: // report state
             // XXX
             break;
-            
+
         case 13: // report position
             // XXX
             break;
-            
+
         case 14: // report size (pixels)
             // XXX
             break;
-            
+
         case 18: // report size (chars)
             // XXX
             break;
-            
+
         case 19: // report size II (chars)
             // XXX
             break;
-            
+
         case 20: // report icon label
         case 21: // report title
             // XXX
             break;
-            
+
         default:
             if(p1 >= 24) { // resize to lines (DECSLPP)
                 emu_core_resize(S, GETARG(S, 0, 0), S->wCols);
             } else {
-#ifdef DEBUG       
+#ifdef DEBUG
                 printf("unhandled xterm window manipulation %d\n", p1);
 #endif
             }
@@ -616,7 +616,7 @@ void emu_ops_do_c1(struct emuState *S, uint8_t lastch)
             CASE(0x82, do_NEL);
             CASE(0x88, do_HTS);
             CASE(0x8D, do_RI);
-            
+
 #ifdef DEBUG
         default:
             printf("unknown C1 %02x\n", lastch);
@@ -641,7 +641,7 @@ void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
             CASE('L', do_IL);
             CASE('M', do_DL);
             CASE('P', do_DCH);
-            
+
             CASE('c', do_DA);
             CASE('d', do_VPA);
             CASE('f', do_CUP_HVP);
@@ -651,8 +651,8 @@ void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
             CASE('m', do_SGR);
             CASE('r', do_DECSTBM);
             CASE('t', do_dterm_window);
-            
-            
+
+
 #ifdef DEBUG
         default:
             printf("unhandled CSI");
@@ -674,7 +674,7 @@ void emu_ops_do_osc(struct emuState *S, int op)
         case 2: // xterm: set window title
             TerminalEmulator_setTitle(S, S->oscBuf);
             break;
-            
+
 #ifdef DEBUG
         default:
             printf("unhandled OSC %d; '%s'\n", op, S->oscBuf);
@@ -692,7 +692,7 @@ static void do_unichar(struct emuState *S, uint16_t uc)
         }
         S->wrapnext = 0;
     }
-    
+
     if(unlikely(S->flags & MODE_INSERT)) {
         int toMove = S->wCols - S->cCol - 1;
         if(toMove > 0) {
@@ -700,10 +700,10 @@ static void do_unichar(struct emuState *S, uint16_t uc)
             memmove(&chars[S->cCol + 1], &chars[S->cCol], toMove);
         }
     }
-    
+
     S->rows[S->cRow]->chars[S->cCol++] = APPLY_ATTR(uc);
     S->rows[S->cRow]->flags |= TERMROW_DIRTY;
-    
+
     if(unlikely(S->cCol == S->wCols)) {
         S->cCol = S->wCols - 1;
         S->wrapnext = 1;
@@ -718,13 +718,13 @@ static void unwind_utf8(struct emuState *S)
         case 4:
             do_unichar(S, S->utf8buf[0]);
             break;
-            
+
         case 3:
         case 5:
             do_unichar(S, S->utf8buf[1]);
             do_unichar(S, S->utf8buf[0]);
             break;
-            
+
         case 6:
             do_unichar(S, S->utf8buf[2]);
             do_unichar(S, S->utf8buf[1]);
@@ -740,7 +740,7 @@ void emu_ops_text(struct emuState * restrict S, const uint8_t *bytes, size_t len
         unwind_utf8(S);
         return;
     }
-    
+
     for(int i = 0; i < len; i++) {
         uint8_t c = bytes[i];
         if(unlikely(S->utf8state > 0)) {
@@ -753,14 +753,14 @@ void emu_ops_text(struct emuState * restrict S, const uint8_t *bytes, size_t len
                                    |   (c & 0x3f));
                         S->utf8state = 0;
                         break;
-                        
+
                     case 3: // process 3/3
                         do_unichar(S, ((S->utf8buf[0] & 0x1f) << 12)
                                    |  ((S->utf8buf[1] & 0x3f) << 6)
                                    |   (c & 0x3f));
                         S->utf8state = 0;
                         break;
-                        
+
                     case 6: // process 4/4
                         do_unichar(S, ((S->utf8buf[0] & 0x0f) << 18)
                                    |  ((S->utf8buf[1] & 0x3f) << 12)
@@ -768,13 +768,13 @@ void emu_ops_text(struct emuState * restrict S, const uint8_t *bytes, size_t len
                                    |   (c & 0x3f));
                         S->utf8state = 0;
                         break;
-                        
+
                     case 2: // process 2/3
                     case 4: // process 2/4
                         S->utf8buf[1] = c;
                         S->utf8state++;
                         break;
-                        
+
                     case 5: // process 3/4
                         S->utf8buf[2] = c;
                         S->utf8state++;

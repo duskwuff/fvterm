@@ -54,20 +54,20 @@
     uint8_t buf[64], ctr = 0;
     uint64_t flags = [ev modifierFlags];
     if(flags & NSCommandKeyMask) return; // we shouldn't have seen that
-    
+
     NSString *rawKeys = [ev charactersIgnoringModifiers];
     NSString *modKeys = [ev characters];
     NSUInteger rkLen = [rawKeys length];
     NSUInteger mkLen = [modKeys length];
     if(rkLen == 0 || mkLen == 0) return; // um...
-    
+
     uint16_t ch    = [modKeys characterAtIndex:0];
     uint16_t rawch = [rawKeys characterAtIndex:0];
-    
+
     int vtShift = !!(flags & NSShiftKeyMask);
     int vtCtrl  = !!(flags & NSControlKeyMask);
     int vtAlt   = !!(flags & NSAlternateKeyMask);
-    
+
     int vtMode = 0;
     if(vtShift) vtMode |= 1;
     if(vtAlt)   vtMode |= 2;
@@ -90,9 +90,9 @@
             ctr = snprintf((char *) buf, sizeof(buf), "\e[%d~", ckm->content);
         else if(ckm->type == CKM_NUM)
             ctr = snprintf((char *) buf, sizeof(buf), "\e[%d;%d~", vtMode + 1, ckm->content);
-    } else {    
+    } else {
         if(flags & 0x40) vtAlt = 0; // special case for rightopt
-        
+
         if(vtAlt) {
             buf[ctr++] = '\e';
             ch = rawch; // undo the effects of option (hopefully)
@@ -108,7 +108,7 @@
             buf[ctr++] = 0x80 | (ch & 0x3f);
         }
     }
-    
+
     if(ctr > 0) [pty writeData:[NSData dataWithBytes:buf length:ctr]];
 }
 
@@ -119,7 +119,7 @@
     NSPoint relPt = [v convertPoint:[ev locationInWindow] fromView:nil];
     int x = (relPt.x - TERMINALVIEW_HSPACE) / view->font->width;
     int y = (relPt.y - TERMINALVIEW_VSPACE) / view->font->height;
-    
+
     // xterm's button numbers don't match Apple's, so we translate
     int xBtn;
     switch([ev buttonNumber]) {
@@ -134,13 +134,13 @@
             xBtn = 1;
             break;
     }
-    
+
     uint8_t buf[64];
     int ctr = 0;
     buf[ctr++] = '\e'; // CSI M
     buf[ctr++] = '[';
     buf[ctr++] = 'M';
-    
+
     switch([ev type]) {
         case NSLeftMouseDown:
         case NSRightMouseDown:
@@ -152,7 +152,7 @@
             lastDragX = x;
             lastDragY = y;
             break;
-            
+
         case NSLeftMouseUp:
         case NSRightMouseUp:
         case NSOtherMouseUp:
@@ -173,7 +173,7 @@
             lastDragX = x;
             lastDragY = y;
             break;
-            
+
         case NSScrollWheel:
             if(!(state.flags & MODE_MOUSE_DOWN)) break;
             if(fabs([ev deltaY]) < 0.05) return; // not significant, probably zero
@@ -182,13 +182,13 @@
             buf[ctr++] = 33 + x;
             buf[ctr++] = 33 + y;
             break;
-            
+
         // FIXME: any other events we need to handle here?
 
         default:
-            return;            
+            return;
     }
-    
+
     [pty writeData:[NSData dataWithBytes:buf length:ctr]];
 }
 
