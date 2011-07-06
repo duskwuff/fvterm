@@ -465,13 +465,11 @@ static void do_modes(struct emuState *S, int flag)
             case PACK3('?', 0, 1002):
                 S->flags &= ~MODE_MOUSE_MASK;
                 APPLY_FLAG(MODE_MOUSE_1002, flag);
-                // FIXME
                 break;
 
             case PACK3('?', 0, 1003):
                 S->flags &= ~MODE_MOUSE_MASK;
                 APPLY_FLAG(MODE_MOUSE_1003, flag);
-                // FIXME
                 break;
 
             case PACK3('?', 0, 1047): // alternate buffer
