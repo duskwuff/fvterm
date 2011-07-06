@@ -732,16 +732,18 @@ static void do_unichar(struct emuState *S, uint16_t uc)
         S->wrapnext = 0;
     }
 
+    // cache this as an aliasing fix
+    struct termRow *thisRow = S->rows[S->cRow];
+
     if(unlikely(S->flags & MODE_INSERT)) {
         int toMove = S->wCols - S->cCol - 1;
         if(toMove > 0) {
-            uint64_t *chars = S->rows[S->cRow]->chars;
-            memmove(&chars[S->cCol + 1], &chars[S->cCol], toMove);
+            memmove(&thisRow->chars[S->cCol + 1], &thisRow->chars[S->cCol], toMove);
         }
     }
 
-    S->rows[S->cRow]->chars[S->cCol++] = APPLY_ATTR(uc);
-    S->rows[S->cRow]->flags |= TERMROW_DIRTY;
+    thisRow->chars[S->cCol++] = APPLY_ATTR(uc);
+    thisRow->flags |= TERMROW_DIRTY;
 
     if(unlikely(S->cCol == S->wCols)) {
         S->cCol = S->wCols - 1;
