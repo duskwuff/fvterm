@@ -124,6 +124,12 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
             }
             continue;
         }
+        
+        if(ch >= 0x80 && ch < 0xA0) { // C1 control characters
+            emu_ops_do_c1(S, ch);
+            lstate = ST_GROUND; // FIXME: check this
+            continue;
+        }
 
         if(lstate != ST_GROUND) {
             GROUND_FLUSH();

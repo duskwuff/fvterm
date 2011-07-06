@@ -49,6 +49,7 @@ void emu_term_index(struct emuState *S, int count);
 void emu_ops_text(struct emuState *S, const uint8_t *bytes, size_t len);
 void emu_ops_do_ctrl(struct emuState *S, uint8_t ch);
 void emu_ops_do_esc(struct emuState *S, uint8_t ch);
+void emu_ops_do_c1(struct emuState *S, uint8_t ch);
 void emu_ops_do_csi(struct emuState *S, uint8_t ch);
 void emu_ops_do_osc(struct emuState *S, int op);
 

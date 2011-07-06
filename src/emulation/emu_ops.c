@@ -596,6 +596,22 @@ void emu_ops_do_esc(struct emuState *S, uint8_t lastch)
     }
 }
 
+void emu_ops_do_c1(struct emuState *S, uint8_t lastch)
+{
+    switch(lastch) {
+            CASE(0x81, do_IND);
+            CASE(0x82, do_NEL);
+            CASE(0x88, do_HTS);
+            CASE(0x8D, do_RI);
+            
+#ifdef DEBUG
+        default:
+            printf("unknown C1 %02x\n", lastch);
+            break;
+#endif
+    }
+}
+
 void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
 {
     switch(PACK2(S->intermed, lastch)) {
