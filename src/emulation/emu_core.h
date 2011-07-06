@@ -35,7 +35,7 @@ struct emuState {
     int wrapnext, tScroll, bScroll;
     uint64_t flags;
 
-    int coreState, paramPtr, paramVal, priv, intermed;
+    int state, paramPtr, paramVal, priv, intermed;
     int utf8state;
     uint8_t utf8buf[4];
 
@@ -97,6 +97,9 @@ void emu_core_init(struct emuState *S, int rows, int cols);
 void emu_core_resize(struct emuState *S, int rows, int cols);
 size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len);
 void emu_core_free(struct emuState *S);
+
+void emu_core_start_csi(struct emuState *S);
+void emu_core_start_osc(struct emuState *S);
 
 // Functions to be defined by clients of emu_core
 

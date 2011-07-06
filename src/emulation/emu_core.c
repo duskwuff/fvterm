@@ -14,7 +14,7 @@ enum emuCoreState {
 
 void emu_term_reset(struct emuState *S)
 {
-    S->coreState = ST_GROUND;
+    S->state = ST_GROUND;
     S->utf8state = 0;
 
     for(int i = 0; i < 258; i++)
@@ -98,7 +98,6 @@ void emu_core_free(struct emuState *S)
 
 size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
 {
-    enum emuCoreState lstate = S->coreState;
     int first_ground = -1, ground_len = 0;
 
 #define GROUND_FLUSH() do { \
@@ -113,12 +112,12 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
     for(int i = 0; i < len; i++) {
         uint8_t ch = bytes[i];
 
-        if(ch < 0x20 && lstate != ST_OSC) {
+        if(ch < 0x20 && S->state != ST_OSC) {
             GROUND_FLUSH();
             UTF8_FLUSH();
             if(ch == 0x1B) { // State-changing - trap this locally
                 S->priv = S->intermed = 0;
-                lstate = ST_ESC;
+                S->state = ST_ESC;
             } else {
                 emu_ops_do_ctrl(S, ch);
             }
@@ -127,16 +126,16 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
 
         if(ch >= 0x80 && ch < 0xA0) { // C1 control characters
             emu_ops_do_c1(S, ch);
-            lstate = ST_GROUND; // FIXME: check this
+            S->state = ST_GROUND; // FIXME: check this
             continue;
         }
 
-        if(lstate != ST_GROUND) {
+        if(S->state != ST_GROUND) {
             GROUND_FLUSH();
             UTF8_FLUSH();
         }
 
-        switch(lstate) {
+        switch(S->state) {
             case ST_GROUND:
                 if(first_ground < 0) {
                     first_ground = i;
@@ -151,18 +150,8 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
                     S->intermed = (S->intermed << 8) | ch;
                     if(S->intermed >= 0xffff)
                         S->intermed = 0xffff;
-                } else if(ch == '[') { // CSI introducer
-                    lstate = ST_CSI;
-                    S->paramPtr = S->paramVal = 0;
-                    S->priv = S->intermed = 0;
-                    bzero(S->params, sizeof(S->params));
-                } else if(ch == ']') { // OSC introducer
-                    lstate = ST_OSC;
-                    S->paramPtr = S->paramVal = 0;
-                    S->priv = S->intermed = 0;
-                    bzero(S->oscBuf, sizeof(S->oscBuf));
                 } else {
-                    lstate = ST_GROUND;
+                    S->state = ST_GROUND;
                     emu_ops_do_esc(S, ch);
                 }
                 break;
@@ -189,7 +178,7 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
                     if(S->paramPtr < MAX_PARAMS)
                         S->params[S->paramPtr++] = S->paramVal;
                     emu_ops_do_csi(S, ch);
-                    lstate = ST_GROUND;
+                    S->state = ST_GROUND;
                 }
                 break;
 
@@ -202,7 +191,7 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
                     } else if(ch == 0x3b) {
                         S->priv = 1;
                     } else {
-                        lstate = ST_GROUND; // eh, whatever
+                        S->state = ST_GROUND; // eh, whatever
                     }
                     break;
                 }
@@ -211,7 +200,7 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
                     // ECMA48 specifies ST (ESC 0x5C or 0x9C), vt100 uses BEL.
                     // We allow both.
                     emu_ops_do_osc(S, S->paramVal);
-                    lstate = ST_GROUND;
+                    S->state = ST_GROUND;
                 }
 
                 if((ch >= 0x20 && ch < 0x7f) || (ch >= 0xa0)) {
@@ -223,7 +212,7 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
                 } else {
                     // Invalid characters terminate OSC, so that you don't get
                     // stuck in OSC mode forever.
-                    lstate = ST_GROUND;
+                    S->state = ST_GROUND;
                 }
                 break;
         }
@@ -231,10 +220,25 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
 
     GROUND_FLUSH();
 
-    S->coreState = lstate;
     return len;
 
 #undef GROUND_FLUSH
+}
+
+void emu_core_start_csi(struct emuState *S)
+{
+    S->state = ST_CSI;
+    S->paramPtr = S->paramVal = 0;
+    S->priv = S->intermed = 0;
+    bzero(S->params, sizeof(S->params));
+}
+
+void emu_core_start_osc(struct emuState *S)
+{
+    S->state = ST_OSC;
+    S->paramPtr = S->paramVal = 0;
+    S->priv = S->intermed = 0;
+    bzero(S->oscBuf, sizeof(S->oscBuf));
 }
 
 

@@ -75,6 +75,11 @@ static void do_CR(struct emuState *S)
     S->wrapnext = 0;
 }
 
+static void do_CSI(struct emuState *S)
+{
+    emu_core_start_csi(S);
+}
+
 static void do_CUB(struct emuState *S)
 {
     S->cCol -= GETARG(S, 0, 1);
@@ -264,6 +269,11 @@ static void do_NL(struct emuState *S)
     if(S->flags & MODE_NEWLINE)
         S->cCol = 0;
     S->wrapnext = 0;
+}
+
+static void do_OSC(struct emuState *S)
+{
+    emu_core_start_osc(S);
 }
 
 static void do_RI(struct emuState *S)
@@ -593,12 +603,29 @@ void emu_ops_do_esc(struct emuState *S, uint8_t lastch)
     switch(PACK2(S->intermed, lastch)) {
             CASE('7', do_DECSC);
             CASE('8', do_DECRC);
-            
+
+            //CASE('=', do_DECPAM);
+            //CASE('>', do_DECPNM);
+
+            // note: anything from 0x40-0x7f is duplicated in C1 (0x80-0x9f)
             CASE('D', do_IND);
             CASE('E', do_NEL);
             CASE('H', do_HTS);
             CASE('M', do_RI);
-            
+            //CASE('N', do_SS2);
+            //CASE('O', do_SS3);
+            //CASE('P', do_DCS);
+            //CASE('V', do_SPA);
+            //CASE('W', do_EPA);
+            //CASE('X', do_SOS);
+            //CASE('Z', do_DECID);
+            CASE('[', do_CSI);
+            //CASE('\\', do_ST);
+            CASE(']', do_OSC);
+            //CASE('^', do_PM);
+            //CASE('_', do_APC);
+
+            // Extended ESC ops
             CASE2('#', '8', do_DECALN);
 
 #ifdef DEBUG
@@ -612,10 +639,22 @@ void emu_ops_do_esc(struct emuState *S, uint8_t lastch)
 void emu_ops_do_c1(struct emuState *S, uint8_t lastch)
 {
     switch(lastch) {
-            CASE(0x81, do_IND);
-            CASE(0x82, do_NEL);
+            CASE(0x84, do_IND);
+            CASE(0x85, do_NEL);
             CASE(0x88, do_HTS);
             CASE(0x8D, do_RI);
+            //CASE(0x8E, do_SS2);
+            //CASE(0x8F, do_SS3);
+            //CASE(0x90, do_DCS);
+            //CASE(0x96, do_SPA);
+            //CASE(0x97, do_EPA);
+            //CASE(0x98, do_SOS);
+            //CASE(0x9A, do_DECID);
+            CASE(0x9B, do_CSI);
+            //CASE(0x9C, do_ST);
+            CASE(0x9D, do_OSC);
+            //CASE(0x9E, do_PM);
+            //CASE(0x9F, do_APC);
 
 #ifdef DEBUG
         default:
