@@ -450,8 +450,14 @@ static void do_modes(struct emuState *S, int flag)
                 break;
 
             case PACK3('?', 0, 8): // DECARM (autorepeat mode)
-            case PACK3('?', 0, 9): // DECINLM (interlace)
                 // Ignored - neither of these make sense on a software terminal.
+                break;
+
+            case PACK3('?', 0, 9): // DECINLM (interlace) / X10 mouse tracking
+                // DECINLM makes no sense on a software terminal.
+                // Mouse tracking does, so we'll do that instead.
+                S->flags &= ~MODE_MOUSE_MASK;
+                APPLY_FLAG(MODE_MOUSE_X10, flag);
                 break;
 
             case PACK3('?', 0, 12): // cursor blink
@@ -709,7 +715,7 @@ void emu_ops_do_osc(struct emuState *S, int op)
 {
     switch(op) {
         case 0: // xterm: set icon name and window title
-        case 1: // xterm: set icon name
+        //case 1: // xterm: set icon name
         case 2: // xterm: set window title
             TerminalEmulator_setTitle(S, S->oscBuf);
             break;

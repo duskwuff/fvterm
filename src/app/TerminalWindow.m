@@ -117,8 +117,8 @@
 {
     // Translate location
     NSPoint relPt = [v convertPoint:[ev locationInWindow] fromView:nil];
-    int x = (relPt.x - TERMINALVIEW_HSPACE) / view->font->width;
-    int y = (relPt.y - TERMINALVIEW_VSPACE) / view->font->height;
+    int x = 1 + (relPt.x - TERMINALVIEW_HSPACE) / view->font->width;
+    int y = 1 + (relPt.y - TERMINALVIEW_VSPACE) / view->font->height;
 
     // xterm's button numbers don't match Apple's, so we translate
     int xBtn;
@@ -147,8 +147,8 @@
         case NSOtherMouseDown:
             if(!(state.flags & MODE_MOUSE_DOWN)) return;
             buf[ctr++] = 32 + xBtn;
-            buf[ctr++] = 33 + x;
-            buf[ctr++] = 33 + y;
+            buf[ctr++] = 32 + x;
+            buf[ctr++] = 32 + y;
             lastDragX = x;
             lastDragY = y;
             break;
@@ -156,10 +156,10 @@
         case NSLeftMouseUp:
         case NSRightMouseUp:
         case NSOtherMouseUp:
-            if(!(state.flags & MODE_MOUSE_UP)) break;
+            if(!(state.flags & MODE_MOUSE_UP)) return;
             buf[ctr++] = 32 + 3; // 3 = release
-            buf[ctr++] = 33 + x;
-            buf[ctr++] = 33 + y;
+            buf[ctr++] = 32 + x;
+            buf[ctr++] = 32 + y;
             break;
 
         case NSLeftMouseDragged:
@@ -167,20 +167,20 @@
         case NSOtherMouseDragged:
             if(!(state.flags & MODE_MOUSE_DRAG)) return;
             if(x == lastDragX && y == lastDragY) return;
-            buf[ctr++] = 32 + 32 + xBtn; // yes this is correct
-            buf[ctr++] = 33 + x;
-            buf[ctr++] = 33 + y;
+            buf[ctr++] = 32 + 32 + xBtn; // yes, we really do add 32 twice
+            buf[ctr++] = 32 + x;
+            buf[ctr++] = 32 + y;
             lastDragX = x;
             lastDragY = y;
             break;
 
         case NSScrollWheel:
-            if(!(state.flags & MODE_MOUSE_DOWN)) break;
+            if(!(state.flags & MODE_MOUSE_DOWN)) return;
             if(fabs([ev deltaY]) < 0.05) return; // not significant, probably zero
             xBtn = ([ev deltaY] > 0) ? 64 : 65;
             buf[ctr++] = 32 + xBtn;
-            buf[ctr++] = 33 + x;
-            buf[ctr++] = 33 + y;
+            buf[ctr++] = 32 + x;
+            buf[ctr++] = 32 + y;
             break;
 
         // FIXME: any other events we need to handle here?
