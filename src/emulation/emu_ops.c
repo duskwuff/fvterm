@@ -426,6 +426,11 @@ static void do_modes(struct emuState *S, int flag)
 
             case PACK3('?', 0, 3): // DECCOLM (132/80 switch)
                 emu_core_resize(S, S->wRows, flag ? 132 : 80);
+                // clear screen and reset cursor to 0/0
+                for(int i = 0; i < S->wRows; i++)
+                    emu_row_fill(S->rows[i], 0, S->wCols, EMPTY_FIELD);
+                S->cCol = 0;
+                S->cRow = (S->flags & MODE_ORIGIN) ? S->tScroll : 0;
                 break;
 
             case PACK3('?', 0, 4): // DECSCLM (smooth scrolling)
