@@ -5,12 +5,23 @@ static NSMutableDictionary *loadedFonts = NULL;
 
 @implementation TerminalFont
 
-+ (id) loadFont:(NSString *)name
++ (void)_loadFontPlist
 {
     if(!fontPlist) {
         fontPlist = [[NSDictionary dictionaryWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"fonts" ofType:@"plist"]] retain];
         NSAssert(fontPlist != NULL, @"couldn't load fonts.plist");
     }
+}
+
++ (NSArray *)availableFonts
+{
+    [self _loadFontPlist];
+    return [fontPlist allKeys];
+}
+
++ (id)loadFont:(NSString *)name
+{
+    [self _loadFontPlist];
 
     if(loadedFonts) {
         id font = [loadedFonts objectForKey:name];

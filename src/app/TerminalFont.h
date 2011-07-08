@@ -10,6 +10,7 @@
     BOOL brightbold;
 }
 
++ (NSArray *)availableFonts;
 + (id)loadFont:(NSString *)name;
 - (id)initWithConfig:(NSDictionary *)dict;
 - (BOOL)unpackPage:(int)page;
