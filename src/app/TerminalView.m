@@ -5,13 +5,22 @@
 
 static CGColorSpaceRef cspace = nil;
 
+NSString * const fallbackFont = @"fixed13";
+
 @implementation TerminalView
 
 - (id)_init
 {
     running = NO;
 
-    font = [[TerminalFont loadFont:@"terminus16"] retain];
+    NSUserDefaults *dflt = [NSUserDefaults standardUserDefaults];
+    NSString *fontName = [dflt stringForKey:@"font"];
+    if(!fontName) fontName = fallbackFont;
+    font = [TerminalFont loadFont:fontName];
+    if(!font) font = [TerminalFont loadFont:fallbackFont];
+    if(!font) abort(); // oops!
+
+    [font retain];
 
     if(cspace == nil)
         cspace = CGColorSpaceCreateDeviceRGB();

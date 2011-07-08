@@ -28,7 +28,11 @@
 
     title = @"Terminal";
 
-    int rows = 24, cols = 80; // XXX
+    NSUserDefaults *dflt = [NSUserDefaults standardUserDefaults];
+    int cols = (int) [dflt integerForKey:@"initCols"];
+    if(cols <= 0) cols = 80;
+    int rows = (int) [dflt integerForKey:@"initRows"];
+    if(rows <= 0) rows = 24;
 
     state.parent = self;
     emu_core_init(&state, rows, cols);
@@ -209,9 +213,14 @@
 
 - (void)ptyClosed:(TerminalPTY *)pty
 {
-    // Poke the controller to make the new title show up
-    [[self windowControllers] makeObjectsPerformSelector:
-        @selector(synchronizeWindowTitleWithDocumentName)];
+    if([[NSUserDefaults standardUserDefaults] boolForKey:@"keepZombies"]) {
+        // Poke the controller to make the new title show up
+        [[self windowControllers] makeObjectsPerformSelector:
+         @selector(synchronizeWindowTitleWithDocumentName)];
+    } else {
+        // Closin' time
+        [self close];
+    }
 }
 
 
