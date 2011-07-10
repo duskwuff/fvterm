@@ -25,7 +25,7 @@ void emu_term_reset(struct emuState *S)
     S->tScroll = 0;
     S->bScroll = S->wRows - 1;
 
-    S->flags = MODE_WRAPAROUND | MODE_SHOWCURSOR;
+    S->flags = MODE_WRAPAROUND | MODE_SHOWCURSOR | MODE_ALLOW_DECCOLM;
     S->cursorAttr = S->saveAttr = 0;
 
     for(int i = 0; i < S->wRows; i++)

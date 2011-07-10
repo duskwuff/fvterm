@@ -72,13 +72,14 @@ struct emuState {
 #define MODE_CURSORKEYS     _BIT(7)
 #define MODE_INVERT         _BIT(8)
 #define MODE_SHOWCURSOR     _BIT(9)
+#define MODE_ALLOW_DECCOLM  _BIT(10)
 
-#define MODE_MOUSE_DOWN     _BIT(10)
-#define MODE_MOUSE_UP       _BIT(11)
-#define MODE_MOUSE_MODS     _BIT(11) /* yes, same as _UP */
-#define MODE_MOUSE_DRAG     _BIT(12)
-#define MODE_MOUSE_HILITE   _BIT(13)
-#define MODE_MOUSE_MOTION   _BIT(14)
+#define MODE_MOUSE_DOWN     _BIT(58)
+#define MODE_MOUSE_UP       _BIT(59)
+#define MODE_MOUSE_MODS     _BIT(59) /* yes, same as _UP */
+#define MODE_MOUSE_DRAG     _BIT(60)
+#define MODE_MOUSE_HILITE   _BIT(61)
+#define MODE_MOUSE_MOTION   _BIT(62)
 
 #define MODE_MOUSE_X10      (MODE_MOUSE_DOWN)
 #define MODE_MOUSE_1000     (MODE_MOUSE_X10 | MODE_MOUSE_UP | MODE_MOUSE_MODS)
@@ -86,7 +87,7 @@ struct emuState {
 #define MODE_MOUSE_1002     (MODE_MOUSE_1000 | MODE_MOUSE_DRAG)
 #define MODE_MOUSE_1003     (MODE_MOUSE_1002 | MODE_MOUSE_MOTION)
 
-#define MODE_MOUSE_MASK     _BIT_RANGE(10, 14)
+#define MODE_MOUSE_MASK     _BIT_RANGE(58, 62)
 
 #define COLFLAG_TAB         _BIT(0)
 

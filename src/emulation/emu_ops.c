@@ -425,6 +425,7 @@ static void do_modes(struct emuState *S, int flag)
                 break;
 
             case PACK3('?', 0, 3): // DECCOLM (132/80 switch)
+                if(!(S->flags & MODE_ALLOW_DECCOLM)) break;
                 emu_core_resize(S, S->wRows, flag ? 132 : 80);
                 // clear screen and reset cursor to 0/0
                 for(int i = 0; i < S->wRows; i++)
@@ -471,6 +472,19 @@ static void do_modes(struct emuState *S, int flag)
 
             case PACK3('?', 0, 25): // visible cursor
                 APPLY_FLAG(MODE_SHOWCURSOR, flag);
+                break;
+
+            case PACK3('?', 0, 40): // allow DECCOLM
+                // not quite sure what the point of this is, but what the hey.
+                APPLY_FLAG(MODE_ALLOW_DECCOLM, flag);
+                break;
+
+            case PACK3('?', 0, 41): // more(1) fix
+                // obsolete and ignored
+                break;
+
+            case PACK3('?', 0, 45): // reverse wraparound
+                APPLY_FLAG(MODE_REVWRAP, flag);
                 break;
 
             case PACK3('?', 0, 1000): // mouse tracking
