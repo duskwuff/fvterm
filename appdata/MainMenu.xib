@@ -396,6 +396,15 @@
 									<reference key="NSOnImage" ref="224224359"/>
 									<reference key="NSMixedImage" ref="209172294"/>
 								</object>
+								<object class="NSMenuItem" id="167073160">
+									<reference key="NSMenu" ref="336708274"/>
+									<string key="NSTitle">Toggle Full Screen</string>
+									<string type="base64-UTF8" key="NSKeyEquiv">DQ</string>
+									<int key="NSKeyEquivModMask">1048576</int>
+									<int key="NSMnemonicLoc">2147483647</int>
+									<reference key="NSOnImage" ref="224224359"/>
+									<reference key="NSMixedImage" ref="209172294"/>
+								</object>
 								<object class="NSMenuItem" id="105252969">
 									<reference key="NSMenu" ref="336708274"/>
 									<bool key="NSIsDisabled">YES</bool>
@@ -540,6 +549,14 @@
 					</object>
 					<int key="connectionID">204</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">toggleFullScreen:</string>
+						<reference key="source" ref="645309496"/>
+						<reference key="destination" ref="167073160"/>
+					</object>
+					<int key="connectionID">242</int>
+				</object>
 			</array>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<array key="orderedObjects">
@@ -590,6 +607,7 @@
 							<reference ref="168222703"/>
 							<reference ref="105252969"/>
 							<reference ref="813015198"/>
+							<reference ref="167073160"/>
 						</array>
 						<reference key="parent" ref="862179740"/>
 					</object>
@@ -871,6 +889,11 @@
 						<reference key="object" ref="889050687"/>
 						<reference key="parent" ref="497871312"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">241</int>
+						<reference key="object" ref="167073160"/>
+						<reference key="parent" ref="336708274"/>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -913,6 +936,7 @@
 				<string key="239.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="24.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="240.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="241.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="29.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="5.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="56.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -928,7 +952,7 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">240</int>
+			<int key="maxID">242</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes"/>
 		<int key="IBDocument.localizationMode">0</int>
