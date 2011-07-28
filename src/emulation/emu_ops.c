@@ -174,7 +174,7 @@ static void do_DECSTBM(struct emuState *S)
     int p2 = GETARG(S, 1, 65535);
     CAP_MIN(p1, 1);
     CAP_MAX(p2, S->wRows);
-    if(p2 > p1) { // FIXME: is this correct?
+    if(p2 > p1) { // confirmed: xterm ignores other STBMs
         S->tScroll = p1 - 1;
         S->bScroll = p2 - 1;
         S->cRow = (S->flags & MODE_ORIGIN) ? S->tScroll : 0;
@@ -405,26 +405,29 @@ static void do_VPA(struct emuState *S)
 
 static void do_modes(struct emuState *S, int flag)
 {
-    for(int i = 0; i < S->paramPtr; i++) {
-        switch(PACK3(S->priv, S->intermed, S->params[i])) {
+#define _M(im, n) ((im) | (n) << 8)
+#define CASE_MODE(im, n) case _M(im, n)
 
-            case PACK3(0, 0, 4): // IRM (insert/replace mode)
+    for(int i = 0; i < S->paramPtr; i++) {
+        switch(_M(S->intermed, S->params[i])) {
+
+            CASE_MODE(0, 4): // IRM (insert/replace mode)
                 APPLY_FLAG(MODE_INSERT, flag);
                 break;
 
-            case PACK3(0, 0, 20): // LNM (normal linefeed mode)
+            CASE_MODE(0, 20): // LNM (normal linefeed mode)
                 APPLY_FLAG(MODE_LINEFEED, flag);
                 break;
 
-            case PACK3('?', 0, 1): // DECCKM (cursor key mode)
+            CASE_MODE('?', 1): // DECCKM (cursor key mode)
                 APPLY_FLAG(MODE_CURSORKEYS, flag);
                 break;
 
-            case PACK3('?', 0, 2): // DECANM (vt52 mode)
+            CASE_MODE('?', 2): // DECANM (vt52 mode)
                 // FIXME (it's not just a mode, it's a way of life)
                 break;
 
-            case PACK3('?', 0, 3): // DECCOLM (132/80 switch)
+            CASE_MODE('?', 3): // DECCOLM (132/80 switch)
                 if(!(S->flags & MODE_ALLOW_DECCOLM)) break;
                 emu_core_resize(S, S->wRows, flag ? 132 : 80);
                 // clear screen and reset cursor to 0/0
@@ -434,91 +437,94 @@ static void do_modes(struct emuState *S, int flag)
                 S->cRow = (S->flags & MODE_ORIGIN) ? S->tScroll : 0;
                 break;
 
-            case PACK3('?', 0, 4): // DECSCLM (smooth scrolling)
+            CASE_MODE('?', 4): // DECSCLM (smooth scrolling)
                 // Ignored - we don't implement this feature
                 break;
 
-            case PACK3('?', 0, 5): // DECSCNM (reverse video)
+            CASE_MODE('?', 5): // DECSCNM (reverse video)
                 APPLY_FLAG(MODE_INVERT, flag);
                 for(int i = 0; i < S->wRows; i++)
                     S->rows[i]->flags |= TERMROW_DIRTY; // redraw everything!
                 break;
 
-            case PACK3('?', 0, 6): // DECOM (origin mode)
+            CASE_MODE('?', 6): // DECOM (origin mode)
                 APPLY_FLAG(MODE_ORIGIN, flag);
                 // Origin flag homes the cursor when set/reset
                 S->cRow = flag ? S->tScroll : 0;
                 S->cCol = 0;
                 break;
 
-            case PACK3('?', 0, 7): // DECAWM (wraparound mode)
+            CASE_MODE('?', 7): // DECAWM (wraparound mode)
                 APPLY_FLAG(MODE_WRAPAROUND, flag);
                 break;
 
-            case PACK3('?', 0, 8): // DECARM (autorepeat mode)
+            CASE_MODE('?', 8): // DECARM (autorepeat mode)
                 // Ignored - neither of these make sense on a software terminal.
                 break;
 
-            case PACK3('?', 0, 9): // DECINLM (interlace) / X10 mouse tracking
+            CASE_MODE('?', 9): // DECINLM (interlace) / X10 mouse tracking
                 // DECINLM makes no sense on a software terminal.
                 // Mouse tracking does, so we'll do that instead.
                 S->flags &= ~MODE_MOUSE_MASK;
                 APPLY_FLAG(MODE_MOUSE_X10, flag);
                 break;
 
-            case PACK3('?', 0, 12): // cursor blink
+            CASE_MODE('?', 12): // cursor blink
                 // TODO
                 break;
 
-            case PACK3('?', 0, 25): // visible cursor
+            CASE_MODE('?', 25): // visible cursor
                 APPLY_FLAG(MODE_SHOWCURSOR, flag);
                 break;
 
-            case PACK3('?', 0, 40): // allow DECCOLM
+            CASE_MODE('?', 40): // allow DECCOLM
                 // not quite sure what the point of this is, but what the hey.
                 APPLY_FLAG(MODE_ALLOW_DECCOLM, flag);
                 break;
 
-            case PACK3('?', 0, 41): // more(1) fix
+            CASE_MODE('?', 41): // more(1) fix
                 // obsolete and ignored
                 break;
 
-            case PACK3('?', 0, 45): // reverse wraparound
+            CASE_MODE('?', 45): // reverse wraparound
                 APPLY_FLAG(MODE_REVWRAP, flag);
                 break;
 
-            case PACK3('?', 0, 1000): // mouse tracking
+            CASE_MODE('?', 1000): // mouse tracking
                 S->flags &= ~MODE_MOUSE_MASK;
                 APPLY_FLAG(MODE_MOUSE_1000, flag);
                 break;
 
-            case PACK3('?', 0, 1001):
+            CASE_MODE('?', 1001):
                 S->flags &= ~MODE_MOUSE_MASK;
                 APPLY_FLAG(MODE_MOUSE_1001, flag);
                 break;
 
-            case PACK3('?', 0, 1002):
+            CASE_MODE('?', 1002):
                 S->flags &= ~MODE_MOUSE_MASK;
                 APPLY_FLAG(MODE_MOUSE_1002, flag);
                 break;
 
-            case PACK3('?', 0, 1003):
+            CASE_MODE('?', 1003):
                 S->flags &= ~MODE_MOUSE_MASK;
                 APPLY_FLAG(MODE_MOUSE_1003, flag);
                 break;
 
-            case PACK3('?', 0, 1047): // alternate buffer
-            case PACK3('?', 0, 1049): // alternate buffer/cursor
+            CASE_MODE('?', 1047): // alternate buffer
+            CASE_MODE('?', 1049): // alternate buffer/cursor
                 // TODO
                 break;
 
 #ifdef DEBUG
             default:
-                printf("unhandled mode %x/%x/%d (flag: %d)\n",
-                       S->priv, S->intermed, S->params[i], flag);
+                printf("unhandled mode %x/%d (flag: %d)\n",
+                       S->intermed, S->params[i], flag);
 #endif
         }
     }
+
+#undef CASE_MODE
+#undef _M
 }
 
 static void do_SM(struct emuState *S)

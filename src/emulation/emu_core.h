@@ -34,7 +34,9 @@ struct emuState {
     int wrapnext, tScroll, bScroll;
     uint64_t flags;
 
-    int state, paramPtr, paramVal, priv, intermed;
+    int state, paramPtr, paramVal;
+    uint8_t intermed;
+
     int utf8state;
     uint8_t utf8buf[4];
 

@@ -116,7 +116,7 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
             GROUND_FLUSH();
             UTF8_FLUSH();
             if(ch == 0x1B) { // State-changing - trap this locally
-                S->priv = S->intermed = 0;
+                S->intermed = 0;
                 S->state = ST_ESC;
             } else {
                 emu_ops_do_ctrl(S, ch);
@@ -147,9 +147,7 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
 
             case ST_ESC:
                 if(ch < 0x30) {
-                    S->intermed = (S->intermed << 8) | ch;
-                    if(S->intermed >= 0xffff)
-                        S->intermed = 0xffff;
+                    S->intermed = S->intermed ? 255 : ch;
                 } else {
                     S->state = ST_GROUND;
                     emu_ops_do_esc(S, ch);
@@ -158,9 +156,7 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
 
             case ST_CSI:
                 if(ch < 0x30) { // intermediate
-                    S->intermed = (S->intermed << 8) | ch;
-                    if(S->intermed >= 0xffff)
-                        S->intermed = 0xffff;
+                    S->intermed = S->intermed ? 255 : ch;
                 } else if(ch < 0x3A) { // digit
                     S->paramVal = 10 * S->paramVal + (ch - 0x30);
                     CAP_MAX(S->paramVal, 16383);
@@ -170,10 +166,8 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
                     if(S->paramPtr < MAX_PARAMS)
                         S->params[S->paramPtr++] = S->paramVal;
                     S->paramVal = 0;
-                } else if(ch < 0x40) { // private
-                    S->priv = (S->priv << 8) | ch;
-                    if(S->priv >= 0xffff)
-                        S->priv = 0xffff;
+                } else if(ch < 0x40) { // private DEC stuff, treated as intermediate
+                    S->intermed = S->intermed ? 255 : ch;
                 } else { // dispatch
                     if(S->paramPtr < MAX_PARAMS)
                         S->params[S->paramPtr++] = S->paramVal;
@@ -185,18 +179,18 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
             case ST_OSC:
                 // OSC is heavily underspecified in ECMA48. I've come up with
                 // some rules here that mimic xterm's behavior.
-                if(S->priv == 0) {
+                if(S->intermed == 0) {
                     if(ch >= 0x30 && ch < 0x3A) {
                         S->paramVal = 10 * S->paramVal + (ch - 0x30);
                     } else if(ch == 0x3b) {
-                        S->priv = 1;
+                        S->intermed = 1;
                     } else {
                         S->state = ST_GROUND; // eh, whatever
                     }
                     break;
                 }
 
-                if(ch == 0x07 || ch == 0x9C || (ch == 0x5C && S->priv == 2)) {
+                if(ch == 0x07 || ch == 0x9C || (ch == 0x5C && S->intermed == 2)) {
                     // ECMA48 specifies ST (ESC 0x5C or 0x9C), vt100 uses BEL.
                     // We allow both.
                     emu_ops_do_osc(S, S->paramVal);
@@ -229,7 +223,7 @@ void emu_core_start_csi(struct emuState *S)
 {
     S->state = ST_CSI;
     S->paramPtr = S->paramVal = 0;
-    S->priv = S->intermed = 0;
+    S->intermed = 0;
     bzero(S->params, sizeof(S->params));
 }
 
@@ -237,7 +231,7 @@ void emu_core_start_osc(struct emuState *S)
 {
     S->state = ST_OSC;
     S->paramPtr = S->paramVal = 0;
-    S->priv = S->intermed = 0;
+    S->intermed = 0;
     bzero(S->oscBuf, sizeof(S->oscBuf));
 }
 
