@@ -277,7 +277,7 @@ static void render(TerminalView *view, struct termRow *row)
         redrawPending = YES;
         [self performSelector:@selector(display)
                    withObject:nil
-                   afterDelay:1/30.0
+                   afterDelay:1/60.0
                       inModes:[NSArray arrayWithObjects:
                                NSDefaultRunLoopMode, NSEventTrackingRunLoopMode, nil]];
     }
