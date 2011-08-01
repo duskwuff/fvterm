@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CC164D7B13E7738300451497 /* fixed13-r-03.png in Resources */ = {isa = PBXBuildFile; fileRef = CC164D7A13E7738300451497 /* fixed13-r-03.png */; };
+		CC164D7D13E7740D00451497 /* fixed13-r-22.png in Resources */ = {isa = PBXBuildFile; fileRef = CC164D7C13E7740D00451497 /* fixed13-r-22.png */; };
 		CC50C587132C141600F07E38 /* fonts.plist in Resources */ = {isa = PBXBuildFile; fileRef = CC50C586132C141600F07E38 /* fonts.plist */; };
 		CC7E4706132C09A900C9B890 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC7E4705132C09A900C9B890 /* Cocoa.framework */; };
 		CC7E4713132C09A900C9B890 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = CC7E4712132C09A900C9B890 /* main.m */; };
@@ -62,6 +64,7 @@
 		CC7E47D3132C127200C9B890 /* terminus16-r-ff.png in Resources */ = {isa = PBXBuildFile; fileRef = CC7E4786132C0F2C00C9B890 /* terminus16-r-ff.png */; };
 		CC7E47D4132C127700C9B890 /* vga16-r-00.png in Resources */ = {isa = PBXBuildFile; fileRef = CC7E47A9132C0F2C00C9B890 /* vga16-r-00.png */; };
 		CC7E47D5132C127700C9B890 /* vga16-b-00.png in Resources */ = {isa = PBXBuildFile; fileRef = CC7E47AA132C0F2C00C9B890 /* vga16-b-00.png */; };
+		CC9B3BD713E9215B004A62F4 /* fixed13-r-23.png in Resources */ = {isa = PBXBuildFile; fileRef = CC9B3BD613E9215B004A62F4 /* fixed13-r-23.png */; };
 		CC9EC8D6132C28E500675B90 /* terminus32-b-00.png in Resources */ = {isa = PBXBuildFile; fileRef = CC7E4788132C0F2C00C9B890 /* terminus32-b-00.png */; };
 		CC9EC8D7132C28E500675B90 /* terminus32-b-01.png in Resources */ = {isa = PBXBuildFile; fileRef = CC7E4789132C0F2C00C9B890 /* terminus32-b-01.png */; };
 		CC9EC8D8132C28E500675B90 /* terminus32-b-02.png in Resources */ = {isa = PBXBuildFile; fileRef = CC7E478A132C0F2C00C9B890 /* terminus32-b-02.png */; };
@@ -100,6 +103,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		CC164D7A13E7738300451497 /* fixed13-r-03.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "fixed13-r-03.png"; sourceTree = "<group>"; };
+		CC164D7C13E7740D00451497 /* fixed13-r-22.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "fixed13-r-22.png"; sourceTree = "<group>"; };
 		CC50C586132C141600F07E38 /* fonts.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = fonts.plist; sourceTree = "<group>"; };
 		CC7E4701132C09A900C9B890 /* fvterm.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = fvterm.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC7E4705132C09A900C9B890 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -199,6 +204,7 @@
 		CC7E47A6132C0F2C00C9B890 /* terminus32-r-ff.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "terminus32-r-ff.png"; sourceTree = "<group>"; };
 		CC7E47A9132C0F2C00C9B890 /* vga16-r-00.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vga16-r-00.png"; sourceTree = "<group>"; };
 		CC7E47AA132C0F2C00C9B890 /* vga16-b-00.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vga16-b-00.png"; sourceTree = "<group>"; };
+		CC9B3BD613E9215B004A62F4 /* fixed13-r-23.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "fixed13-r-23.png"; sourceTree = "<group>"; };
 		CC9F3DD81338FDEC00C1D3B3 /* libfvterm.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libfvterm.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC9F3DE11338FE7700C1D3B3 /* libfvterm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = libfvterm.c; sourceTree = "<group>"; };
 		CC9F3DE31338FE7800C1D3B3 /* libfvterm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libfvterm.h; sourceTree = "<group>"; };
@@ -330,7 +336,10 @@
 				CC7E475B132C0F2C00C9B890 /* fixed13-b-01.png */,
 				CC7E475C132C0F2C00C9B890 /* fixed13-r-01.png */,
 				CC7E475D132C0F2C00C9B890 /* fixed13-r-02.png */,
+				CC164D7A13E7738300451497 /* fixed13-r-03.png */,
 				CC7E475E132C0F2C00C9B890 /* fixed13-r-04.png */,
+				CC164D7C13E7740D00451497 /* fixed13-r-22.png */,
+				CC9B3BD613E9215B004A62F4 /* fixed13-r-23.png */,
 				CC7E475F132C0F2C00C9B890 /* fixed13-r-24.png */,
 				CC7E4760132C0F2C00C9B890 /* fixed13-r-25.png */,
 				CC7E4761132C0F2C00C9B890 /* fixed13-r-28.png */,
@@ -591,6 +600,9 @@
 				CC9EC8F1132C28E500675B90 /* terminus32-r-26.png in Resources */,
 				CC9EC8F2132C28E500675B90 /* terminus32-r-f6.png in Resources */,
 				CC9EC8F3132C28E500675B90 /* terminus32-r-ff.png in Resources */,
+				CC164D7B13E7738300451497 /* fixed13-r-03.png in Resources */,
+				CC164D7D13E7740D00451497 /* fixed13-r-22.png in Resources */,
+				CC9B3BD713E9215B004A62F4 /* fixed13-r-23.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
