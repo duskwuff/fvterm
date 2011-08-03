@@ -130,7 +130,18 @@ static void do_CUP_HVP(struct emuState *S)
 
 static void do_DA(struct emuState *S)
 {
+    // VT100 with AVO
     TerminalEmulator_writeStr(S, "\e[?1;2c");
+}
+
+static void do_DA2(struct emuState *S)
+{
+    switch(GETARG(S, 0, 0)) {
+        case 0:
+            // FIXME: Decide on exact response format
+            TerminalEmulator_writeStr(S, "\e[>0;0;1c");
+            break;
+    }
 }
 
 static void do_DCH(struct emuState *S)
@@ -188,6 +199,26 @@ static void do_DL(struct emuState *S)
 {
     if(S->cRow >= S->tScroll && S->cRow <= S->bScroll)
         emu_scroll_down(S, S->cRow, S->bScroll, GETARG(S, 0, 1));
+}
+
+static void do_DSR(struct emuState *S)
+{
+    char buf[32];
+    int line;
+    switch(GETARG(S, 0, 0)) {
+        case 5:
+            TerminalEmulator_writeStr(S, "\x1b[0n"); // OK response
+            break;
+
+        case 6:
+            line = S->cRow;
+            // FIXME: How does MODE_ORIGIN interact with cursor above tscroll?
+            if(S->flags & MODE_ORIGIN)
+               line -= S->tScroll;
+            snprintf(buf, sizeof(buf), "\x1b[%d;%dR", line + 1, S->cCol + 1);
+            TerminalEmulator_writeStr(S, buf);
+            break;
+    }
 }
 
 static void do_ED(struct emuState *S)
@@ -627,6 +658,7 @@ static void do_dterm_window(struct emuState *S)
 void emu_ops_do_ctrl(struct emuState *S, uint8_t ch)
 {
     switch(ch) {
+            //CASE(0x05, do_ENQ);
             CASE(0x07, do_BEL);
             CASE(0x08, do_BS);
             CASE(0x09, do_HT);
@@ -732,6 +764,7 @@ void emu_ops_do_c1(struct emuState *S, uint8_t lastch)
 void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
 {
     switch(PACK2(S->intermed, lastch)) {
+            //CASE('@', do_ICH);
             CASE('A', do_CUU);
             CASE('B', do_CUD);
             CASE('C', do_CUF);
@@ -740,22 +773,46 @@ void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
             CASE('F', do_CPL);
             CASE('G', do_CHA);
             CASE('H', do_CUP_HVP);
+            //CASE('I', do_CHT);
             CASE('J', do_ED);
             CASE('K', do_EL);
             CASE('L', do_IL);
             CASE('M', do_DL);
             CASE('P', do_DCH);
-
+            //CASE('S', do_SU);
+            //CASE('T', do_SD);
+            //CASE('X', do_ECH);
+            //CASE('Z', do_CBT);
+            //CASE('`', do_HPA);
+            //CASE('b', do_REP); (ugh!)
             CASE('c', do_DA);
+            CASE2('>', 'c', do_DA2);
+            //CASE2('=', 'c', do_DA3);
             CASE('d', do_VPA);
             CASE('f', do_CUP_HVP);
             CASE('g', do_TBC);
             CASE('h', do_SM);
+            CASE2('?', 'h', do_SM);
+            //CASE('i', do_MC);
+            //CASE2('?', 'i', do_DECMC);
             CASE('l', do_RM);
+            CASE2('?', 'l', do_RM);
             CASE('m', do_SGR);
+            CASE('n', do_DSR);
+            //CASE2('?', 'n', do_DECDSR);
+            //CASE2('!', 'p', do_DECSTR);
+            //CASE2('"', 'p', do_DECSCL);
+            //CASE2('"', 'q', do_DECSCA);
             CASE('r', do_DECSTBM);
+            //CASE2('?', 'r', DEC mode restore
+            //CASE2('?', 's', DEC mode save
             CASE('t', do_dterm_window);
-
+            //CASE2(0x27, 'w', do_DECEFR);
+            //CASE2('&', 'w', do_DECLRP);
+            //CASE('x', do_DECREQTPARM);
+            //CASE2(0x27, 'z', do_DECELR);
+            //CASE2(0x27, '{', do_DECSLE);
+            //CASE2(0x27, '|', do_DECRQLP);
 
 #ifdef DEBUG
         default:
