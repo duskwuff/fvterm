@@ -28,6 +28,10 @@ void emu_term_reset(struct emuState *S)
     S->flags = MODE_WRAPAROUND | MODE_SHOWCURSOR | MODE_ALLOW_DECCOLM;
     S->cursorAttr = S->saveAttr = 0;
 
+    S->charset = 0;
+    for(int i = 0; i < 4; i++)
+        S->charsets[i] = 'B'; // USASCII
+
     for(int i = 0; i < S->wRows; i++)
         emu_row_fill(S->rows[i], 0, S->wCols, EMPTY_FIELD);
 
@@ -124,10 +128,15 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
             continue;
         }
 
-        if(ch >= 0x80 && ch < 0xA0) { // C1 control characters
-            emu_ops_do_c1(S, ch);
-            S->state = ST_GROUND; // FIXME: check this
-            continue;
+        // C1 control characters, but only when not in UTF8 sequences
+        if(ch >= 0x80 && ch < 0xA0) {
+            GROUND_FLUSH();
+            if(S->state == ST_GROUND && S->utf8state == 0) {
+                UTF8_FLUSH();
+                emu_ops_do_c1(S, ch);
+                S->state = ST_GROUND; // FIXME: check this
+                continue;
+            }
         }
 
         if(S->state != ST_GROUND) {

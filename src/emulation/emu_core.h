@@ -40,6 +40,8 @@ struct emuState {
     int utf8state;
     uint8_t utf8buf[4];
 
+    uint8_t charset, saveCharset, charsets[4];
+
     // We'll only be using one of these at a time, so they share storage
     union {
         int params[MAX_PARAMS];

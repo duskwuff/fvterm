@@ -157,15 +157,17 @@ static void do_DECRC(struct emuState *S)
     S->cCol = S->saveCol;
     S->wrapnext = 0;
     S->cursorAttr = S->saveAttr;
+    S->charset = S->saveCharset;
     CAP_MAX(S->cRow, S->wRows - 1);
     CAP_MAX(S->cCol, S->wCols - 1);
 }
 
 static void do_DECSC(struct emuState *S)
 {
-    S->saveRow  = S->cRow;
-    S->saveCol  = S->cCol;
-    S->saveAttr = S->cursorAttr;
+    S->saveRow     = S->cRow;
+    S->saveCol     = S->cCol;
+    S->saveAttr    = S->cursorAttr;
+    S->saveCharset = S->charset;
 }
 
 static void do_DECSTBM(struct emuState *S)
@@ -364,6 +366,18 @@ static void do_SGR(struct emuState *S)
 #endif
         }
     }
+}
+
+static void do_SO(struct emuState *S)
+{
+    // Switch to G1
+    S->charset = S->charsets[1];
+}
+
+static void do_SI(struct emuState *S)
+{
+    // Switch to G0
+    S->charset = S->charsets[0];
 }
 
 static void do_TBC(struct emuState *S)
@@ -620,6 +634,8 @@ void emu_ops_do_ctrl(struct emuState *S, uint8_t ch)
             CASE(0x0B, do_NL); // VT -> NL
             CASE(0x0C, do_NL); // NP -> NL
             CASE(0x0D, do_CR);
+            CASE(0x0E, do_SO);
+            CASE(0x0F, do_SI);
 
 #ifdef DEBUG
         default:
@@ -631,6 +647,24 @@ void emu_ops_do_ctrl(struct emuState *S, uint8_t ch)
 
 void emu_ops_do_esc(struct emuState *S, uint8_t lastch)
 {
+    // Ugh, this bit grinds my gears.
+    switch(S->intermed) {
+        case '(':
+            S->charsets[0] = lastch;
+            return;
+        case ')':
+            S->charsets[1] = lastch;
+            return;
+        case '*':
+            S->charsets[2] = lastch;
+            return;
+        case '+':
+            S->charsets[3] = lastch;
+            return;
+        default:
+            break;
+    }
+
     switch(PACK2(S->intermed, lastch)) {
             CASE('7', do_DECSC);
             CASE('8', do_DECRC);
@@ -806,6 +840,41 @@ static void unwind_utf8(struct emuState *S)
     S->utf8state = 0;
 }
 
+static uint16_t decsgr[32] = {
+    0x0020, // SPACE
+    0x25C6, // BLACK DIAMOND
+    0x2592, // MEDIUM SHADE
+    0x2409, // SYMBOL FOR HORIZONTAL TAB
+    0x240C, // SYMBOL FOR FORM FEED
+    0x240D, // SYMBOL FOR CARRIAGE RETURN
+    0x240A, // SYMBOL FOR LINE FEED
+    0x00B0, // DEGREE SIGN
+    0x00B1, // PLUS-MINUS SIGN
+    0x2424, // SYMBOL FOR NEWLINE
+    0x240B, // SYMBOL FOR VERTICAL TABULATION
+    0x2518, // BOX DRAWINGS LIGHT UP AND LEFT
+    0x2510, // BOX DRAWINGS LIGHT DOWN AND LEFT
+    0x250C, // BOX DRAWINGS LIGHT DOWN AND RIGHT
+    0x2514, // BOX DRAWINGS LIGHT UP AND RIGHT
+    0x253C, // BOX DRAWINGS LIGHT VERTICAL AND HORIZONTAL
+    0x23BA, // HORIZONTAL SCAN LINE-1
+    0x23BB, // HORIZONTAL SCAN LINE-3
+    0x2500, // BOX DRAWINGS LIGHT HORIZONTAL
+    0x23BC, // HORIZONTAL SCAN LINE-7
+    0x23BD, // HORIZONTAL SCAN LINE-9
+    0x251C, // BOX DRAWINGS LIGHT VERTICAL AND RIGHT
+    0x2524, // BOX DRAWINGS LIGHT VERTICAL AND LEFT
+    0x2534, // BOX DRAWINGS LIGHT UP AND HORIZONTAL
+    0x252C, // BOX DRAWINGS LIGHT DOWN AND HORIZONTAL
+    0x2502, // BOX DRAWINGS LIGHT VERTICAL
+    0x2264, // LESS-THAN OR EQUAL TO
+    0x2265, // GREATER-THAN OR EQUAL TO
+    0x03C0, // GREEK SMALL LETTER PI
+    0x2260, // NOT EQUAL TO
+    0x00A3, // POUND SIGN
+    0x00B7, // MIDDLE DOT
+};
+
 void emu_ops_text(struct emuState * restrict S, const uint8_t *bytes, size_t len)
 {
     if(len == 0) {
@@ -815,6 +884,19 @@ void emu_ops_text(struct emuState * restrict S, const uint8_t *bytes, size_t len
 
     for(int i = 0; i < len; i++) {
         uint8_t c = bytes[i];
+
+        // DEC linedrawing charset
+        if(S->charset == '0' && (c >= 0x5f && c < 0x7f)) {
+            do_unichar(S, decsgr[c - 0x5f]);
+            continue;
+        }
+
+        // UK charset
+        if(S->charset == 'A' && c == '$') {
+            do_unichar(S, 0x00A3); // pound symbol
+            continue;
+        }
+
         if(unlikely(S->utf8state > 0)) {
             if(c < 0x80 || c >= 0xc0) {
                 unwind_utf8(S);
