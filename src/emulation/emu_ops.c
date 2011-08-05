@@ -278,6 +278,18 @@ static void do_HTS(struct emuState *S)
     S->colFlags[S->cCol] |= COLFLAG_TAB;
 }
 
+static void do_ICH(struct emuState *S)
+{
+    int ins = GETARG(S, 0, 1);
+    CAP_MIN_MAX(ins, 0, S->wCols);
+    uint64_t *chars = S->rows[S->cRow]->chars;
+    for(int i = S->wCols - 1; i >= S->cCol; i--) {
+        int src = i - ins;
+        chars[i] = (src >= S->cCol) ? chars[src] : EMPTY_FIELD;
+    }
+    S->rows[S->cRow]->flags |= TERMROW_DIRTY;
+}
+
 static void do_IL(struct emuState *S)
 {
     if(S->cRow >= S->tScroll && S->cRow <= S->bScroll)
@@ -764,7 +776,7 @@ void emu_ops_do_c1(struct emuState *S, uint8_t lastch)
 void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
 {
     switch(PACK2(S->intermed, lastch)) {
-            //CASE('@', do_ICH);
+            CASE('@', do_ICH);
             CASE('A', do_CUU);
             CASE('B', do_CUD);
             CASE('C', do_CUF);
