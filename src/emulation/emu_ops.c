@@ -264,6 +264,13 @@ static void do_EL(struct emuState *S)
     emu_row_fill(S->rows[S->cRow], from, to - from + 1, EMPTY_FIELD);
 }
 
+static void do_HPA(struct emuState *S)
+{
+    S->cCol = GETARG(S, 0, 1) - 1;
+    CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
+    S->wrapnext = 0;
+}
+
 static void do_HT(struct emuState *S)
 {
     do {
@@ -795,7 +802,7 @@ void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
             //CASE('T', do_SD);
             //CASE('X', do_ECH);
             //CASE('Z', do_CBT);
-            //CASE('`', do_HPA);
+            CASE('`', do_HPA);
             //CASE('b', do_REP); (ugh!)
             CASE('c', do_DA);
             CASE2('>', 'c', do_DA2);
