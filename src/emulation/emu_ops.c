@@ -45,6 +45,20 @@ static void do_BS(struct emuState *S)
     S->wrapnext = 0;
 }
 
+static void do_CBT(struct emuState *S)
+{
+    int count = GETARG(S, 0, 1);
+    for(;;) {
+        S->cCol--;
+        if(S->cCol <= 0) break;
+        if(S->colFlags[S->cCol] & COLFLAG_TAB) {
+            if(--count <= 0) break;
+        }
+    }
+    CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
+    S->wrapnext = 0;
+}
+
 static void do_CHA(struct emuState *S)
 {
     int p1 = GETARG(S, 0, 1);
@@ -56,11 +70,13 @@ static void do_CHA(struct emuState *S)
 static void do_CHT(struct emuState *S)
 {
     int count = GETARG(S, 0, 1);
-    do {
-        if(S->colFlags[++S->cCol] & COLFLAG_TAB) {
+    for(;;) {
+        S->cCol++;
+        if(S->cCol >= S->wCols) break;
+        if(S->colFlags[S->cCol] & COLFLAG_TAB) {
             if(--count <= 0) break;
         }
-    } while(count > 0 && S->cCol < S->wCols);
+    }
     CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
     S->wrapnext = 0;
 }
@@ -285,9 +301,11 @@ static void do_HPA(struct emuState *S)
 
 static void do_HT(struct emuState *S)
 {
-    do {
+    for(;;) {
         S->cCol++;
-    } while(!(S->cCol >= S->wCols || S->colFlags[S->cCol] & COLFLAG_TAB));
+        if(S->cCol >= S->wCols) break;
+        if(S->colFlags[S->cCol] & COLFLAG_TAB) break;
+    }
     CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
     S->wrapnext = 0;
 }
@@ -813,7 +831,7 @@ void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
             //CASE('S', do_SU);
             //CASE('T', do_SD);
             //CASE('X', do_ECH);
-            //CASE('Z', do_CBT);
+            CASE('Z', do_CBT);
             CASE('`', do_HPA);
             //CASE('b', do_REP); (ugh!)
             CASE('c', do_DA);
