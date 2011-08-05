@@ -53,6 +53,18 @@ static void do_CHA(struct emuState *S)
     CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
 }
 
+static void do_CHT(struct emuState *S)
+{
+    int count = GETARG(S, 0, 1);
+    do {
+        if(S->colFlags[++S->cCol] & COLFLAG_TAB) {
+            if(--count <= 0) break;
+        }
+    } while(count > 0 && S->cCol < S->wCols);
+    CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
+    S->wrapnext = 0;
+}
+
 static void do_CNL(struct emuState *S)
 {
     int p1 = GETARG(S, 0, 1);
@@ -792,7 +804,7 @@ void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
             CASE('F', do_CPL);
             CASE('G', do_CHA);
             CASE('H', do_CUP_HVP);
-            //CASE('I', do_CHT);
+            CASE('I', do_CHT);
             CASE('J', do_ED);
             CASE('K', do_EL);
             CASE('L', do_IL);
