@@ -249,6 +249,13 @@ static void do_DSR(struct emuState *S)
     }
 }
 
+static void do_ECH(struct emuState *S)
+{
+    int count = GETARG(S, 0, 1);
+    CAP_MAX(count, S->wCols - S->cCol);
+    emu_row_fill(S->rows[S->cRow], S->cCol, count, EMPTY_FIELD);
+}
+
 static void do_ED(struct emuState *S)
 {
     int p1 = GETARG(S, 0, 0);
@@ -830,7 +837,7 @@ void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
             CASE('P', do_DCH);
             //CASE('S', do_SU);
             //CASE('T', do_SD);
-            //CASE('X', do_ECH);
+            CASE('X', do_ECH);
             CASE('Z', do_CBT);
             CASE('`', do_HPA);
             //CASE('b', do_REP); (ugh!)
