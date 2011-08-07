@@ -148,7 +148,7 @@ static void do_CUP_HVP(struct emuState *S)
     S->wrapnext = 0;
     if(S->flags & MODE_ORIGIN) {
         S->cRow += S->tScroll;
-        CAP_MIN_MAX(S->cRow, 0, S->bScroll);
+        CAP_MIN_MAX(S->cRow, S->tScroll, S->bScroll);
     } else {
         CAP_MIN_MAX(S->cRow, 0, S->wRows - 1);
     }
@@ -196,6 +196,15 @@ static void do_DECRC(struct emuState *S)
     S->wrapnext = 0;
     S->cursorAttr = S->saveAttr;
     S->charset = S->saveCharset;
+    memcpy(S->charsets, S->saveCharsets, sizeof(S->charsets));
+
+    /* VT500 spec specifies that these flags (and only these!) are restored. */
+    APPLY_FLAG(MODE_ORIGIN,     S->saveFlags & MODE_ORIGIN);
+    APPLY_FLAG(MODE_WRAPAROUND, S->saveFlags & MODE_WRAPAROUND);
+
+    if(S->flags & MODE_ORIGIN)
+        CAP_MIN_MAX(S->cRow, S->tScroll, S->bScroll);
+
     CAP_MAX(S->cRow, S->wRows - 1);
     CAP_MAX(S->cCol, S->wCols - 1);
 }
@@ -206,6 +215,8 @@ static void do_DECSC(struct emuState *S)
     S->saveCol     = S->cCol;
     S->saveAttr    = S->cursorAttr;
     S->saveCharset = S->charset;
+    S->saveFlags   = S->flags;
+    memcpy(S->saveCharsets, S->charsets, sizeof(S->charsets));
 }
 
 static void do_DECSTBM(struct emuState *S)
@@ -239,7 +250,6 @@ static void do_DSR(struct emuState *S)
 
         case 6:
             line = S->cRow;
-            // FIXME: How does MODE_ORIGIN interact with cursor above tscroll?
             if(S->flags & MODE_ORIGIN)
                line -= S->tScroll;
             snprintf(buf, sizeof(buf), "\x1b[%d;%dR", line + 1, S->cCol + 1);
@@ -503,7 +513,7 @@ static void do_VPA(struct emuState *S)
     S->wrapnext = 0;
     if(S->flags & MODE_ORIGIN) {
         S->cRow += S->tScroll;
-        CAP_MIN_MAX(S->cRow, 0, S->bScroll);
+        CAP_MIN_MAX(S->cRow, S->tScroll, S->bScroll);
     } else {
         CAP_MIN_MAX(S->cRow, 0, S->wRows - 1);
     }
@@ -704,8 +714,8 @@ static void do_dterm_window(struct emuState *S)
             break;
 
         default:
-            if(p1 >= 24) { // resize to lines (DECSLPP)
-                emu_core_resize(S, GETARG(S, 0, 0), S->wCols);
+            if(p1 >= 24 && p1 < 999) { // resize to lines (DECSLPP)
+                emu_core_resize(S, p1, S->wCols);
             } else {
 #ifdef DEBUG
                 printf("unhandled xterm window manipulation %d\n", p1);
