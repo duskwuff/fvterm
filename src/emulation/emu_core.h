@@ -19,28 +19,39 @@ struct termRow {
     uint64_t chars[];
 };
 
+enum emuCoreState {
+    ST_GROUND,
+    ST_ESC,
+    ST_CSI,
+    ST_OSC,
+};
+
 struct emuState {
     void *parent;
 
-    int cRow, cCol, saveRow, saveCol;
+    int cRow, cCol;
     uint32_t palette[256 + 2];
     int wRows, wCols;
     struct termRow **rows;
     void *rowBase;
     uint8_t *colFlags;
 
-    uint32_t cursorAttr, saveAttr;
-
     int wrapnext, tScroll, bScroll;
+    uint32_t cursorAttr;
     uint64_t flags;
 
     int state, paramPtr, paramVal;
-    uint8_t intermed;
+    uint8_t intermed, vt52Hack;
 
     int utf8state;
     uint8_t utf8buf[4];
 
-    uint8_t charset, saveCharset, charsets[4];
+    uint8_t charset, charsets[4];
+
+    int saveRow, saveCol;
+    uint32_t saveAttr;
+    uint64_t saveFlags;
+    uint8_t saveCharset, saveCharsets[4];
 
     // We'll only be using one of these at a time, so they share storage
     union {
@@ -76,6 +87,7 @@ struct emuState {
 #define MODE_INVERT         _BIT(8)
 #define MODE_SHOWCURSOR     _BIT(9)
 #define MODE_ALLOW_DECCOLM  _BIT(10)
+#define MODE_VT52           _BIT(11)
 
 #define MODE_MOUSE_DOWN     _BIT(59)
 #define MODE_MOUSE_UP       _BIT(60)

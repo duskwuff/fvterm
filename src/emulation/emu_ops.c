@@ -1,12 +1,11 @@
 #include "emu_core.h"
 #include "emu_ops.h"
 
+#include <stdio.h>
 #include <assert.h>
 #include <string.h>
 
 #ifdef DEBUG
-#include <stdio.h>
-
 static const char * safeHex(uint32_t ch)
 {
     // Remember, kids, always practice safe hex.
@@ -299,6 +298,12 @@ static void do_EL(struct emuState *S)
     emu_row_fill(S->rows[S->cRow], from, to - from + 1, EMPTY_FIELD);
 }
 
+static void do_ESC(struct emuState *S)
+{
+    S->intermed = 0;
+    S->state = ST_ESC;
+}
+
 static void do_HPA(struct emuState *S)
 {
     S->cCol = GETARG(S, 0, 1) - 1;
@@ -525,7 +530,11 @@ static void do_modes(struct emuState *S, int flag)
                 break;
 
             CASE_MODE('?', 2): // DECANM (vt52 mode)
-                // FIXME (it's not just a mode, it's a way of life)
+                if(flag == 0) { // this flag is weirdly inverted.
+                    S->flags |= MODE_VT52;
+                    S->charset = 'B';
+                    S->vt52Hack = 0;
+                }
                 break;
 
             CASE_MODE('?', 3): // DECCOLM (132/80 switch)
@@ -705,6 +714,86 @@ static void do_dterm_window(struct emuState *S)
     }
 }
 
+
+static void do_VT52_graphics_on(struct emuState *S)
+{
+    // A real VT52 had a different special graphics character set than the
+    // VT100, but the VT100 didn't implement that. We'll err on the side
+    // of emulating the VT100 here, since the VT52 is super-obscure, and
+    // many of its characters aren't even available in Unicode.
+    S->charset = '0';
+}
+
+
+static void do_VT52_graphics_off(struct emuState *S)
+{
+    S->charset = 'B';
+}
+
+
+static void do_VT52_ident(struct emuState *S)
+{
+    // VT52 had a pretty simple ident string, in large part because it didn't
+    // have the brains to send anything more complex.
+    TerminalEmulator_writeStr(S, "\e/Z");
+}
+
+
+static void do_VT52_loc_start(struct emuState *S)
+{
+    // This is kind of a massive hack, but VT52 is weird enough that it's
+    // probably not worth doing in any more general fashion.
+    S->paramVal = 0;
+    S->vt52Hack = 1;
+    S->state = ST_ESC;
+}
+
+static void do_VT52_loc_continue(struct emuState *S, uint8_t ch)
+{
+    if(S->vt52Hack == 1) {
+        // Save the location char and come back for the next one
+        S->paramVal = ch;
+        S->state = ST_ESC;
+        S->vt52Hack = 2;
+        return;
+    }
+
+    int line = S->paramVal - 0x20;
+    if(S->flags & MODE_ORIGIN)
+        line += S->tScroll;
+
+    // VT52 spec says that the cursor does NOT move if the row is invalid.
+    if(line >= 0 && line < S->wRows)
+        S->cRow = line;
+
+    S->cCol = ch - 0x20;
+    CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
+
+    S->vt52Hack = 0;
+}
+
+
+static void do_VT52_return(struct emuState *S)
+{
+    S->flags &= ~MODE_VT52;
+}
+
+
+static void do_VT52_tab(struct emuState *S)
+{
+    // The definition of a tab in the VT52 manual says that tabs after
+    // column 72 should move a space to the right, instead of to the margin.
+
+    if(S->cCol >= 72)
+        S->cCol++;
+    else
+        do_HT(S);
+
+    CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
+    S->wrapnext = 0;
+}
+
+
 //////////////////////////////////////////////////////////////////////////////
 
 
@@ -724,6 +813,8 @@ void emu_ops_do_ctrl(struct emuState *S, uint8_t ch)
             CASE(0x0D, do_CR);
             CASE(0x0E, do_SO);
             CASE(0x0F, do_SI);
+
+            CASE(0x1B, do_ESC);
 
 #ifdef DEBUG
         default:
@@ -899,6 +990,64 @@ void emu_ops_do_osc(struct emuState *S, int op)
     }
 }
 
+
+void emu_ops_do_vt52_ctrl(struct emuState *S, uint8_t ch)
+{
+    switch(ch) {
+            CASE(0x07, do_BEL);
+            CASE(0x08, do_BS);
+            CASE(0x09, do_VT52_tab);
+            CASE(0x0a, do_IND);
+            CASE(0x0d, do_NEL);
+            CASE(0x1b, do_ESC);
+
+#ifdef DEBUG
+        default:
+            printf("Unknown VT52 control char %s\n", safeHex(ch));
+#endif
+    }
+}
+
+void emu_ops_do_vt52_esc(struct emuState *S, uint8_t ch)
+{
+    // VT52 locator mode. Hackety hack.
+    if(S->vt52Hack > 0) {
+        do_VT52_loc_continue(S, ch);
+        return;
+    }
+
+    // A lot of VT52 operations behave like a VT100 equivalent with all params
+    // zero, so we can use this as a shortcut:
+    bzero(S->params, sizeof(S->params));
+
+    switch(ch) {
+            CASE('A', do_CUU);
+            CASE('B', do_CUD);
+            CASE('C', do_CUF);
+            CASE('D', do_CUB);
+            CASE('F', do_VT52_graphics_on);
+            CASE('G', do_VT52_graphics_off);
+            CASE('H', do_CUP_HVP);
+            CASE('I', do_RI);
+            CASE('J', do_ED);
+            CASE('K', do_EL);
+
+            CASE('Y', do_VT52_loc_start);
+            CASE('Z', do_VT52_ident);
+
+            //CASE('=', do_VT52_altkeypad_on);
+            //CASE('>', do_VT52_altkeypad_off);
+
+            CASE('<', do_VT52_return);
+
+#ifdef DEBUG
+        default:
+            printf("Unhandled VT52 ESC %c\n", ch);
+#endif
+    }
+}
+
+
 static void do_unichar(struct emuState *S, uint16_t uc)
 {
     if(unlikely(S->wrapnext)) {
@@ -987,6 +1136,7 @@ static uint16_t decsgr[32] = {
     0x00A3, // POUND SIGN
     0x00B7, // MIDDLE DOT
 };
+
 
 void emu_ops_text(struct emuState * restrict S, const uint8_t *bytes, size_t len)
 {

@@ -53,4 +53,7 @@ void emu_ops_do_c1(struct emuState *S, uint8_t ch);
 void emu_ops_do_csi(struct emuState *S, uint8_t ch);
 void emu_ops_do_osc(struct emuState *S, int op);
 
+void emu_ops_do_vt52_ctrl(struct emuState *S, uint8_t ch);
+void emu_ops_do_vt52_esc(struct emuState *S, uint8_t ch);
+
 #endif // _EMU_UTILS_H

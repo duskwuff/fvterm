@@ -5,13 +5,6 @@
 #include <assert.h>
 #include <string.h>
 
-enum emuCoreState {
-    ST_GROUND,
-    ST_ESC,
-    ST_CSI,
-    ST_OSC,
-};
-
 void emu_term_reset(struct emuState *S)
 {
     S->state = ST_GROUND;
@@ -116,26 +109,30 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
     for(int i = 0; i < len; i++) {
         uint8_t ch = bytes[i];
 
-        if(ch < 0x20 && S->state != ST_OSC) {
-            GROUND_FLUSH();
-            UTF8_FLUSH();
-            if(ch == 0x1B) { // State-changing - trap this locally
-                S->intermed = 0;
-                S->state = ST_ESC;
-            } else {
-                emu_ops_do_ctrl(S, ch);
-            }
-            continue;
-        }
-
-        // C1 control characters, but only when not in UTF8 sequences
-        if(ch >= 0x80 && ch < 0xA0) {
-            GROUND_FLUSH();
-            if(S->state == ST_GROUND && S->utf8state == 0) {
+        if(unlikely(S->flags & MODE_VT52)) {
+            if(ch < 0x20) {
+                GROUND_FLUSH();
                 UTF8_FLUSH();
-                emu_ops_do_c1(S, ch);
-                S->state = ST_GROUND; // FIXME: check this
+                emu_ops_do_vt52_ctrl(S, ch);
                 continue;
+            }
+        } else {
+            if(ch < 0x20 && S->state != ST_OSC) {
+                GROUND_FLUSH();
+                UTF8_FLUSH();
+                emu_ops_do_ctrl(S, ch);
+                continue;
+            }
+
+            // C1 control characters, but only when not in UTF8 sequences
+            if(ch >= 0x80 && ch < 0xA0) {
+                GROUND_FLUSH();
+                if(S->state == ST_GROUND && S->utf8state == 0) {
+                    UTF8_FLUSH();
+                    emu_ops_do_c1(S, ch);
+                    S->state = ST_GROUND; // FIXME: check this
+                    continue;
+                }
             }
         }
 
@@ -155,7 +152,10 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
                 break;
 
             case ST_ESC:
-                if(ch < 0x30) {
+                if(S->flags & MODE_VT52) {
+                    S->state = ST_GROUND;
+                    emu_ops_do_vt52_esc(S, ch);
+                } else if(ch < 0x30) {
                     S->intermed = S->intermed ? 255 : ch;
                 } else {
                     S->state = ST_GROUND;
