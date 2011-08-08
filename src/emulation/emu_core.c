@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <string.h>
 
+
 void emu_term_reset(struct emuState *S)
 {
     S->state = ST_GROUND;
@@ -26,13 +27,14 @@ void emu_term_reset(struct emuState *S)
         S->charsets[i] = 'B'; // USASCII
 
     for(int i = 0; i < S->wRows; i++)
-        emu_row_fill(S->rows[i], 0, S->wCols, EMPTY_FIELD);
+        emu_row_fill(S, i, 0, S->wCols, EMPTY_FIELD);
 
     for(int i = 0; i < S->wCols; i++) {
         if(i % 8 == 7)
             S->colFlags[i] |= COLFLAG_TAB;
     }
 }
+
 
 static void allocBackBuffers(struct emuState *S)
 {
@@ -45,6 +47,7 @@ static void allocBackBuffers(struct emuState *S)
         S->rows[i] = S->rowBase + i * rowSize;
 }
 
+
 void emu_core_init(struct emuState *S, int rows, int cols)
 {
     S->wRows = rows;
@@ -53,6 +56,7 @@ void emu_core_init(struct emuState *S, int rows, int cols)
     allocBackBuffers(S);
     emu_term_reset(S);
 }
+
 
 void emu_core_resize(struct emuState *S, int rows, int cols)
 {
@@ -84,6 +88,7 @@ void emu_core_resize(struct emuState *S, int rows, int cols)
     TerminalEmulator_resize(S);
 }
 
+
 void emu_core_free(struct emuState *S)
 {
     for(int r = 0; r < S->wRows; r++)
@@ -92,6 +97,7 @@ void emu_core_free(struct emuState *S)
     free(S->rows);
     free(S->colFlags);
 }
+
 
 size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
 {
@@ -228,6 +234,7 @@ size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len)
 #undef GROUND_FLUSH
 }
 
+
 void emu_core_start_csi(struct emuState *S)
 {
     S->state = ST_CSI;
@@ -235,6 +242,7 @@ void emu_core_start_csi(struct emuState *S)
     S->intermed = 0;
     bzero(S->params, sizeof(S->params));
 }
+
 
 void emu_core_start_osc(struct emuState *S)
 {
@@ -245,27 +253,39 @@ void emu_core_start_osc(struct emuState *S)
 }
 
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// Buffer-manipulating utilities
+#pragma mark - Buffer manipulation utils
 
-void emu_row_fill(struct termRow *row, int start, int count, uint64_t value)
+
+void emu_row_fill(struct emuState *S, int row, int start, int count, uint64_t value)
 {
+    assert(row >= 0);
+    assert(row < S->wRows);
+    assert(start >= 0);
+    assert(count >= 0);
+    assert(start < S->wCols);
+    assert(start + count <= S->wCols);
+
+    struct termRow *r = S->rows[row];
 #ifdef NOT_DARWIN
     // bah, we have to do this the hard way
     for(int i = 0; i < count; i++)
-        row->chars[start + i] = value;
+        r->chars[start + i] = value;
 #else
     // memset_pattern8 is highly optimized on x86 :)
-    memset_pattern8(&row->chars[start], &value, count * 8);
+    memset_pattern8(&r->chars[start], &value, count * 8);
 #endif
-    row->flags = TERMROW_DIRTY;
+    r->flags = TERMROW_DIRTY;
 }
 
 
 void emu_scroll_down(struct emuState *S, int top, int btm, int count)
 {
     assert(count > 0);
+    assert(top >= 0);
+    assert(btm >= 0);
+    assert(top < S->wRows);
+    assert(btm < S->wRows);
+
     int clearStart;
     if(count > btm - top) {
         // every row's getting cleared, so we don't need to bother
@@ -283,20 +303,25 @@ void emu_scroll_down(struct emuState *S, int top, int btm, int count)
     }
 
     for(int i = clearStart; i <= btm; i++)
-        emu_row_fill(S->rows[i], 0, S->wCols, EMPTY_FIELD);
+        emu_row_fill(S, i, 0, S->wCols, EMPTY_FIELD);
 }
 
 
 void emu_scroll_up(struct emuState *S, int top, int btm, int count)
 {
-    // FIXME: this is unoptimized.
     assert(count > 0);
+    assert(top >= 0);
+    assert(btm >= 0);
+    assert(top < S->wRows);
+    assert(btm < S->wRows);
+
+    // FIXME: this is unoptimized.
     while(count--) {
         struct termRow *movingRow = S->rows[btm];
         for(int i = btm; i > top; i--)
             S->rows[i] = S->rows[i - 1];
         S->rows[top] = movingRow;
-        emu_row_fill(movingRow, 0, S->wCols, EMPTY_FIELD);
+        emu_row_fill(S, top, 0, S->wCols, EMPTY_FIELD);
     }
 }
 

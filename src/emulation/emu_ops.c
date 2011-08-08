@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <string.h>
 
+
 #ifdef DEBUG
 static const char * safeHex(uint32_t ch)
 {
@@ -29,7 +30,7 @@ static const char * safeHex(uint32_t ch)
 #endif
 
 
-//////////////////////////////////////////////////////////////////////////////
+#pragma mark - Control sequences
 
 
 static void do_BEL(struct emuState *S)
@@ -37,12 +38,14 @@ static void do_BEL(struct emuState *S)
     TerminalEmulator_bell(S);
 }
 
+
 static void do_BS(struct emuState *S)
 {
     S->cCol -= 1;
     CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
     S->wrapnext = 0;
 }
+
 
 static void do_CBT(struct emuState *S)
 {
@@ -58,6 +61,7 @@ static void do_CBT(struct emuState *S)
     S->wrapnext = 0;
 }
 
+
 static void do_CHA(struct emuState *S)
 {
     int p1 = GETARG(S, 0, 1);
@@ -65,6 +69,7 @@ static void do_CHA(struct emuState *S)
     S->wrapnext = 0;
     CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
 }
+
 
 static void do_CHT(struct emuState *S)
 {
@@ -80,6 +85,7 @@ static void do_CHT(struct emuState *S)
     S->wrapnext = 0;
 }
 
+
 static void do_CNL(struct emuState *S)
 {
     int p1 = GETARG(S, 0, 1);
@@ -87,6 +93,7 @@ static void do_CNL(struct emuState *S)
     S->cCol = 0;
     S->wrapnext = 0;
 }
+
 
 static void do_CPL(struct emuState *S)
 {
@@ -96,16 +103,19 @@ static void do_CPL(struct emuState *S)
     S->wrapnext = 0;
 }
 
+
 static void do_CR(struct emuState *S)
 {
     S->cCol = 0;
     S->wrapnext = 0;
 }
 
+
 static void do_CSI(struct emuState *S)
 {
     emu_core_start_csi(S);
 }
+
 
 static void do_CUB(struct emuState *S)
 {
@@ -114,12 +124,14 @@ static void do_CUB(struct emuState *S)
     S->wrapnext = 0;
 }
 
+
 static void do_CUF(struct emuState *S)
 {
     S->cCol += GETARG(S, 0, 1);
     CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
     S->wrapnext = 0;
 }
+
 
 static void do_CUU(struct emuState *S)
 {
@@ -130,6 +142,7 @@ static void do_CUU(struct emuState *S)
     S->wrapnext = 0;
 }
 
+
 static void do_CUD(struct emuState *S)
 {
     int p1 = GETARG(S, 0, 1);
@@ -138,6 +151,7 @@ static void do_CUD(struct emuState *S)
     CAP_MIN_MAX(S->cRow, 0, (row > S->bScroll) ? S->wRows - 1 : S->bScroll);
     S->wrapnext = 0;
 }
+
 
 static void do_CUP_HVP(struct emuState *S)
 {
@@ -155,11 +169,13 @@ static void do_CUP_HVP(struct emuState *S)
     CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
 }
 
+
 static void do_DA(struct emuState *S)
 {
     // VT100 with AVO
     TerminalEmulator_writeStr(S, "\e[?1;2c");
 }
+
 
 static void do_DA2(struct emuState *S)
 {
@@ -170,6 +186,7 @@ static void do_DA2(struct emuState *S)
             break;
     }
 }
+
 
 static void do_DCH(struct emuState *S)
 {
@@ -183,11 +200,13 @@ static void do_DCH(struct emuState *S)
     S->rows[S->cRow]->flags |= TERMROW_DIRTY;
 }
 
+
 static void do_DECALN(struct emuState *S)
 {
     for(int i = 0; i < S->wRows; i++)
-        emu_row_fill(S->rows[i], 0, S->wCols, APPLY_ATTR('E'));
+        emu_row_fill(S, i, 0, S->wCols, APPLY_ATTR('E'));
 }
+
 
 static void do_DECRC(struct emuState *S)
 {
@@ -209,6 +228,7 @@ static void do_DECRC(struct emuState *S)
     CAP_MAX(S->cCol, S->wCols - 1);
 }
 
+
 static void do_DECSC(struct emuState *S)
 {
     S->saveRow     = S->cRow;
@@ -218,6 +238,7 @@ static void do_DECSC(struct emuState *S)
     S->saveFlags   = S->flags;
     memcpy(S->saveCharsets, S->charsets, sizeof(S->charsets));
 }
+
 
 static void do_DECSTBM(struct emuState *S)
 {
@@ -233,11 +254,13 @@ static void do_DECSTBM(struct emuState *S)
     }
 }
 
+
 static void do_DL(struct emuState *S)
 {
     if(S->cRow >= S->tScroll && S->cRow <= S->bScroll)
         emu_scroll_down(S, S->cRow, S->bScroll, GETARG(S, 0, 1));
 }
+
 
 static void do_DSR(struct emuState *S)
 {
@@ -258,12 +281,14 @@ static void do_DSR(struct emuState *S)
     }
 }
 
+
 static void do_ECH(struct emuState *S)
 {
     int count = GETARG(S, 0, 1);
     CAP_MAX(count, S->wCols - S->cCol);
-    emu_row_fill(S->rows[S->cRow], S->cCol, count, EMPTY_FIELD);
+    emu_row_fill(S, S->cRow, S->cCol, count, EMPTY_FIELD);
 }
+
 
 static void do_ED(struct emuState *S)
 {
@@ -282,13 +307,14 @@ static void do_ED(struct emuState *S)
             break;
     }
     for(int i = from; i <= to; i++)
-        emu_row_fill(S->rows[i], 0, S->wCols, EMPTY_FIELD);
+        emu_row_fill(S, i, 0, S->wCols, EMPTY_FIELD);
     // ED erases partial lines too...
     if(p1 == 1)
-        emu_row_fill(S->rows[S->cRow], 0, S->cCol + 1, EMPTY_FIELD);
+        emu_row_fill(S, S->cRow, 0, S->cCol + 1, EMPTY_FIELD);
     else if(p1 != 2) // 0 or default
-        emu_row_fill(S->rows[S->cRow], S->cCol, S->wCols - S->cCol, EMPTY_FIELD);
+        emu_row_fill(S, S->cRow, S->cCol, S->wCols - S->cCol, EMPTY_FIELD);
 }
+
 
 static void do_EL(struct emuState *S)
 {
@@ -305,8 +331,9 @@ static void do_EL(struct emuState *S)
         case 2:
             break;
     }
-    emu_row_fill(S->rows[S->cRow], from, to - from + 1, EMPTY_FIELD);
+    emu_row_fill(S, S->cRow, from, to - from + 1, EMPTY_FIELD);
 }
+
 
 static void do_ESC(struct emuState *S)
 {
@@ -314,12 +341,14 @@ static void do_ESC(struct emuState *S)
     S->state = ST_ESC;
 }
 
+
 static void do_HPA(struct emuState *S)
 {
     S->cCol = GETARG(S, 0, 1) - 1;
     CAP_MIN_MAX(S->cCol, 0, S->wCols - 1);
     S->wrapnext = 0;
 }
+
 
 static void do_HT(struct emuState *S)
 {
@@ -332,10 +361,12 @@ static void do_HT(struct emuState *S)
     S->wrapnext = 0;
 }
 
+
 static void do_HTS(struct emuState *S)
 {
     S->colFlags[S->cCol] |= COLFLAG_TAB;
 }
+
 
 static void do_ICH(struct emuState *S)
 {
@@ -349,16 +380,19 @@ static void do_ICH(struct emuState *S)
     S->rows[S->cRow]->flags |= TERMROW_DIRTY;
 }
 
+
 static void do_IL(struct emuState *S)
 {
     if(S->cRow >= S->tScroll && S->cRow <= S->bScroll)
         emu_scroll_up(S, S->cRow, S->bScroll, GETARG(S, 0, 1));
 }
 
+
 static void do_IND(struct emuState *S)
 {
     emu_term_index(S, 1);
 }
+
 
 static void do_NEL(struct emuState *S)
 {
@@ -366,6 +400,7 @@ static void do_NEL(struct emuState *S)
     S->cCol = 0;
     S->wrapnext = 0;
 }
+
 
 static void do_NL(struct emuState *S)
 {
@@ -375,15 +410,18 @@ static void do_NL(struct emuState *S)
     S->wrapnext = 0;
 }
 
+
 static void do_OSC(struct emuState *S)
 {
     emu_core_start_osc(S);
 }
 
+
 static void do_RI(struct emuState *S)
 {
     emu_term_index(S, -1);
 }
+
 
 static void do_SGR(struct emuState *S)
 {
@@ -470,17 +508,20 @@ static void do_SGR(struct emuState *S)
     }
 }
 
+
 static void do_SO(struct emuState *S)
 {
     // Switch to G1
     S->charset = S->charsets[1];
 }
 
+
 static void do_SI(struct emuState *S)
 {
     // Switch to G0
     S->charset = S->charsets[0];
 }
+
 
 static void do_TBC(struct emuState *S)
 {
@@ -507,6 +548,7 @@ static void do_TBC(struct emuState *S)
     }
 }
 
+
 static void do_VPA(struct emuState *S)
 {
     S->cRow = GETARG(S, 0, 1) - 1;
@@ -519,143 +561,6 @@ static void do_VPA(struct emuState *S)
     }
 }
 
-static void do_modes(struct emuState *S, int flag)
-{
-#define _M(im, n) ((im) | (n) << 8)
-#define CASE_MODE(im, n) case _M(im, n)
-
-    for(int i = 0; i < S->paramPtr; i++) {
-        switch(_M(S->intermed, S->params[i])) {
-
-            CASE_MODE(0, 4): // IRM (insert/replace mode)
-                APPLY_FLAG(MODE_INSERT, flag);
-                break;
-
-            CASE_MODE(0, 20): // LNM (normal linefeed mode)
-                APPLY_FLAG(MODE_LINEFEED, flag);
-                break;
-
-            CASE_MODE('?', 1): // DECCKM (cursor key mode)
-                APPLY_FLAG(MODE_CURSORKEYS, flag);
-                break;
-
-            CASE_MODE('?', 2): // DECANM (vt52 mode)
-                if(flag == 0) { // this flag is weirdly inverted.
-                    S->flags |= MODE_VT52;
-                    S->charset = 'B';
-                    S->vt52Hack = 0;
-                }
-                break;
-
-            CASE_MODE('?', 3): // DECCOLM (132/80 switch)
-                if(!(S->flags & MODE_ALLOW_DECCOLM)) break;
-                emu_core_resize(S, S->wRows, flag ? 132 : 80);
-                // clear screen and reset cursor to 0/0
-                for(int i = 0; i < S->wRows; i++)
-                    emu_row_fill(S->rows[i], 0, S->wCols, EMPTY_FIELD);
-                S->cCol = 0;
-                S->cRow = (S->flags & MODE_ORIGIN) ? S->tScroll : 0;
-                break;
-
-            CASE_MODE('?', 4): // DECSCLM (smooth scrolling)
-                // Ignored - we don't implement this feature
-                break;
-
-            CASE_MODE('?', 5): // DECSCNM (reverse video)
-                APPLY_FLAG(MODE_INVERT, flag);
-                for(int i = 0; i < S->wRows; i++)
-                    S->rows[i]->flags |= TERMROW_DIRTY; // redraw everything!
-                break;
-
-            CASE_MODE('?', 6): // DECOM (origin mode)
-                APPLY_FLAG(MODE_ORIGIN, flag);
-                // Origin flag homes the cursor when set/reset
-                S->cRow = flag ? S->tScroll : 0;
-                S->cCol = 0;
-                break;
-
-            CASE_MODE('?', 7): // DECAWM (wraparound mode)
-                APPLY_FLAG(MODE_WRAPAROUND, flag);
-                break;
-
-            CASE_MODE('?', 8): // DECARM (autorepeat mode)
-                // Ignored - neither of these make sense on a software terminal.
-                break;
-
-            CASE_MODE('?', 9): // DECINLM (interlace) / X10 mouse tracking
-                // DECINLM makes no sense on a software terminal.
-                // Mouse tracking does, so we'll do that instead.
-                S->flags &= ~MODE_MOUSE_MASK;
-                APPLY_FLAG(MODE_MOUSE_X10, flag);
-                break;
-
-            CASE_MODE('?', 12): // cursor blink
-                // TODO
-                break;
-
-            CASE_MODE('?', 25): // visible cursor
-                APPLY_FLAG(MODE_SHOWCURSOR, flag);
-                break;
-
-            CASE_MODE('?', 40): // allow DECCOLM
-                // not quite sure what the point of this is, but what the hey.
-                APPLY_FLAG(MODE_ALLOW_DECCOLM, flag);
-                break;
-
-            CASE_MODE('?', 41): // more(1) fix
-                // obsolete and ignored
-                break;
-
-            CASE_MODE('?', 45): // reverse wraparound
-                APPLY_FLAG(MODE_REVWRAP, flag);
-                break;
-
-            CASE_MODE('?', 1000): // mouse tracking
-                S->flags &= ~MODE_MOUSE_MASK;
-                APPLY_FLAG(MODE_MOUSE_1000, flag);
-                break;
-
-            CASE_MODE('?', 1001):
-                S->flags &= ~MODE_MOUSE_MASK;
-                APPLY_FLAG(MODE_MOUSE_1001, flag);
-                break;
-
-            CASE_MODE('?', 1002):
-                S->flags &= ~MODE_MOUSE_MASK;
-                APPLY_FLAG(MODE_MOUSE_1002, flag);
-                break;
-
-            CASE_MODE('?', 1003):
-                S->flags &= ~MODE_MOUSE_MASK;
-                APPLY_FLAG(MODE_MOUSE_1003, flag);
-                break;
-
-            CASE_MODE('?', 1047): // alternate buffer
-            CASE_MODE('?', 1049): // alternate buffer/cursor
-                // TODO
-                break;
-
-#ifdef DEBUG
-            default:
-                printf("unhandled mode %x/%d (flag: %d)\n",
-                       S->intermed, S->params[i], flag);
-#endif
-        }
-    }
-
-#undef CASE_MODE
-#undef _M
-}
-
-static void do_SM(struct emuState *S)
-{
-    do_modes(S, 1);
-}
-
-static void do_RM(struct emuState *S)
-{
-    do_modes(S, 0);
-}
 
 static void do_dterm_window(struct emuState *S)
 {
@@ -725,6 +630,9 @@ static void do_dterm_window(struct emuState *S)
 }
 
 
+#pragma mark VT52 sequences
+
+
 static void do_VT52_graphics_on(struct emuState *S)
 {
     // A real VT52 had a different special graphics character set than the
@@ -757,6 +665,7 @@ static void do_VT52_loc_start(struct emuState *S)
     S->vt52Hack = 1;
     S->state = ST_ESC;
 }
+
 
 static void do_VT52_loc_continue(struct emuState *S, uint8_t ch)
 {
@@ -804,7 +713,156 @@ static void do_VT52_tab(struct emuState *S)
 }
 
 
-//////////////////////////////////////////////////////////////////////////////
+#pragma mark - Modes
+
+
+static void do_modes(struct emuState *S, int flag)
+{
+#define _M(im, n) ((im) | (n) << 8)
+#define CASE_MODE(im, n) case _M(im, n)
+
+    for(int i = 0; i < S->paramPtr; i++) {
+        switch(_M(S->intermed, S->params[i])) {
+
+            CASE_MODE(0, 4): // IRM (insert/replace mode)
+                APPLY_FLAG(MODE_INSERT, flag);
+                break;
+
+            CASE_MODE(0, 20): // LNM (normal linefeed mode)
+                APPLY_FLAG(MODE_LINEFEED, flag);
+                break;
+
+            CASE_MODE('?', 1): // DECCKM (cursor key mode)
+                APPLY_FLAG(MODE_CURSORKEYS, flag);
+                break;
+
+            CASE_MODE('?', 2): // DECANM (vt52 mode)
+                if(flag == 0) { // this flag is weirdly inverted.
+                    S->flags |= MODE_VT52;
+                    S->charset = 'B';
+                    S->vt52Hack = 0;
+                }
+                break;
+
+            CASE_MODE('?', 3): // DECCOLM (132/80 switch)
+                printf("DECCOLM -> %d\n", flag);
+                if(!(S->flags & MODE_ALLOW_DECCOLM)) break;
+                emu_core_resize(S, S->wRows, flag ? 132 : 80);
+                // clear screen and reset cursor to 0/0
+                for(int i = 0; i < S->wRows; i++)
+                    emu_row_fill(S, i, 0, S->wCols, EMPTY_FIELD);
+                S->cCol = 0;
+                S->cRow = (S->flags & MODE_ORIGIN) ? S->tScroll : 0;
+                break;
+
+            CASE_MODE('?', 4): // DECSCLM (smooth scrolling)
+                // Ignored - we don't implement this feature
+                break;
+
+            CASE_MODE('?', 5): // DECSCNM (reverse video)
+                APPLY_FLAG(MODE_INVERT, flag);
+                for(int i = 0; i < S->wRows; i++)
+                    S->rows[i]->flags |= TERMROW_DIRTY; // redraw everything!
+                break;
+
+            CASE_MODE('?', 6): // DECOM (origin mode)
+                APPLY_FLAG(MODE_ORIGIN, flag);
+                // Origin flag homes the cursor when set/reset
+                S->cRow = flag ? S->tScroll : 0;
+                S->cCol = 0;
+                break;
+
+            CASE_MODE('?', 7): // DECAWM (wraparound mode)
+                APPLY_FLAG(MODE_WRAPAROUND, flag);
+                break;
+
+            CASE_MODE('?', 8): // DECARM (autorepeat mode)
+                // Ignored - neither of these make sense on a software terminal.
+                break;
+
+            CASE_MODE('?', 9): // DECINLM (interlace) / X10 mouse tracking
+                // DECINLM makes no sense on a software terminal.
+                // Mouse tracking does, so we'll do that instead.
+                S->flags &= ~MODE_MOUSE_MASK;
+                APPLY_FLAG(MODE_MOUSE_X10, flag);
+                break;
+
+            CASE_MODE('?', 12): // cursor blink
+                // TODO
+                break;
+
+            CASE_MODE('?', 25): // visible cursor
+                APPLY_FLAG(MODE_SHOWCURSOR, flag);
+                break;
+
+            CASE_MODE('?', 40): // allow DECCOLM
+                // not quite sure what the point of this is, but what the hey.
+                APPLY_FLAG(MODE_ALLOW_DECCOLM, flag);
+                break;
+
+            CASE_MODE('?', 41): // more(1) fix
+                // obsolete and ignored
+                break;
+
+            CASE_MODE('?', 42): // DECNCRM
+                // FIXME
+                break;
+
+            CASE_MODE('?', 45): // reverse wraparound
+                APPLY_FLAG(MODE_REVWRAP, flag);
+                break;
+
+            CASE_MODE('?', 1000): // mouse tracking
+                S->flags &= ~MODE_MOUSE_MASK;
+                APPLY_FLAG(MODE_MOUSE_1000, flag);
+                break;
+
+            CASE_MODE('?', 1001):
+                S->flags &= ~MODE_MOUSE_MASK;
+                APPLY_FLAG(MODE_MOUSE_1001, flag);
+                break;
+
+            CASE_MODE('?', 1002):
+                S->flags &= ~MODE_MOUSE_MASK;
+                APPLY_FLAG(MODE_MOUSE_1002, flag);
+                break;
+
+            CASE_MODE('?', 1003):
+                S->flags &= ~MODE_MOUSE_MASK;
+                APPLY_FLAG(MODE_MOUSE_1003, flag);
+                break;
+
+            CASE_MODE('?', 1047): // alternate buffer
+            CASE_MODE('?', 1049): // alternate buffer/cursor
+                // TODO
+                break;
+
+#ifdef DEBUG
+            default:
+                printf("unhandled mode %x/%d (flag: %d)\n",
+                       S->intermed, S->params[i], flag);
+#endif
+        }
+    }
+
+#undef CASE_MODE
+#undef _M
+}
+
+
+static void do_SM(struct emuState *S)
+{
+    do_modes(S, 1);
+}
+
+
+static void do_RM(struct emuState *S)
+{
+    do_modes(S, 0);
+}
+
+
+#pragma mark - Emu ops switches
 
 
 #define CASE(frm, to) case frm: to(S); break
@@ -890,6 +948,7 @@ void emu_ops_do_esc(struct emuState *S, uint8_t lastch)
     }
 }
 
+
 void emu_ops_do_c1(struct emuState *S, uint8_t lastch)
 {
     switch(lastch) {
@@ -917,6 +976,7 @@ void emu_ops_do_c1(struct emuState *S, uint8_t lastch)
 #endif
     }
 }
+
 
 void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
 {
@@ -1018,6 +1078,7 @@ void emu_ops_do_vt52_ctrl(struct emuState *S, uint8_t ch)
     }
 }
 
+
 void emu_ops_do_vt52_esc(struct emuState *S, uint8_t ch)
 {
     // VT52 locator mode. Hackety hack.
@@ -1058,6 +1119,9 @@ void emu_ops_do_vt52_esc(struct emuState *S, uint8_t ch)
 }
 
 
+#pragma mark - Output
+
+
 static void do_unichar(struct emuState *S, uint16_t uc)
 {
     if(unlikely(S->wrapnext)) {
@@ -1069,7 +1133,12 @@ static void do_unichar(struct emuState *S, uint16_t uc)
         S->wrapnext = 0;
     }
 
-    // cache this as an aliasing fix
+    assert(S->cRow >= 0);
+    assert(S->cCol >= 0);
+    assert(S->cRow < S->wRows);
+    assert(S->cCol < S->wCols);
+
+    // simplify alias analysis for the compiler by putting this in a variable
     struct termRow *thisRow = S->rows[S->cRow];
 
     if(unlikely(S->flags & MODE_INSERT)) {
@@ -1087,6 +1156,7 @@ static void do_unichar(struct emuState *S, uint16_t uc)
         S->wrapnext = 1;
     }
 }
+
 
 static void unwind_utf8(struct emuState *S)
 {
@@ -1111,6 +1181,7 @@ static void unwind_utf8(struct emuState *S)
     }
     S->utf8state = 0;
 }
+
 
 static uint16_t decsgr[32] = {
     0x0020, // SPACE
@@ -1210,6 +1281,7 @@ void emu_ops_text(struct emuState * restrict S, const uint8_t *bytes, size_t len
                 continue;
             }
         }
+
         if(likely(c < 0x80)) {
             // Just plain ASCII
             do_unichar(S, c);

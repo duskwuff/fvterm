@@ -41,7 +41,7 @@
 
 void emu_term_reset(struct emuState *S);
 
-void emu_row_fill(struct termRow *row, int start, int count, uint64_t value);
+void emu_row_fill(struct emuState *S, int row, int start, int count, uint64_t value);
 void emu_scroll_up(struct emuState *S, int top, int btm, int count);
 void emu_scroll_down(struct emuState *S, int top, int btm, int count);
 void emu_term_index(struct emuState *S, int count);
