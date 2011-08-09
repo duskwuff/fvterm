@@ -211,8 +211,8 @@
 
 - (void)ptyInput:(TerminalPTY *)pty data:(NSData *)data
 {
-    size_t n = emu_core_run(&state, [data bytes], [data length]);
-    [view triggerRedrawWithDataLength:(int) n];
+    emu_core_run(&state, [data bytes], [data length]);
+    [view setNeedsDisplay:YES];
 }
 
 

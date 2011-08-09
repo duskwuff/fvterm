@@ -15,8 +15,6 @@
     TerminalFont *font;
 }
 - (void)resizeForTerminal;
-- (void)triggerRedrawWithDataLength:(int)length;
-
 + (void)releaseBitmaps:(void **)bmap;
 @end
 

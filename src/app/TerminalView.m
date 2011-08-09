@@ -64,6 +64,7 @@ NSString * const fallbackFont = @"fixed13";
     [parent eventKeyInput:self event:ev];
 }
 
+
 #define MOUSE_SELECTOR(selector) \
 - (void)selector:(NSEvent *)ev { [parent eventMouseInput:self event:ev]; }
 
@@ -283,23 +284,6 @@ static void render(TerminalView *view, struct termRow *row)
     [self setNeedsDisplay:YES];
 }
 
-- (void)triggerRedrawWithDataLength:(int)length
-{
-    if(redrawPending) return;
-
-    redrawCounter += length;
-
-    if(redrawCounter < 64) {
-        [self display];
-    } else {
-        redrawPending = YES;
-        [self performSelector:@selector(display)
-                   withObject:nil
-                   afterDelay:1/60.0
-                      inModes:[NSArray arrayWithObjects:
-                               NSDefaultRunLoopMode, NSEventTrackingRunLoopMode, nil]];
-    }
-}
 
 - (void)_gotResized:(NSNotification *)note
 {
