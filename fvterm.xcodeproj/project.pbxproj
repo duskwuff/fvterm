@@ -14,8 +14,7 @@
 		CC7E4713132C09A900C9B890 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = CC7E4712132C09A900C9B890 /* main.m */; };
 		CC7E4724132C09E600C9B890 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = CC7E4723132C09E600C9B890 /* Credits.rtf */; };
 		CC7E4726132C0A0400C9B890 /* fvterm.icns in Resources */ = {isa = PBXBuildFile; fileRef = CC7E4725132C0A0400C9B890 /* fvterm.icns */; };
-		CC7E472D132C0A1100C9B890 /* emu_core.c in Sources */ = {isa = PBXBuildFile; fileRef = CC7E4728132C0A1100C9B890 /* emu_core.c */; };
-		CC7E472E132C0A1100C9B890 /* emu_ops.c in Sources */ = {isa = PBXBuildFile; fileRef = CC7E472A132C0A1100C9B890 /* emu_ops.c */; };
+		CC7E472D132C0A1100C9B890 /* fvemu.c in Sources */ = {isa = PBXBuildFile; fileRef = CC7E4728132C0A1100C9B890 /* fvemu.c */; };
 		CC7E4735132C0A1C00C9B890 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = CC7E4732132C0A1C00C9B890 /* MainMenu.xib */; };
 		CC7E4740132C0A2700C9B890 /* TerminalFont.m in Sources */ = {isa = PBXBuildFile; fileRef = CC7E4738132C0A2700C9B890 /* TerminalFont.m */; };
 		CC7E4741132C0A2700C9B890 /* TerminalPTY.m in Sources */ = {isa = PBXBuildFile; fileRef = CC7E473A132C0A2700C9B890 /* TerminalPTY.m */; };
@@ -95,9 +94,7 @@
 		CC9EC8F1132C28E500675B90 /* terminus32-r-26.png in Resources */ = {isa = PBXBuildFile; fileRef = CC7E47A4132C0F2C00C9B890 /* terminus32-r-26.png */; };
 		CC9EC8F2132C28E500675B90 /* terminus32-r-f6.png in Resources */ = {isa = PBXBuildFile; fileRef = CC7E47A5132C0F2C00C9B890 /* terminus32-r-f6.png */; };
 		CC9EC8F3132C28E500675B90 /* terminus32-r-ff.png in Resources */ = {isa = PBXBuildFile; fileRef = CC7E47A6132C0F2C00C9B890 /* terminus32-r-ff.png */; };
-		CC9F3DDD1338FE1E00C1D3B3 /* emu_core.c in Sources */ = {isa = PBXBuildFile; fileRef = CC7E4728132C0A1100C9B890 /* emu_core.c */; };
-		CC9F3DDF1338FE2600C1D3B3 /* emu_ops.c in Sources */ = {isa = PBXBuildFile; fileRef = CC7E472A132C0A1100C9B890 /* emu_ops.c */; };
-		CC9F3DE01338FE2600C1D3B3 /* emu_ops.h in Headers */ = {isa = PBXBuildFile; fileRef = CC7E472B132C0A1100C9B890 /* emu_ops.h */; };
+		CC9F3DDD1338FE1E00C1D3B3 /* fvemu.c in Sources */ = {isa = PBXBuildFile; fileRef = CC7E4728132C0A1100C9B890 /* fvemu.c */; };
 		CC9F3DE41338FE7800C1D3B3 /* libfvterm.c in Sources */ = {isa = PBXBuildFile; fileRef = CC9F3DE11338FE7700C1D3B3 /* libfvterm.c */; };
 		CC9F3DE61338FE7800C1D3B3 /* libfvterm.h in Headers */ = {isa = PBXBuildFile; fileRef = CC9F3DE31338FE7800C1D3B3 /* libfvterm.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
@@ -118,10 +115,8 @@
 		CC7E4723132C09E600C9B890 /* Credits.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
 		CC7E4725132C0A0400C9B890 /* fvterm.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = fvterm.icns; sourceTree = "<group>"; };
 		CC7E4727132C0A1100C9B890 /* DefaultColors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DefaultColors.h; sourceTree = "<group>"; };
-		CC7E4728132C0A1100C9B890 /* emu_core.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = emu_core.c; sourceTree = "<group>"; };
-		CC7E4729132C0A1100C9B890 /* emu_core.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = emu_core.h; sourceTree = "<group>"; };
-		CC7E472A132C0A1100C9B890 /* emu_ops.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = emu_ops.c; sourceTree = "<group>"; };
-		CC7E472B132C0A1100C9B890 /* emu_ops.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = emu_ops.h; sourceTree = "<group>"; };
+		CC7E4728132C0A1100C9B890 /* fvemu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fvemu.c; sourceTree = "<group>"; };
+		CC7E4729132C0A1100C9B890 /* fvemu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fvemu.h; sourceTree = "<group>"; };
 		CC7E4732132C0A1C00C9B890 /* MainMenu.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		CC7E4737132C0A2700C9B890 /* TerminalFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TerminalFont.h; sourceTree = "<group>"; };
 		CC7E4738132C0A2700C9B890 /* TerminalFont.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TerminalFont.m; sourceTree = "<group>"; };
@@ -306,10 +301,8 @@
 			children = (
 				CC9F3DE11338FE7700C1D3B3 /* libfvterm.c */,
 				CC9F3DE31338FE7800C1D3B3 /* libfvterm.h */,
-				CC7E4728132C0A1100C9B890 /* emu_core.c */,
-				CC7E4729132C0A1100C9B890 /* emu_core.h */,
-				CC7E472A132C0A1100C9B890 /* emu_ops.c */,
-				CC7E472B132C0A1100C9B890 /* emu_ops.h */,
+				CC7E4728132C0A1100C9B890 /* fvemu.c */,
+				CC7E4729132C0A1100C9B890 /* fvemu.h */,
 			);
 			name = emulation;
 			path = src/emulation;
@@ -450,7 +443,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CC9F3DE01338FE2600C1D3B3 /* emu_ops.h in Headers */,
 				CC9F3DE61338FE7800C1D3B3 /* libfvterm.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -614,8 +606,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CC7E4713132C09A900C9B890 /* main.m in Sources */,
-				CC7E472D132C0A1100C9B890 /* emu_core.c in Sources */,
-				CC7E472E132C0A1100C9B890 /* emu_ops.c in Sources */,
+				CC7E472D132C0A1100C9B890 /* fvemu.c in Sources */,
 				CC7E4740132C0A2700C9B890 /* TerminalFont.m in Sources */,
 				CC7E4741132C0A2700C9B890 /* TerminalPTY.m in Sources */,
 				CC7E4742132C0A2700C9B890 /* TerminalView.m in Sources */,
@@ -627,8 +618,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CC9F3DDD1338FE1E00C1D3B3 /* emu_core.c in Sources */,
-				CC9F3DDF1338FE2600C1D3B3 /* emu_ops.c in Sources */,
+				CC9F3DDD1338FE1E00C1D3B3 /* fvemu.c in Sources */,
 				CC9F3DE41338FE7800C1D3B3 /* libfvterm.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

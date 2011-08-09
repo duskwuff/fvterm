@@ -1,16 +1,10 @@
-#ifndef _EMU_CORE_H
-#define _EMU_CORE_H
+#ifndef _FVEMU_H
+#define _FVEMU_H
 
 #include <stdint.h>
 #include <stdlib.h>
 
-#define __MAX(x,y) (((x) > (y)) ? (x) : (y))
-#define __MIN(x,y) (((x) < (y)) ? (x) : (y))
-
-#define _BIT(n) (1UL<<(n))
-
 #define BITMAP_PTRS 2
-
 #define MAX_PARAMS 16
 
 struct termRow {
@@ -59,6 +53,8 @@ struct emuState {
         char oscBuf[512];
     };
 };
+
+#define _BIT(n) (1UL<<(n))
 
 #define TERMROW_DIRTY       _BIT(0)
 #define TERMROW_WRAPPED     _BIT(1)
@@ -111,15 +107,14 @@ struct emuState {
 #define PAL_DEFAULT_FG      (256+0)
 #define PAL_DEFAULT_BG      (256+1)
 
+// Functions exported by fvemu
+
 void emu_core_init(struct emuState *S, int rows, int cols);
 void emu_core_resize(struct emuState *S, int rows, int cols);
 size_t emu_core_run(struct emuState *S, const uint8_t *bytes, size_t len);
 void emu_core_free(struct emuState *S);
 
-void emu_core_start_csi(struct emuState *S);
-void emu_core_start_osc(struct emuState *S);
-
-// Functions to be defined by clients of emu_core
+// Functions imported by fvemu
 
 void TerminalEmulator_bell(struct emuState *S);
 void TerminalEmulator_setTitle(struct emuState *S, const char *title);
@@ -128,4 +123,4 @@ void TerminalEmulator_write(struct emuState *S, char *bytes, size_t len);
 void TerminalEmulator_writeStr(struct emuState *S, char *bytes);
 void TerminalEmulator_freeRowBitmaps(struct termRow *r);
 
-#endif // _EMU_CORE_H
+#endif // _FVEMU_H

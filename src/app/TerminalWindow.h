@@ -1,4 +1,4 @@
-#import "emu_core.h"
+#import "fvemu.h"
 
 @class TerminalPTY;
 @class TerminalView;
