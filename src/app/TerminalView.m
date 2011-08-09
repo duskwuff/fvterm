@@ -3,11 +3,14 @@
 #import "TerminalWindow.h"
 #import "TerminalFont.h"
 
+
 static CGColorSpaceRef cspace = nil;
 
 NSString * const fallbackFont = @"fixed13";
 
+
 @implementation TerminalView
+
 
 - (id)_init
 {
@@ -28,17 +31,20 @@ NSString * const fallbackFont = @"fixed13";
     return self;
 }
 
+
 - (id)initWithFrame:(NSRect)frame
 {
     if(!(self = [super initWithFrame:frame])) return nil;
     return [self _init];
 }
 
+
 - (id)initWithCoder:(NSCoder *)coder
 {
     if(!(self = [super initWithCoder:coder])) return nil;
     return [self _init];
 }
+
 
 - (void)dealloc
 {
@@ -49,10 +55,12 @@ NSString * const fallbackFont = @"fixed13";
 }
 
 
-#pragma mark Event handling
+#pragma mark - Event handling
+
 
 - (void)keyDown:(NSEvent *)ev
 {
+    [NSCursor setHiddenUntilMouseMoves:YES];
     [parent eventKeyInput:self event:ev];
 }
 
@@ -74,7 +82,8 @@ MOUSE_SELECTOR(otherMouseUp)
 MOUSE_SELECTOR(scrollWheel)
 
 
-#pragma mark Rendering
+#pragma mark - Rendering
+
 
 static const uint8_t * getPage(TerminalFont *font, int page, unichar *glyph) {
     if(font->unpackedPages[page] || [font unpackPage:page])
@@ -96,6 +105,7 @@ static const uint8_t * getPage(TerminalFont *font, int page, unichar *glyph) {
     abort();
 }
 
+
 #define OFFSET_FONT(ptr, lrow, glyph) do { \
     int fontRow = (charGlyph >> 5) & 7; \
     int fontCol = charGlyph & 31; \
@@ -103,6 +113,7 @@ static const uint8_t * getPage(TerminalFont *font, int page, unichar *glyph) {
             fontCol + FVFONT_CHARS_WIDE * ( \
                 (fontRow + 1) * font->height - (lrow + 1))); \
 } while(0)
+
 
 static void render(TerminalView *view, struct termRow *row)
 {
@@ -184,11 +195,13 @@ static void render(TerminalView *view, struct termRow *row)
     row->flags &= ~TERMROW_DIRTY;
 }
 
+
 + (void)releaseBitmaps:(void **)bmaps
 {
     if(bmaps[0]) free(bmaps[0]);
     if(bmaps[1]) CGImageRelease(bmaps[1]);
 }
+
 
 - (void)drawRect:(NSRect)rect
 {
@@ -229,15 +242,18 @@ static void render(TerminalView *view, struct termRow *row)
     redrawCounter = 0;
 }
 
+
 - (BOOL)acceptsFirstResponder
 {
     return YES;
 }
 
+
 - (BOOL)isOpaque
 {
     return YES;
 }
+
 
 - (BOOL)isFlipped
 {
@@ -245,10 +261,12 @@ static void render(TerminalView *view, struct termRow *row)
 }
 
 
-#pragma mark Resizing
+#pragma mark - Resizing
+
 
 - (void)resizeForTerminal
 {
+    printf("resizeForTerminal (rows = %d, cols = %d)\n", parent->state.wRows, parent->state.wCols);
     int termWidth = parent->state.wCols * font->width + 2 * TERMINALVIEW_HSPACE;
     int termHeight = parent->state.wRows * font->height + 2 * TERMINALVIEW_VSPACE;
     NSRect new_cr = NSMakeRect(0, 0, termWidth, termHeight);
@@ -297,6 +315,7 @@ static void render(TerminalView *view, struct termRow *row)
     //    [parent setWinSize:newsize];
 }
 
+
 - (void)viewDidMoveToWindow
 {
     // We're definitely running now, so start observing
@@ -306,6 +325,5 @@ static void render(TerminalView *view, struct termRow *row)
                                                object:self];
 }
 
-@end
 
-// vim: set syn=objc:
+@end

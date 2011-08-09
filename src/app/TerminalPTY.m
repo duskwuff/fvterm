@@ -6,7 +6,9 @@
 #import <sys/ioctl.h>
 #import <pwd.h>
 
+
 @implementation TerminalPTY
+
 
 - (id)initWithParent:(TerminalWindow *)tw rows:(int)rows cols:(int)cols
 {
@@ -61,6 +63,7 @@
     return self;
 }
 
+
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -68,6 +71,7 @@
     [term release];
     [super dealloc];
 }
+
 
 - (void)setRows:(int)rows cols:(int)cols
 {
@@ -87,16 +91,19 @@
     }
 }
 
+
 - (void)writeData:(NSData *)dat
 {
     if(alive)
         [term writeData:dat];
 }
 
+
 - (BOOL)alive
 {
     return alive;
 }
+
 
 - (void)gotData:(NSNotification *)note
 {
@@ -116,6 +123,5 @@
                                   NSEventTrackingRunLoopMode, nil]];
 }
 
-@end
 
-// vim: set syn=objc:
+@end

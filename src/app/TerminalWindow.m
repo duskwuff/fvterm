@@ -5,7 +5,9 @@
 
 #import "ConsoleKeyMappings.h"
 
+
 @implementation TerminalWindow
+
 
 - (NSString *)windowNibName
 {
@@ -51,6 +53,9 @@
     [pty release];
     [super dealloc];
 }
+
+
+#pragma mark - Event handling
 
 
 - (void)eventKeyInput:(TerminalView *)view event:(NSEvent *)ev
@@ -224,7 +229,7 @@
 }
 
 
-//////////////////////////////////////////////////////////////////////////////
+#pragma mark - TerminalEmulator callback functions
 
 
 void TerminalEmulator_bell(struct emuState *S)
@@ -263,9 +268,11 @@ void TerminalEmulator_writeStr(struct emuState *S, char *bytes)
     TerminalEmulator_write(S, bytes, strlen(bytes));
 }
 
+
 void TerminalEmulator_freeRowBitmaps(struct termRow *r)
 {
     [TerminalView releaseBitmaps:r->bitmaps];
 }
+
 
 @end
