@@ -271,7 +271,6 @@ static void render(TerminalView *view, struct termRow *row)
 
 - (void)resizeForTerminal
 {
-    printf("resizeForTerminal (rows = %d, cols = %d)\n", parent->state.wRows, parent->state.wCols);
     int termWidth = parent->state.wCols * font->width + 2 * TERMINALVIEW_HSPACE;
     int termHeight = parent->state.wRows * font->height + 2 * TERMINALVIEW_VSPACE;
     NSRect new_cr = NSMakeRect(0, 0, termWidth, termHeight);
