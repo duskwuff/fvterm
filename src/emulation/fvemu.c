@@ -568,6 +568,12 @@ static void do_RI(struct emuState *S)
 }
 
 
+static void do_SD(struct emuState *S)
+{
+    emu_scroll_up(S, S->tScroll, S->bScroll, GETARG(S, 0, 1));
+}
+
+
 static void do_SGR(struct emuState *S)
 {
     for(int i = 0; i < S->paramPtr; i++) {
@@ -665,6 +671,12 @@ static void do_SI(struct emuState *S)
 {
     // Switch to G0
     S->charset = S->charsets[0];
+}
+
+
+static void do_SU(struct emuState *S)
+{
+    emu_scroll_down(S, S->tScroll, S->bScroll, GETARG(S, 0, 1));
 }
 
 
@@ -1141,8 +1153,8 @@ static void emu_ops_do_csi(struct emuState *S, uint8_t lastch)
             CASE('L', do_IL);
             CASE('M', do_DL);
             CASE('P', do_DCH);
-            //CASE('S', do_SU);
-            //CASE('T', do_SD);
+            CASE('S', do_SU);
+            CASE('T', do_SD);
             CASE('X', do_ECH);
             CASE('Z', do_CBT);
             CASE('`', do_HPA);
