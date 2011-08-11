@@ -32,9 +32,11 @@
     CAP_MAX(val, vmax); \
 } while(0)
 
-#define PACK2(c1, c2) ((c1 << 8) | (c2))
+#define PACK2(c1, c2) (((c1) << 8) | (c2))
 #define PACK3(c1, c2, c3) (((c1) << 16) | ((c2) << 8) | (c3))
 #define PACK4(c1, c2, c3, c4) (((c1) << 24) | ((c2) << 16) | ((c3) << 8) | (c4))
+
+#define MODE(intermed, num) (((num) << 8) | (intermed))
 
 #define APPLY_ATTR(ch) ((((uint64_t) S->cursorAttr) << 32) | (ch))
 
@@ -875,25 +877,22 @@ static void do_VT52_tab(struct emuState *S)
 
 static void do_modes(struct emuState *S, int flag)
 {
-#define _M(im, n) ((im) | (n) << 8)
-#define CASE_MODE(im, n) case _M(im, n)
-
     for(int i = 0; i < S->paramPtr; i++) {
-        switch(_M(S->intermed, S->params[i])) {
+        switch(MODE(S->intermed, S->params[i])) {
 
-                CASE_MODE(0, 4): // IRM (insert/replace mode)
+            case MODE(0, 4): // IRM (insert/replace mode)
                 APPLY_FLAG(MODE_INSERT, flag);
                 break;
 
-                CASE_MODE(0, 20): // LNM (normal linefeed mode)
+            case MODE(0, 20): // LNM (normal linefeed mode)
                 APPLY_FLAG(MODE_LINEFEED, flag);
                 break;
 
-                CASE_MODE('?', 1): // DECCKM (cursor key mode)
+            case MODE('?', 1): // DECCKM (cursor key mode)
                 APPLY_FLAG(MODE_CURSORKEYS, flag);
                 break;
 
-                CASE_MODE('?', 2): // DECANM (vt52 mode)
+            case MODE('?', 2): // DECANM (vt52 mode)
                 if(flag == 0) { // this flag is weirdly inverted.
                     S->flags |= MODE_VT52;
                     S->charset = 'B';
@@ -901,8 +900,7 @@ static void do_modes(struct emuState *S, int flag)
                 }
                 break;
 
-                CASE_MODE('?', 3): // DECCOLM (132/80 switch)
-                printf("DECCOLM -> %d\n", flag);
+            case MODE('?', 3): // DECCOLM (132/80 switch)
                 if(!(S->flags & MODE_ALLOW_DECCOLM)) break;
                 emu_core_resize(S, S->wRows, flag ? 132 : 80);
                 // clear screen and reset cursor to 0/0
@@ -912,85 +910,85 @@ static void do_modes(struct emuState *S, int flag)
                 S->cRow = (S->flags & MODE_ORIGIN) ? S->tScroll : 0;
                 break;
 
-                CASE_MODE('?', 4): // DECSCLM (smooth scrolling)
+            case MODE('?', 4): // DECSCLM (smooth scrolling)
                 // Ignored - we don't implement this feature
                 break;
 
-                CASE_MODE('?', 5): // DECSCNM (reverse video)
+            case MODE('?', 5): // DECSCNM (reverse video)
                 APPLY_FLAG(MODE_INVERT, flag);
                 for(int i = 0; i < S->wRows; i++)
                     S->rows[i]->flags |= TERMROW_DIRTY; // redraw everything!
                 break;
 
-                CASE_MODE('?', 6): // DECOM (origin mode)
+            case MODE('?', 6): // DECOM (origin mode)
                 APPLY_FLAG(MODE_ORIGIN, flag);
                 // Origin flag homes the cursor when set/reset
                 S->cRow = flag ? S->tScroll : 0;
                 S->cCol = 0;
                 break;
 
-                CASE_MODE('?', 7): // DECAWM (wraparound mode)
+            case MODE('?', 7): // DECAWM (wraparound mode)
                 APPLY_FLAG(MODE_WRAPAROUND, flag);
                 break;
 
-                CASE_MODE('?', 8): // DECARM (autorepeat mode)
+            case MODE('?', 8): // DECARM (autorepeat mode)
                 // Ignored - neither of these make sense on a software terminal.
                 break;
 
-                CASE_MODE('?', 9): // DECINLM (interlace) / X10 mouse tracking
+            case MODE('?', 9): // DECINLM (interlace) / X10 mouse tracking
                 // DECINLM makes no sense on a software terminal.
                 // Mouse tracking does, so we'll do that instead.
                 S->flags &= ~MODE_MOUSE_MASK;
                 APPLY_FLAG(MODE_MOUSE_X10, flag);
                 break;
 
-                CASE_MODE('?', 12): // cursor blink
+            case MODE('?', 12): // cursor blink
                 // TODO
                 break;
 
-                CASE_MODE('?', 25): // visible cursor
+            case MODE('?', 25): // visible cursor
                 APPLY_FLAG(MODE_SHOWCURSOR, flag);
                 break;
 
-                CASE_MODE('?', 40): // allow DECCOLM
+            case MODE('?', 40): // allow DECCOLM
                 // not quite sure what the point of this is, but what the hey.
                 APPLY_FLAG(MODE_ALLOW_DECCOLM, flag);
                 break;
 
-                CASE_MODE('?', 41): // more(1) fix
+            case MODE('?', 41): // more(1) fix
                 // obsolete and ignored
                 break;
 
-                CASE_MODE('?', 42): // DECNCRM
-                // FIXME
+            case MODE('?', 42): // DECNCRM
+                // TODO
                 break;
 
-                CASE_MODE('?', 45): // reverse wraparound
+            case MODE('?', 45): // reverse wraparound
                 APPLY_FLAG(MODE_REVWRAP, flag);
                 break;
 
-                CASE_MODE('?', 1000): // mouse tracking
+            case MODE('?', 1000): // mouse tracking
                 S->flags &= ~MODE_MOUSE_MASK;
                 APPLY_FLAG(MODE_MOUSE_1000, flag);
                 break;
 
-                CASE_MODE('?', 1001):
+            case MODE('?', 1001):
                 S->flags &= ~MODE_MOUSE_MASK;
                 APPLY_FLAG(MODE_MOUSE_1001, flag);
                 break;
 
-                CASE_MODE('?', 1002):
+            case MODE('?', 1002):
                 S->flags &= ~MODE_MOUSE_MASK;
                 APPLY_FLAG(MODE_MOUSE_1002, flag);
                 break;
 
-                CASE_MODE('?', 1003):
+            case MODE('?', 1003):
                 S->flags &= ~MODE_MOUSE_MASK;
                 APPLY_FLAG(MODE_MOUSE_1003, flag);
                 break;
 
-                CASE_MODE('?', 1047): // alternate buffer
-                CASE_MODE('?', 1049): // alternate buffer/cursor
+            case MODE('?', 1047): // alternate buffer
+            case MODE('?', 1049): // alternate buffer/cursor
                 // TODO
                 break;
 
@@ -1001,9 +999,6 @@ static void do_modes(struct emuState *S, int flag)
 #endif
         }
     }
-
-#undef CASE_MODE
-#undef _M
 }
 
 
