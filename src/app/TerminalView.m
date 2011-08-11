@@ -148,6 +148,10 @@ static void render(TerminalView *view, struct termRow *row)
             charBG = tmp;
         }
 
+        if(charAttr & ATTR_INVIS) {
+            charFG = charBG;
+        }
+
         // make this char bold
         if(charAttr & ATTR_BOLD) {
             fontPage += 256;

@@ -71,6 +71,8 @@ struct emuState {
 #define ATTR_STRIKE         _BIT(21)
 #define ATTR_CUSTFG         _BIT(22)
 #define ATTR_CUSTBG         _BIT(23)
+#define ATTR_INVIS          _BIT(24)
+#define ATTR_FAINT          _BIT(25)
 
 #define MODE_WRAPAROUND     _BIT(0)
 #define MODE_REVWRAP        _BIT(1)

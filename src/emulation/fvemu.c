@@ -583,76 +583,124 @@ static void do_SGR(struct emuState *S)
             case 0:
                 S->cursorAttr = 0;
                 break;
+
             case 1: // bold / increased intensity
                 S->cursorAttr |= ATTR_BOLD;
+                S->cursorAttr &= ~ATTR_FAINT;
                 break;
-                // case 2: faint
+
+            case 2: // faint / decreased intensity
+                S->cursorAttr |= ATTR_FAINT;
+                S->cursorAttr &= ~ATTR_BOLD;
+                break;
+
             case 3: // italic
                 S->cursorAttr |= ATTR_ITALIC;
                 break;
+
             case 4: // single underline
                 S->cursorAttr |= ATTR_UNDERLINE;
                 break;
+
             case 5: // slow blink
             case 6: // fast blink (!)
                 S->cursorAttr |= ATTR_BLINK;
                 break;
+
             case 7: // negative image
                 S->cursorAttr |= ATTR_REVERSE;
                 break;
-                // case 8: invisible
+
+            case 8:
+                S->cursorAttr |= ATTR_INVIS;
+                break;
+
             case 9: // crossed out
                 S->cursorAttr |= ATTR_STRIKE;
                 break;
-                // case 10 ... 19: alt fonts
-                // case 20: fraktur?!
+
+            // case 10 ... 19: alt fonts
+
+            // case 20: fraktur?!
+
             case 21: // double underline
                 S->cursorAttr |= ATTR_UNDERLINE;
                 break;
+
             case 22: // unbold / unfaint
-                S->cursorAttr &= ~ATTR_BOLD;
+                S->cursorAttr &= ~(ATTR_BOLD | ATTR_FAINT);
                 break;
+
             case 23: // un-italic / unFraktur
                 S->cursorAttr &= ~ATTR_ITALIC;
                 break;
+
             case 24: // un-underline ("derline"?)
                 S->cursorAttr &= ~ATTR_UNDERLINE;
                 break;
+
             case 25: // un-blink
                 S->cursorAttr &= ~ATTR_BLINK;
                 break;
-                // case 26: un-used
+
+            // case 26: unused
+
             case 27: // un-reverse
                 S->cursorAttr &= ~ATTR_REVERSE;
                 break;
-                //case 28: un-invisible
+
+            case 28:
+                S->cursorAttr &= ~ATTR_INVIS;
+                break;
+
             case 29: // un-crosssed-out
                 S->cursorAttr &= ~ATTR_STRIKE;
                 break;
+
             case 30 ... 37: // foreground colors
                 S->cursorAttr &= ~ATTR_FG_MASK;
                 S->cursorAttr |= ATTR_CUSTFG | (S->params[i] - 30);
                 break;
-                //case 38: extended FG, FIXME
+
+            case 38: // extended FG
+                if(++i >= S->paramPtr) break;
+                if(S->params[i] != 5) break;
+                if(++i >= S->paramPtr) break;
+                S->cursorAttr &= ~ATTR_FG_MASK;
+                S->cursorAttr |= ATTR_CUSTFG | (S->params[i] & 255);
+                break;
+
             case 39: // default FG
                 S->cursorAttr &= ~(ATTR_FG_MASK | ATTR_CUSTFG);
                 break;
+
             case 40 ... 47: // background colors
                 S->cursorAttr &= ~ATTR_BG_MASK;
                 S->cursorAttr |= ATTR_CUSTBG | (S->params[i] - 40) << 8;
                 break;
-                // case 48: extended BG, FIXME
+
+            case 48: // extended BG
+                if(++i >= S->paramPtr) break;
+                if(S->params[i] != 5) break;
+                if(++i >= S->paramPtr) break;
+                S->cursorAttr &= ~ATTR_BG_MASK;
+                S->cursorAttr |= ATTR_CUSTBG | (S->params[i] & 255) << 8;
+                break;
+
             case 49: // default FG
                 S->cursorAttr &= ~(ATTR_BG_MASK | ATTR_CUSTBG);
                 break;
+
             case 90 ... 97: // bright foreground colors (not in ECMA048)
                 S->cursorAttr &= ~ATTR_FG_MASK;
                 S->cursorAttr |= ATTR_CUSTFG | (8 + S->params[i] - 90);
                 break;
+
             case 100 ... 107: // bright background colors (not in ECMA048)
                 S->cursorAttr &= ~ATTR_BG_MASK;
                 S->cursorAttr |= ATTR_CUSTBG | (8 + S->params[i] - 100) << 8;
                 break;
+
 #ifdef DEBUG
             default:
                 printf("unhandled SGR %d\n", S->params[i]);
