@@ -98,7 +98,7 @@
         else if(ckm->type == CKM_NUM && vtMode == 0)
             ctr = snprintf((char *) buf, sizeof(buf), "\e[%d~", ckm->content);
         else if(ckm->type == CKM_NUM)
-            ctr = snprintf((char *) buf, sizeof(buf), "\e[%d;%d~", vtMode + 1, ckm->content);
+            ctr = snprintf((char *) buf, sizeof(buf), "\e[%d;%d~", ckm->content, vtMode + 1);
     } else {
         if(flags & 0x40) vtAlt = 0; // special case for rightopt
 
