@@ -75,7 +75,7 @@ static const char * safeHex(uint32_t ch)
 #pragma mark - Buffer manipulation utils
 
 
-static void emu_row_fill(struct emuState *S, int row, int start, int count, uint64_t value)
+static void row_fill(struct emuState *S, int row, int start, int count, uint64_t value)
 {
     assert(row >= 0);
     assert(row < S->wRows);
@@ -93,11 +93,11 @@ static void emu_row_fill(struct emuState *S, int row, int start, int count, uint
     // memset_pattern8 is highly optimized on x86 :)
     memset_pattern8(&r->chars[start], &value, count * 8);
 #endif
-    r->flags = TERMROW_DIRTY;
+    r->flags |= TERMROW_DIRTY;
 }
 
 
-static void emu_scroll_down(struct emuState *S, int top, int btm, int count)
+static void scroll_down(struct emuState *S, int top, int btm, int count)
 {
     assert(count > 0);
     assert(top >= 0);
@@ -122,11 +122,11 @@ static void emu_scroll_down(struct emuState *S, int top, int btm, int count)
     }
 
     for(int i = clearStart; i <= btm; i++)
-        emu_row_fill(S, i, 0, S->wCols, EMPTY_FIELD);
+        row_fill(S, i, 0, S->wCols, EMPTY_FIELD);
 }
 
 
-static void emu_scroll_up(struct emuState *S, int top, int btm, int count)
+static void scroll_up(struct emuState *S, int top, int btm, int count)
 {
     assert(count > 0);
     assert(top >= 0);
@@ -140,12 +140,12 @@ static void emu_scroll_up(struct emuState *S, int top, int btm, int count)
         for(int i = btm; i > top; i--)
             S->rows[i] = S->rows[i - 1];
         S->rows[top] = movingRow;
-        emu_row_fill(S, top, 0, S->wCols, EMPTY_FIELD);
+        row_fill(S, top, 0, S->wCols, EMPTY_FIELD);
     }
 }
 
 
-static void emu_term_index(struct emuState *S, int count)
+static void cursor_index(struct emuState *S, int count)
 {
     if(unlikely(count == 0)) return;
 
@@ -156,7 +156,7 @@ static void emu_term_index(struct emuState *S, int count)
             S->cRow += count;
         } else {
             S->cRow = S->bScroll;
-            emu_scroll_down(S, S->tScroll, S->bScroll, count - dist);
+            scroll_down(S, S->tScroll, S->bScroll, count - dist);
         }
     } else {
         count = -count; // scroll up
@@ -165,7 +165,7 @@ static void emu_term_index(struct emuState *S, int count)
             S->cRow -= count;
         else {
             S->cRow = S->tScroll;
-            emu_scroll_up(S, S->tScroll, S->bScroll, count - dist);
+            scroll_up(S, S->tScroll, S->bScroll, count - dist);
         }
     }
 }
@@ -230,7 +230,7 @@ static void do_CHT(struct emuState *S)
 static void do_CNL(struct emuState *S)
 {
     int p1 = GETARG(S, 0, 1);
-    emu_term_index(S, p1);
+    cursor_index(S, p1);
     S->cCol = 0;
     S->wrapnext = 0;
 }
@@ -239,7 +239,7 @@ static void do_CNL(struct emuState *S)
 static void do_CPL(struct emuState *S)
 {
     int p1 = GETARG(S, 0, 1);
-    emu_term_index(S, -p1);
+    cursor_index(S, -p1);
     S->cCol = 0;
     S->wrapnext = 0;
 }
@@ -348,7 +348,7 @@ static void do_DCH(struct emuState *S)
 static void do_DECALN(struct emuState *S)
 {
     for(int i = 0; i < S->wRows; i++)
-        emu_row_fill(S, i, 0, S->wCols, APPLY_ATTR('E'));
+        row_fill(S, i, 0, S->wCols, APPLY_ATTR('E'));
 }
 
 
@@ -402,7 +402,7 @@ static void do_DECSTBM(struct emuState *S)
 static void do_DL(struct emuState *S)
 {
     if(S->cRow >= S->tScroll && S->cRow <= S->bScroll)
-        emu_scroll_down(S, S->cRow, S->bScroll, GETARG(S, 0, 1));
+        scroll_down(S, S->cRow, S->bScroll, GETARG(S, 0, 1));
 }
 
 
@@ -430,7 +430,7 @@ static void do_ECH(struct emuState *S)
 {
     int count = GETARG(S, 0, 1);
     CAP_MAX(count, S->wCols - S->cCol);
-    emu_row_fill(S, S->cRow, S->cCol, count, EMPTY_FIELD);
+    row_fill(S, S->cRow, S->cCol, count, EMPTY_FIELD);
 }
 
 
@@ -451,12 +451,12 @@ static void do_ED(struct emuState *S)
             break;
     }
     for(int i = from; i <= to; i++)
-        emu_row_fill(S, i, 0, S->wCols, EMPTY_FIELD);
+        row_fill(S, i, 0, S->wCols, EMPTY_FIELD);
     // ED erases partial lines too...
     if(p1 == 1)
-        emu_row_fill(S, S->cRow, 0, S->cCol + 1, EMPTY_FIELD);
+        row_fill(S, S->cRow, 0, S->cCol + 1, EMPTY_FIELD);
     else if(p1 != 2) // 0 or default
-        emu_row_fill(S, S->cRow, S->cCol, S->wCols - S->cCol, EMPTY_FIELD);
+        row_fill(S, S->cRow, S->cCol, S->wCols - S->cCol, EMPTY_FIELD);
 }
 
 
@@ -475,7 +475,7 @@ static void do_EL(struct emuState *S)
         case 2:
             break;
     }
-    emu_row_fill(S, S->cRow, from, to - from + 1, EMPTY_FIELD);
+    row_fill(S, S->cRow, from, to - from + 1, EMPTY_FIELD);
 }
 
 
@@ -528,19 +528,19 @@ static void do_ICH(struct emuState *S)
 static void do_IL(struct emuState *S)
 {
     if(S->cRow >= S->tScroll && S->cRow <= S->bScroll)
-        emu_scroll_up(S, S->cRow, S->bScroll, GETARG(S, 0, 1));
+        scroll_up(S, S->cRow, S->bScroll, GETARG(S, 0, 1));
 }
 
 
 static void do_IND(struct emuState *S)
 {
-    emu_term_index(S, 1);
+    cursor_index(S, 1);
 }
 
 
 static void do_NEL(struct emuState *S)
 {
-    emu_term_index(S, 1);
+    cursor_index(S, 1);
     S->cCol = 0;
     S->wrapnext = 0;
 }
@@ -548,7 +548,7 @@ static void do_NEL(struct emuState *S)
 
 static void do_NL(struct emuState *S)
 {
-    emu_term_index(S, 1);
+    cursor_index(S, 1);
     if(S->flags & MODE_NEWLINE)
         S->cCol = 0;
     S->wrapnext = 0;
@@ -566,13 +566,13 @@ static void do_OSC(struct emuState *S)
 
 static void do_RI(struct emuState *S)
 {
-    emu_term_index(S, -1);
+    cursor_index(S, -1);
 }
 
 
 static void do_SD(struct emuState *S)
 {
-    emu_scroll_up(S, S->tScroll, S->bScroll, GETARG(S, 0, 1));
+    scroll_up(S, S->tScroll, S->bScroll, GETARG(S, 0, 1));
 }
 
 
@@ -726,7 +726,7 @@ static void do_SI(struct emuState *S)
 
 static void do_SU(struct emuState *S)
 {
-    emu_scroll_down(S, S->tScroll, S->bScroll, GETARG(S, 0, 1));
+    scroll_down(S, S->tScroll, S->bScroll, GETARG(S, 0, 1));
 }
 
 
@@ -953,7 +953,7 @@ static void do_modes(struct emuState *S, int flag)
                 emu_core_resize(S, S->wRows, flag ? 132 : 80);
                 // clear screen and reset cursor to 0/0
                 for(int i = 0; i < S->wRows; i++)
-                    emu_row_fill(S, i, 0, S->wCols, EMPTY_FIELD);
+                    row_fill(S, i, 0, S->wCols, EMPTY_FIELD);
                 S->cCol = 0;
                 S->cRow = (S->flags & MODE_ORIGIN) ? S->tScroll : 0;
                 break;
@@ -1327,7 +1327,7 @@ static void do_unichar(struct emuState *S, uint16_t uc)
     if(unlikely(S->wrapnext)) {
         if(S->flags & MODE_WRAPAROUND) {
             S->rows[S->cRow]->flags |= TERMROW_WRAPPED;
-            emu_term_index(S, 1);
+            cursor_index(S, 1);
             S->cCol = 0;
         }
         S->wrapnext = 0;
@@ -1532,7 +1532,7 @@ static void emu_term_reset(struct emuState *S)
         S->charsets[i] = 'B'; // USASCII
 
     for(int i = 0; i < S->wRows; i++)
-        emu_row_fill(S, i, 0, S->wCols, EMPTY_FIELD);
+        row_fill(S, i, 0, S->wCols, EMPTY_FIELD);
 
     for(int i = 0; i < S->wCols; i++) {
         if(i % 8 == 7)
