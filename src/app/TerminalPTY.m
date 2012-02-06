@@ -5,6 +5,8 @@
 #import <unistd.h>
 #import <sys/ioctl.h>
 #import <pwd.h>
+#import <mach/task.h>
+#import <mach/exception_types.h>
 
 
 @implementation TerminalPTY
@@ -27,6 +29,7 @@
         .ws_xpixel = 0,
         .ws_ypixel = 0,
     };
+
     pid = forkpty(&term_fd, NULL, NULL, &ws);
 
     if(pid < 0) {
@@ -42,6 +45,11 @@
         struct passwd *pwd = getpwuid(getuid());
         char *shell = (pwd && pwd->pw_shell) ? pwd->pw_shell : "/bin/sh";
         endpwent();
+
+        // Disable crash dialogs for processes run from this shell
+        task_set_exception_ports(mach_task_self(),
+                                 EXC_MASK_CRASH,
+                                 MACH_PORT_NULL, 0, 0);
 
         execl(shell, "-", NULL);
         printf("failed to exec shell %s: %s\n", shell, strerror(errno));
