@@ -1,3 +1,5 @@
+#import <Cocoa/Cocoa.h>
+
 #import "TerminalView.h"
 #import "TerminalPTY.h"
 #import "TerminalWindow.h"

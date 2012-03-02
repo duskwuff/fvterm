@@ -109,7 +109,6 @@
 		CC7E4709132C09A900C9B890 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		CC7E470A132C09A900C9B890 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		CC7E470D132C09A900C9B890 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		CC7E4711132C09A900C9B890 /* Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Prefix.pch; sourceTree = "<group>"; };
 		CC7E4712132C09A900C9B890 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		CC7E4722132C09E600C9B890 /* ConsoleKeyMappings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConsoleKeyMappings.h; sourceTree = "<group>"; };
 		CC7E4723132C09E600C9B890 /* Credits.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
@@ -267,7 +266,6 @@
 		CC7E470B132C09A900C9B890 /* fvterm */ = {
 			isa = PBXGroup;
 			children = (
-				CC7E4711132C09A900C9B890 /* Prefix.pch */,
 				CC7E4727132C0A1100C9B890 /* DefaultColors.h */,
 				CC7E4722132C09E600C9B890 /* ConsoleKeyMappings.h */,
 				CC7E4712132C09A900C9B890 /* main.m */,
@@ -490,7 +488,7 @@
 		CC7E46F8132C09A900C9B890 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0410;
+				LastUpgradeCheck = 0430;
 			};
 			buildConfigurationList = CC7E46FB132C09A900C9B890 /* Build configuration list for PBXProject "fvterm" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -630,16 +628,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -649,13 +644,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -663,12 +656,6 @@
 		CC7E4720132C09A900C9B890 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = src/app/Prefix.pch;
 				INFOPLIST_FILE = appdata/Info.plist;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
@@ -678,12 +665,6 @@
 		CC7E4721132C09A900C9B890 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = src/app/Prefix.pch;
 				INFOPLIST_FILE = appdata/Info.plist;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
@@ -693,11 +674,7 @@
 		CC9F3DD91338FDEC00C1D3B3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
 				EXECUTABLE_PREFIX = lib;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				PRODUCT_NAME = fvterm;
 			};
 			name = Debug;
@@ -705,11 +682,7 @@
 		CC9F3DDA1338FDEC00C1D3B3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXECUTABLE_PREFIX = lib;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				PRODUCT_NAME = fvterm;
 			};
 			name = Release;

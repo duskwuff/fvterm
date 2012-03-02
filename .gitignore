@@ -1,7 +1,5 @@
 .DS_Store
 /fvterm.xcodeproj/*.xcworkspace
 /fvterm.xcodeproj/xcuserdata
-/tasks
 *.pyc
 *.pyo
-/t/libfvterm.dylib

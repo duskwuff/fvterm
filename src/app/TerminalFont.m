@@ -1,3 +1,5 @@
+#import <Cocoa/Cocoa.h>
+
 #import "TerminalFont.h"
 
 static NSDictionary *fontPlist = NULL;
